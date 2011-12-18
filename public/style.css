@@ -39,38 +39,18 @@ p, li {
   font-size: 1.5em;
 }
 
-.disclaimer {
-  margin-bottom: 2em;
-}
-
-.disclaimer a {
-  color: #dc9a44;
-  text-decoration: none;
-  background-color: #1b1207;
-  border-radius: 5px;
-  padding: 0 5px 3px 5px;
-}
-
 #screenshots {
   height: 500px;
   width: 100%;
 }
 
-#currently {
-}
-
-#run-it {
-  margin-bottom: 2em;
-}
-
-#play-it {
-  margin-bottom: 2em;
-}
-
-#grab-the-code {
-  margin-bottom: 2em;
-}
-
+#pitch,
+#screenshots,
+#disclaimer,
+#currently,
+#run-it,
+#play-it,
+#grab-the-code,
 #coming-soon {
   margin-bottom: 2em;
 }
@@ -81,7 +61,6 @@ p, li {
 }
 
 #footer {
-  margin: 2em 0;
   text-align: center;
 }
 
@@ -95,7 +74,15 @@ p, li {
   text-decoration: none;
 }
 
-.content {
+.content a {
+  color: #dc9a44;
+  text-decoration: none;
+  background-color: #1b1207;
+  border-radius: 5px;
+  padding: 0 5px 3px 5px;
+}
+
+.lighter-background {
   background-color: #1b1207;
   border-radius: 5px;
   padding: 0.5em 1em;
