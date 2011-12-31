@@ -2,11 +2,11 @@
 
 @font-face {
   font-family: PowellAntique;
-  src: url('PowellAntique-webfont.eot');
-  src: url('PowellAntique-webfont.eot?#iefix')        format('embedded-opentype'),
-       url('PowellAntique-webfont.woff')              format('woff'),
-       url('PowellAntique-webfont.ttf')               format('truetype'),
-       url('PowellAntique-webfont.svg#PowellAntique') format('svg');
+  src: url('../webfonts/PowellAntique-webfont.eot');
+  src: url('../webfonts/PowellAntique-webfont.eot?#iefix')        format('embedded-opentype'),
+       url('../webfonts/PowellAntique-webfont.woff')              format('woff'),
+       url('../webfonts/PowellAntique-webfont.ttf')               format('truetype'),
+       url('../webfonts/PowellAntique-webfont.svg#PowellAntique') format('svg');
   font-weight: normal;
   font-style: normal;
 }
