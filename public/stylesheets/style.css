@@ -13,10 +13,11 @@
 
 body {
   background-color: #100800;
-  width: 720px;
-  margin: 0 0 2em 1em;
+  margin: 1em 0 2em 2em;
+  width: 1000px;
   color: #dc9a44;
   font-family: 'PowellAntique', Arial, sans-serif;
+  float: left;
 }
 
 h1, h2, h3 {
@@ -39,9 +40,64 @@ p, li {
   font-size: 1.5em;
 }
 
+.left-column, .right-column, .both-columns {
+  float: left;
+}
+
+.left-column {
+  width: 720px;
+}
+
+.right-column {
+  width: 280px;
+}
+
+.both-columns {
+  width: 100%;
+}
+
 #screenshots {
   height: 500px;
   width: 100%;
+}
+
+#authentication {
+  float: left;
+  width: 100%;
+}
+
+#authentication a, #authentication p {
+  font-size: 1.2em;
+}
+
+#authentication a {
+  cursor: pointer;
+}
+
+#authentication a:hover {
+  text-decoration: underline;
+}
+
+#account {
+  width: 70%;
+}
+
+#account-picture {
+  width: 15%;
+  float: left;
+}
+
+#account-name {
+  width: 70%;
+  margin: 0 0.5em;
+  padding-right: 0.5em;
+  float: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#fb-auth {
+  float: right;
 }
 
 #pitch,
