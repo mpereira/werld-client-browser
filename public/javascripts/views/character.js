@@ -8,6 +8,17 @@ Werld.Views.Character = function(model) {
 
 Werld.Views.Character.prototype = {
   draw: function() {
-    Werld.canvas.context.drawImage(this.image, this.model.x * 40, this.model.y * 40, 40, 40);
+    var x = this.model.x * 40;
+    var y = this.model.y * 40;
+
+    Werld.canvas.context.shadowColor = '#3300ff';
+    Werld.canvas.context.shadowOffsetX = 1;
+    Werld.canvas.context.shadowOffsetY = 1;
+    Werld.canvas.context.fillStyle = '#00ccff';
+    Werld.canvas.context.font = '20px "PowellAntique" serif';
+    Werld.canvas.context.textBaseline = 'top';
+    Werld.canvas.context.textAlign = 'center';
+    Werld.canvas.context.fillText(this.model.name, x + 20, y - 30);
+    Werld.canvas.context.drawImage(this.image, x, y, 40, 40);
   }
 };

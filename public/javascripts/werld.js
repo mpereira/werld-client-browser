@@ -38,7 +38,9 @@ var Werld = {
   },
   init: function() {
     this.loadSounds();
-    this.character = new Werld.Models.Character({ name: 'hilbert', coordinates: [5, 5] });
+    this.character = new Werld.Models.Character({
+      name: 'hilbert', coordinates: [5, 5]
+    });
     var mapTiles = new Array();
     for (var i = 0; i < 16; i++) {
       mapTiles[i] = new Array();
@@ -46,8 +48,8 @@ var Werld = {
         mapTiles[i][j] = new Werld.Models.Tile({
           type: 'grass', coordinates: [i * 40, j * 40]
         });
-      };
-    };
+      }
+    }
     this.map = new Werld.Models.Map(mapTiles);
     this.canvas.init();
   }
