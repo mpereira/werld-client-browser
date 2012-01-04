@@ -24,8 +24,9 @@ window.fbAsyncInit = function() {
   }
 
   function updateAuthenticationView(response) {
+    view.style.display = 'hidden';
+
     if (response.authResponse) {
-      var view = document.getElementById('authentication');
       var button = document.getElementById('fb-auth');
 
       view.style.fontSize = '1.0em';
@@ -46,7 +47,6 @@ window.fbAsyncInit = function() {
         });
       };
     } else {
-      var view = document.getElementById('authentication');
       var button = document.getElementById('fb-auth');
 
       view.style.display = 'block';
@@ -55,6 +55,9 @@ window.fbAsyncInit = function() {
       button.style.width = '100%';
       button.style.textAlign = 'center';
       button.innerHTML = 'Sign in with facebook';
+
+      view.style.display = 'block';
+
       button.onclick = function() {
         FB.login(function(response) {
           if (response.authResponse) {
@@ -65,6 +68,7 @@ window.fbAsyncInit = function() {
     }
   }
 
+  var view = document.getElementById('authentication');
   FB.getLoginStatus(updateAuthenticationView);
   FB.Event.subscribe('auth.statusChange', updateAuthenticationView);
 };

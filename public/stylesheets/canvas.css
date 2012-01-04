@@ -1,0 +1,10 @@
+body {
+  background-color: #100800;
+  color: #dc9a44;
+  font-family: 'PowellAntique', Arial, sans-serif;
+}
+
+#canvas-wrapper {
+  text-align: center;
+  margin: 2em 0;
+}
