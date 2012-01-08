@@ -32,7 +32,7 @@ window.fbAsyncInit = function() {
       view.style.fontSize = '1.0em';
       button.style.width = '';
 
-      Werld.config.accessToken = response.authResponse.accessToken;
+      Werld.Config.accessToken = response.authResponse.accessToken;
       FB.api('/me', facebookGraphApiCallback);
 
       view.style.display = 'block';

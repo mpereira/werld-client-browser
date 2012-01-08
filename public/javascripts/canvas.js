@@ -81,14 +81,16 @@ Werld.canvas = {
     if (x > 720 && x < 880 && y > 270 && y < 340) {
       clearInterval(this.interval);
       this.characterView = new Werld.Views.Character(Werld.character);
-      setTimeout(Werld.character.move.bind(Werld.character)('up'), 1000);
-      setTimeout(Werld.character.move.bind(Werld.character)('left'), 3000);
-      this.drawGameScreen();
+      window.addEventListener('keydown', this.keyboardHandler.bind(this), false);
       this.interval = setInterval(this.drawGameScreen.bind(this), this.FRAME_RATE);
+      this.drawGameScreen();
     }
   },
-  keyboardHandler: function(e) {
-    switch (e.keyCode) {
+  keyboardHandler: function(event) {
+    switch (event.keyCode) {
+    case 13:
+      Werld.messageInputForm().showOrSubmit(event);
+      break;
     case 38:
       Werld.character.move('up')
       break;
@@ -116,7 +118,6 @@ Werld.canvas = {
       this.mapView = new Werld.Views.Map(Werld.map);
       this.el.addEventListener('mousemove', this.mouseMoveHandler.bind(this), false);
       this.el.addEventListener('click', this.mouseClickHandler.bind(this), false);
-      window.addEventListener('keydown', this.keyboardHandler.bind(this), false);
       this.interval = setInterval(this.drawSplashScreen.bind(this), this.FRAME_RATE);
     } else {
       console.log('fail');

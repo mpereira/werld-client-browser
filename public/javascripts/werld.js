@@ -1,7 +1,10 @@
 var Werld = {
   Views: {},
   Models: {},
-  config: {},
+  Util: {},
+  Config: {
+    messageLifeCycle: 5
+  },
   account: {
     provider: {}
   },
@@ -35,6 +38,12 @@ var Werld = {
       music.setAttribute('src', this.sounds.music[supportedType]);
       music.addEventListener('canplay', music.play, false);
     }
+  },
+  messageInputForm: function() {
+    if (!this.messageInputView) {
+     this.messageInputView = new Werld.Views.MessageInputForm();
+    }
+    return(this.messageInputView);
   },
   init: function() {
     this.loadSounds();
