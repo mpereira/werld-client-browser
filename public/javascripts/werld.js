@@ -36,7 +36,7 @@ var Werld = {
     if (supportedType) {
       document.body.appendChild(music);
       music.setAttribute('src', this.sounds.music[supportedType]);
-      music.addEventListener('canplay', music.play, false);
+      //music.addEventListener('canplay', music.play, false);
     }
   },
   messageInputForm: function() {
@@ -47,9 +47,6 @@ var Werld = {
   },
   init: function() {
     this.loadSounds();
-    this.character = new Werld.Models.Character({
-      name: 'hilbert', coordinates: [5, 5]
-    });
     var mapTiles = new Array();
     for (var i = 0; i < 16; i++) {
       mapTiles[i] = new Array();

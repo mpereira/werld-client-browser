@@ -12,6 +12,14 @@
     <div id='canvas-wrapper'>
       <canvas width='640' height='480'></canvas>
     </div>
+    <div id='character-name-input-form-wrapper'>
+      <form id='character-name-input-form' style='display: none;'>
+        <label for='character-name-input'>
+          Please choose a name for your character
+        </label>
+        <input id='character-name-input' type='text'>
+      </form>
+    </div>
     <div id='message-input-form-wrapper'>
       <form id='message-input-form' style='display: none;'>
         <input type='text'>
@@ -38,6 +46,7 @@
     <script src='javascripts/models/tile.js'></script>
     <script src='javascripts/views/tile.js'></script>
     <script src='javascripts/views/message_input_form.js'></script>
+    <script src='javascripts/views/character_name_input_form.js'></script>
     <script src='javascripts/models/map.js'></script>
     <script src='javascripts/views/map.js'></script>
   </body>

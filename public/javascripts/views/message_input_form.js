@@ -1,14 +1,12 @@
 Werld.Views.MessageInputForm = Linchpin.DomView.extend({
   el: '#message-input-form',
   initialize: function() {
-    var self = this;
     $(this.el).submit(function(event) {
       Werld.character.say($('input', this.el).val());
-      $('input', this.el).val('');
-      $('input', this.el).blur();
-      $(self.el).hide();
+      $('input', this.el).val('').blur();
+      $(this.el).hide();
       return(false);
-    });
+    }.bind(this));
     return(this);
   },
   showOrSubmit: function(event) {

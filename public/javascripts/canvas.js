@@ -79,11 +79,8 @@ Werld.canvas = {
     y = coordinates[1];
 
     if (x > 720 && x < 880 && y > 270 && y < 340) {
-      clearInterval(this.interval);
-      this.characterView = new Werld.Views.Character(Werld.character);
-      window.addEventListener('keydown', this.keyboardHandler.bind(this), false);
-      this.interval = setInterval(this.drawGameScreen.bind(this), this.FRAME_RATE);
-      this.drawGameScreen();
+      var characterNameInputForm = new Werld.Views.CharacterNameInputForm();
+      characterNameInputForm.render();
     }
   },
   keyboardHandler: function(event) {

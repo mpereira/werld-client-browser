@@ -9,11 +9,11 @@ body {
   margin: 2em 0;
 }
 
-#message-input-form-wrapper {
+#message-input-form-wrapper, #character-name-input-form-wrapper {
   text-align: center;
 }
 
-#message-input-form input {
+#message-input-form input, #character-name-input-form-wrapper input {
   width: 624px;
   background-color: #1b1207;
   color: #dc9a44;
@@ -22,4 +22,13 @@ body {
   padding: 0.5em;
   font-family: 'PowellAntique', Arial, sans-serif;
   font-size: 1.2em;
+}
+
+#character-name-input-form-wrapper {
+  font-size: 1.4em;
+}
+
+#character-name-input-form-wrapper input {
+  width: 300px;
+  font-size: 1em;
 }
