@@ -3,7 +3,7 @@ var Werld = {
   Models: {},
   Util: {},
   Config: {
-    messageLifeCycle: 5
+    messageLifeCycle: 5000
   },
   account: {
     provider: {}

@@ -27,13 +27,13 @@ Werld.Models.Character.prototype = {
   },
   say: function(message) {
     var now = new Date();
-    this.messages.enqueue({ content: message, created_at: now.getSeconds() });
+    this.messages.enqueue({ content: message, created_at: now.getTime() });
     $(this.messages).trigger('add');
   },
   messagesSweeper: function() {
     var now = new Date();
     this.messages.forEach(function(message) {
-      if ((now.getSeconds() - message.created_at) > Werld.Config.messageLifeCycle) {
+      if ((now.getTime() - message.created_at) > Werld.Config.messageLifeCycle) {
         this.messages.dequeue();
       }
     }.bind(this));
