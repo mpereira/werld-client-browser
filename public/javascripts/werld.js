@@ -8,7 +8,9 @@ var Werld = {
     GAME_STARTED: 3
   },
   Config: {
-    MESSAGE_LIFE_CYCLE: 5000
+    MESSAGE_LIFE_CYCLE: 5000,
+    CHARACTER_MOVEMENT_SPEED: 2,
+    PIXELS_PER_TILE: 40,
   },
   account: {
     provider: {}

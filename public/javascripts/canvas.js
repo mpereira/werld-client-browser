@@ -43,16 +43,7 @@ Werld.canvas = {
     this.characterView.draw();
   },
   mouseCoordinates: function(e) {
-    var x;
-    var y;
-    if (e.pageX || e.pageY) {
-      x = e.pageX;
-      y = e.pageY;
-    } else {
-      x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-      y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-    }
-    return([x, y]);
+    return([e.offsetX, e.offsetY]);
   },
   mouseMoveHandler: function(e) {
     if (Werld.state === Werld.States.SPLASH_SCREEN) {
@@ -64,7 +55,7 @@ Werld.canvas = {
       x = coordinates[0];
       y = coordinates[1];
 
-      if (x > 720 && x < 880 && y > 270 && y < 340) {
+      if (this.signInLinkArea(coordinates)) {
         this.signInLinkGradientDrawn = true;
         this.el.style.cursor = 'pointer';
       } else {
@@ -74,40 +65,34 @@ Werld.canvas = {
     }
   },
   mouseClickHandler: function(e) {
+    var x;
+    var y;
+    var coordinates;
+
+    coordinates = this.mouseCoordinates(e);
+    x = coordinates[0];
+    y = coordinates[1];
+
     if (Werld.state === Werld.States.SPLASH_SCREEN) {
-      var x;
-      var y;
-      var coordinates;
-
-      coordinates = this.mouseCoordinates(e);
-      x = coordinates[0];
-      y = coordinates[1];
-
-      if (x > 720 && x < 880 && y > 270 && y < 340) {
+      if (this.signInLinkArea(coordinates)) {
         this.el.style.cursor = '';
         var characterNameInputForm = new Werld.Views.CharacterNameInputForm();
         characterNameInputForm.render();
         Werld.state = Werld.States.CHOOSING_NAME;
       }
+    } else if (Werld.state === Werld.States.GAME_STARTED) {
+      if (e.which === 3) {
+        Werld.character.moveTo(coordinates);
+      }
     }
   },
   keyboardHandler: function(event) {
-    switch (event.keyCode) {
-    case 13:
-      Werld.messageInputForm().showOrSubmit(event);
-      break;
-    case 38:
-      Werld.character.move('up')
-      break;
-    case 40:
-      Werld.character.move('down')
-      break;
-    case 37:
-      Werld.character.move('left')
-      break;
-    case 39:
-      Werld.character.move('right')
-      break;
+    if (Werld.state === Werld.States.GAME_STARTED) {
+      switch (event.keyCode) {
+      case 13:
+        Werld.messageInputForm().showOrSubmit(event);
+        break;
+      }
     }
   },
   init: function() {
@@ -116,6 +101,10 @@ Werld.canvas = {
       this.signInLinkGradient = this.context.createRadialGradient(440, 275, 10, 440, 275, 90);
       this.signInLinkGradient.addColorStop(0.4, '#dc9a44');
       this.signInLinkGradient.addColorStop(1, '#000000');
+      this.signInLinkArea = function(coordinates) {
+        return(coordinates[0] > 350 && coordinates[0] < 520 &&
+                 coordinates[1] > 230 && coordinates[1] < 310);
+      }
 
       this.loadTextures();
       this.loadImages();
