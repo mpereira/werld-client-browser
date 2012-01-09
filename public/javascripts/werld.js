@@ -39,7 +39,7 @@ var Werld = {
     if (supportedType) {
       document.body.appendChild(music);
       music.setAttribute('src', this.sounds.music[supportedType]);
-      //music.addEventListener('canplay', music.play, false);
+      music.addEventListener('canplay', music.play, false);
     }
   },
   messageInputForm: function() {
