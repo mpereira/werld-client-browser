@@ -8,7 +8,7 @@ var Werld = {
     GAME_STARTED: 3
   },
   Config: {
-    messageLifeCycle: 5000
+    MESSAGE_LIFE_CYCLE: 5000
   },
   account: {
     provider: {}

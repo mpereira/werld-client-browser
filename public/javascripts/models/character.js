@@ -33,7 +33,7 @@ Werld.Models.Character.prototype = {
   messagesSweeper: function() {
     var now = new Date();
     this.messages.forEach(function(message) {
-      if ((now.getTime() - message.created_at) > Werld.Config.messageLifeCycle) {
+      if ((now.getTime() - message.created_at) > Werld.Config.MESSAGE_LIFE_CYCLE) {
         this.messages.dequeue();
       }
     }.bind(this));
