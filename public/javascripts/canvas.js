@@ -55,35 +55,40 @@ Werld.canvas = {
     return([x, y]);
   },
   mouseMoveHandler: function(e) {
-    var x;
-    var y;
-    var coordinates;
+    if (Werld.state === Werld.States.SPLASH_SCREEN) {
+      var x;
+      var y;
+      var coordinates;
 
-    coordinates = this.mouseCoordinates(e);
-    x = coordinates[0];
-    y = coordinates[1];
+      coordinates = this.mouseCoordinates(e);
+      x = coordinates[0];
+      y = coordinates[1];
 
-    if (x > 720 && x < 880 && y > 270 && y < 340) {
-      this.signInLinkGradientDrawn = true;
-      this.el.style.cursor = 'pointer';
-    } else {
-      this.signInLinkGradientDrawn = false;
-      this.el.style.cursor = '';
+      if (x > 720 && x < 880 && y > 270 && y < 340) {
+        this.signInLinkGradientDrawn = true;
+        this.el.style.cursor = 'pointer';
+      } else {
+        this.signInLinkGradientDrawn = false;
+        this.el.style.cursor = '';
+      }
     }
   },
   mouseClickHandler: function(e) {
-    var x;
-    var y;
-    var coordinates;
+    if (Werld.state === Werld.States.SPLASH_SCREEN) {
+      var x;
+      var y;
+      var coordinates;
 
-    coordinates = this.mouseCoordinates(e);
-    x = coordinates[0];
-    y = coordinates[1];
+      coordinates = this.mouseCoordinates(e);
+      x = coordinates[0];
+      y = coordinates[1];
 
-    if (x > 720 && x < 880 && y > 270 && y < 340) {
-      var characterNameInputForm = new Werld.Views.CharacterNameInputForm();
-      characterNameInputForm.render();
-      Werld.state = Werld.States.CHOOSING_NAME;
+      if (x > 720 && x < 880 && y > 270 && y < 340) {
+        this.el.style.cursor = '';
+        var characterNameInputForm = new Werld.Views.CharacterNameInputForm();
+        characterNameInputForm.render();
+        Werld.state = Werld.States.CHOOSING_NAME;
+      }
     }
   },
   keyboardHandler: function(event) {
@@ -116,9 +121,11 @@ Werld.canvas = {
       this.loadImages();
 
       this.mapView = new Werld.Views.Map(Werld.map);
-      this.el.addEventListener('mousemove', this.mouseMoveHandler.bind(this), false);
-      this.el.addEventListener('click', this.mouseClickHandler.bind(this), false);
+      $(this.el).mousemove(this.mouseMoveHandler.bind(this));
+      $(this.el).mouseup(this.mouseClickHandler.bind(this));
+      $(this.el).contextmenu(function() { return(false); });
       this.interval = setInterval(this.drawSplashScreen.bind(this), this.FRAME_RATE);
+      Werld.state = Werld.States.SPLASH_SCREEN;
     } else {
       console.log('fail');
     }

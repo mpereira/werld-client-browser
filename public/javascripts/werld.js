@@ -3,7 +3,9 @@ var Werld = {
   Models: {},
   Util: {},
   States: {
-    CHOOSING_NAME: 1
+    SPLASH_SCREEN: 1,
+    CHOOSING_NAME: 2,
+    GAME_STARTED: 3
   },
   Config: {
     messageLifeCycle: 5000
@@ -39,7 +41,7 @@ var Werld = {
     if (supportedType) {
       document.body.appendChild(music);
       music.setAttribute('src', this.sounds.music[supportedType]);
-      music.addEventListener('canplay', music.play, false);
+      //music.addEventListener('canplay', music.play, false);
     }
   },
   messageInputForm: function() {

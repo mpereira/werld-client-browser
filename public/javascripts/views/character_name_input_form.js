@@ -19,6 +19,9 @@ Werld.Views.CharacterNameInputForm = Linchpin.DomView.extend({
 
     $('input', this.el).val('').blur();;
     $(this.el).hide();
+
+    Werld.state = Werld.States.GAME_STARTED;
+
     return(false);
   }
 });
