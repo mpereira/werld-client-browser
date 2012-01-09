@@ -16,25 +16,27 @@ Werld.canvas = {
   drawSplashScreen: function() {
     this.context.drawImage(this.images.splash, 0, 0);
 
-    if (this.signInLinkGradientDrawn) {
-      this.context.fillStyle = this.signInLinkGradient;
-      this.context.globalAlpha = 0.2;
-      this.context.fillRect(0, 0, 640, 480);
-      this.context.globalAlpha = 1;
-    }
+    if (Werld.state !== Werld.States.CHOOSING_NAME) {
+      if (this.signInLinkGradientDrawn) {
+        this.context.fillStyle = this.signInLinkGradient;
+        this.context.globalAlpha = 0.2;
+        this.context.fillRect(0, 0, 640, 480);
+        this.context.globalAlpha = 1;
+      }
 
-    this.context.shadowColor = '#000000';
-    this.context.shadowOffsetX = 4;
-    this.context.shadowOffsetY = 4;
-    this.context.fillStyle = '#dc9a44';
-    this.context.font = '90px "PowellAntique" serif';
-    this.context.textBaseline = 'top';
-    this.context.textAlign = 'center';
-    this.context.fillText('Werld Online', 320, 20);
-    this.context.font = '40px "PowellAntique" serif';
-    this.context.shadowOffsetX = 2;
-    this.context.shadowOffsetY = 2;
-    this.context.fillText('Sign In', 440, 240);
+      this.context.shadowColor = '#000000';
+      this.context.shadowOffsetX = 4;
+      this.context.shadowOffsetY = 4;
+      this.context.fillStyle = '#dc9a44';
+      this.context.font = '90px "PowellAntique" serif';
+      this.context.textBaseline = 'top';
+      this.context.textAlign = 'center';
+      this.context.fillText('Werld Online', 320, 20);
+      this.context.font = '40px "PowellAntique" serif';
+      this.context.shadowOffsetX = 2;
+      this.context.shadowOffsetY = 2;
+      this.context.fillText('Sign In', 440, 240);
+    }
   },
   drawGameScreen: function() {
     this.mapView.draw();
@@ -81,6 +83,7 @@ Werld.canvas = {
     if (x > 720 && x < 880 && y > 270 && y < 340) {
       var characterNameInputForm = new Werld.Views.CharacterNameInputForm();
       characterNameInputForm.render();
+      Werld.state = Werld.States.CHOOSING_NAME;
     }
   },
   keyboardHandler: function(event) {

@@ -2,6 +2,9 @@ var Werld = {
   Views: {},
   Models: {},
   Util: {},
+  States: {
+    CHOOSING_NAME: 1
+  },
   Config: {
     messageLifeCycle: 5000
   },
