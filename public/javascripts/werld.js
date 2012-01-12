@@ -9,8 +9,12 @@ var Werld = {
   },
   Config: {
     MESSAGE_LIFE_CYCLE: 5000,
-    CHARACTER_MOVEMENT_SPEED: 2,
+    CHARACTER_MOVEMENT_SPEED: 4,
     PIXELS_PER_TILE: 40,
+    FRAMES_PER_SECOND: 20,
+    FRAME_RATE: function() {
+      return(Math.floor(1000 / Werld.Config.FRAMES_PER_SECOND));
+    }
   },
   account: {
     provider: {}

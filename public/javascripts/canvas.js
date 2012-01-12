@@ -1,5 +1,4 @@
 Werld.canvas = {
-  FRAME_RATE: 30,
   loadTextures: function(callback) {
     this.textures = {};
     this.textures.tiles = {};
@@ -113,7 +112,7 @@ Werld.canvas = {
       $(this.el).mousemove(this.mouseMoveHandler.bind(this));
       $(this.el).mouseup(this.mouseClickHandler.bind(this));
       $(this.el).contextmenu(function() { return(false); });
-      this.interval = setInterval(this.drawSplashScreen.bind(this), this.FRAME_RATE);
+      this.interval = setInterval(this.drawSplashScreen.bind(this), Werld.Config.FRAME_RATE());
       Werld.state = Werld.States.SPLASH_SCREEN;
     } else {
       console.log('fail');

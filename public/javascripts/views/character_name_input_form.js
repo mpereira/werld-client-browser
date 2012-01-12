@@ -14,7 +14,7 @@ Werld.Views.CharacterNameInputForm = Linchpin.DomView.extend({
     });
     Werld.canvas.characterView = new Werld.Views.Character(Werld.character);
     window.addEventListener('keydown', Werld.canvas.keyboardHandler.bind(Werld.canvas), false);
-    Werld.canvas.interval = setInterval(Werld.canvas.drawGameScreen.bind(Werld.canvas), Werld.canvas.FRAME_RATE);
+    Werld.canvas.interval = setInterval(Werld.canvas.drawGameScreen.bind(Werld.canvas), Werld.Config.FRAME_RATE());
     Werld.canvas.drawGameScreen();
 
     $('input', this.el).val('').blur();;
