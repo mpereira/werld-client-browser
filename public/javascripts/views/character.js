@@ -77,7 +77,8 @@ Werld.Views.Character.prototype = {
     Werld.canvas.context.textAlign = 'center';
     Werld.canvas.context.fillText(this.model.name, this.x + 20, this.y - 30);
     Werld.canvas.context.drawImage(
-      this.spriteSheet, this.currentFrame * 40, this.directionFrame, 40, 40,
+      this.spriteSheet,
+      this.currentFrame * 40, this.directionFrame, 40, 40,
       this.x, this.y, 40, 40
     );
 
@@ -85,11 +86,12 @@ Werld.Views.Character.prototype = {
     Werld.canvas.context.shadowOffsetY = 0;
     Werld.canvas.context.fillStyle = '#cccccc';
     Werld.canvas.context.font = '16px "PowellAntique" serif';
+    var x = this.x;
     var y = this.y;
     this.model.messages.forEach(function(message) {
       if (message.content !== '') {
         y -= 20;
-        Werld.canvas.context.fillText(message.content, this.x + 20, y - 30);
+        Werld.canvas.context.fillText(message.content, x + 20, y - 30);
       }
     });
 
