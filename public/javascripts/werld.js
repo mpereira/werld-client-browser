@@ -63,7 +63,7 @@ var Werld = {
       mapTiles[i] = new Array();
       for (var j = 0; j < 12; j++) {
         mapTiles[i][j] = new Werld.Models.Tile({
-          type: 'grass', coordinates: [i * 40, j * 40]
+          type: (Math.random() > 0.75 ? 'dirt' : 'grass'), coordinates: [i * 40, j * 40]
         });
       }
     }

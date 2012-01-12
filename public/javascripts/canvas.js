@@ -5,6 +5,9 @@ Werld.canvas = {
     this.textures.tiles.grass = new Image();
     this.textures.tiles.grass.src = '../images/textures/tiles/grass.jpg';
     this.textures.tiles.grass.onload = callback;
+    this.textures.tiles.dirt = new Image();
+    this.textures.tiles.dirt.src = '../images/textures/tiles/dirt.jpg';
+    this.textures.tiles.dirt.onload = callback;
   },
   loadImages: function(callback) {
     this.images = {};
