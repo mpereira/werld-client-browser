@@ -1,6 +1,7 @@
 Werld.Views.Map = Backbone.View.extend({
   initialize: function() {
     this.character = this.options.character;
+    this.character.bind('move', this.draw, this);
     this.createTileViews();
   },
   createTileViews: function() {

@@ -1,23 +1,21 @@
-Werld.Views.Character = function(model) {
-  this.model = model;
-  this.x = this.model.column * Werld.Config.PIXELS_PER_TILE;
-  this.y = this.model.row * Werld.Config.PIXELS_PER_TILE;
-  this.destinationX = this.x;
-  this.destinationY = this.y;
-  this.spriteSheet = new Image();
-  this.spriteSheet.src = '/images/sprite_sheets/character.png';
-  this.spriteSheet.onload = this.draw.bind(this);
-  this.currentFrame = 0;
-  this.directionFrame = 0;
-  this.movement = {};
-  $(this.model).bind('move', this.updateDestination.bind(this));
-  $(this.model.messages).bind('add', this.draw.bind(this));
-};
-
-Werld.Views.Character.prototype = {
+Werld.Views.Character = Backbone.View.extend({
+  initialize: function() {
+    this.x = this.model.get('coordinates')[0] * Werld.Config.PIXELS_PER_TILE;
+    this.y = this.model.get('coordinates')[1] * Werld.Config.PIXELS_PER_TILE;
+    this.destinationX = this.x;
+    this.destinationY = this.y;
+    this.spriteSheet = new Image();
+    this.spriteSheet.src = '/images/sprite_sheets/character.png';
+    this.spriteSheet.onload = this.draw.bind(this);
+    this.currentFrame = 0;
+    this.directionFrame = 0;
+    this.movement = {};
+    this.model.bind('move', this.updateDestination, this);
+    $(this.model.messages).bind('add', this.draw.bind(this));
+  },
   updateDestination: function() {
-    this.destinationX = this.model.destinationColumn * Werld.Config.PIXELS_PER_TILE;
-    this.destinationY = this.model.destinationRow * Werld.Config.PIXELS_PER_TILE;
+    this.destinationX = this.model.get('destinationColumn') * Werld.Config.PIXELS_PER_TILE;
+    this.destinationY = this.model.get('destinationRow') * Werld.Config.PIXELS_PER_TILE;
   },
   updateDirectionFrame: function() {
     if (this.movement.directionX === 'left' && this.movement.directionY === 'up') {
@@ -52,7 +50,7 @@ Werld.Views.Character.prototype = {
       this.x += Werld.Config.CHARACTER_MOVEMENT_SPEED;
     } else {
       this.movement.directionX = 'none';
-      this.model.column = Math.floor(this.x / Werld.PIXELS_PER_TILE);
+      this.model.get('coordinates')[0] = Math.floor(this.x / Werld.PIXELS_PER_TILE);
     }
 
     if (this.y > this.destinationY) {
@@ -63,7 +61,7 @@ Werld.Views.Character.prototype = {
       this.y += Werld.Config.CHARACTER_MOVEMENT_SPEED;
     } else {
       this.movement.directionY = 'none';
-      this.model.row = Math.floor(this.y / Werld.PIXELS_PER_TILE);
+      this.model.get('coordinates')[1] = Math.floor(this.y / Werld.PIXELS_PER_TILE);
     }
 
     this.updateDirectionFrame();
@@ -75,7 +73,7 @@ Werld.Views.Character.prototype = {
     Werld.canvas.context.font = '20px "PowellAntique" serif';
     Werld.canvas.context.textBaseline = 'top';
     Werld.canvas.context.textAlign = 'center';
-    Werld.canvas.context.fillText(this.model.name, this.x + 20, this.y - 30);
+    Werld.canvas.context.fillText(this.model.get('name'), this.x + 20, this.y - 30);
     Werld.canvas.context.drawImage(
       this.spriteSheet,
       this.currentFrame * 40, this.directionFrame, 40, 40,
@@ -97,4 +95,4 @@ Werld.Views.Character.prototype = {
 
     this.advanceFrame();
   },
-};
+});

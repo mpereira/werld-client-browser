@@ -12,7 +12,7 @@ Werld.Views.CharacterNameInputForm = Backbone.View.extend({
     Werld.character = new Werld.Models.Character({
       name: $('#character-name-input', this.el).val(), coordinates: [5, 5]
     });
-    Werld.canvas.characterView = new Werld.Views.Character(Werld.character);
+    Werld.canvas.characterView = new Werld.Views.Character({ model: Werld.character });
     var mapTiles = new Array();
     for (var i = 0; i < 100; i++) {
       mapTiles[i] = new Array();
