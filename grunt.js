@@ -22,7 +22,7 @@ config.init({
   lint: {
     files: [
       'grunt.js',
-      'src/*.js'
+      'src/**/*.js'
     ]
   },
 
