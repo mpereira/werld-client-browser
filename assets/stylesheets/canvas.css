@@ -24,6 +24,10 @@ body {
   font-size: 1.2em;
 }
 
+#message-input-form input:focus, #character-name-input-form-wrapper input:focus {
+  outline: none;
+}
+
 #character-name-input-form-wrapper {
   font-size: 1.4em;
 }

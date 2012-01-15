@@ -2,11 +2,12 @@
 
 body {
   background-color: #100800;
-  margin: 1em 0 2em 2em;
+  margin: 0.5em 0 2em 1em;
   width: 1000px;
   color: #dc9a44;
   font-family: 'PowellAntique', Arial, sans-serif;
   float: left;
+  line-height: 1.5;
 }
 
 h1, h2, h3 {
@@ -25,7 +26,7 @@ h3 {
   font-size: 2em;
 }
 
-p, li {
+p {
   font-size: 1.5em;
 }
 
@@ -103,6 +104,10 @@ p, li {
 #coming-soon ul {
   list-style-position: inside;
   list-style-type: square;
+}
+
+#coming-soon ul li p {
+  display: inline;
 }
 
 #footer {

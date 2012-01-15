@@ -90,28 +90,26 @@ Werld.canvas = {
   },
   keyboardHandler: function(event) {
     if (Werld.state === Werld.States.GAME_STARTED) {
-      switch (event.keyCode) {
-      case 13:
+      if (event.keyCode === 13) {
         Werld.messageInputForm().showOrSubmit(event);
-        break;
       }
     }
   },
   init: function() {
     this.el = document.getElementsByTagName('canvas')[0];
-    if (this.context = this.el.getContext('2d')) {
+    this.context = this.el.getContext('2d');
+    if (this.context) {
       this.signInLinkGradient = this.context.createRadialGradient(440, 275, 10, 440, 275, 90);
       this.signInLinkGradient.addColorStop(0.4, '#dc9a44');
       this.signInLinkGradient.addColorStop(1, '#000000');
       this.signInLinkArea = function(coordinates) {
         return(coordinates[0] > 350 && coordinates[0] < 520 &&
                  coordinates[1] > 230 && coordinates[1] < 310);
-      }
+      };
 
       this.loadTextures();
       this.loadImages();
 
-      this.mapView = new Werld.Views.Map(Werld.map);
       $(this.el).mousemove(this.mouseMoveHandler.bind(this));
       $(this.el).mouseup(this.mouseClickHandler.bind(this));
       $(this.el).contextmenu(function() { return(false); });
@@ -121,4 +119,4 @@ Werld.canvas = {
       console.log('fail');
     }
   }
-}
+};

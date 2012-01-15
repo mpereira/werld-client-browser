@@ -1,4 +1,4 @@
-Werld.Views.MessageInputForm = Linchpin.DomView.extend({
+Werld.Views.MessageInputForm = Backbone.View.extend({
   el: '#message-input-form',
   initialize: function() {
     $(this.el).submit(function(event) {

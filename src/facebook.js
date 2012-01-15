@@ -1,6 +1,6 @@
 window.fbAsyncInit = function() {
   FB.init({
-    appId: '262558847140814',
+    appId: '232052313538058',
     status: true,
     cookie: true,
     xfbml: true,
@@ -24,6 +24,7 @@ window.fbAsyncInit = function() {
   }
 
   function updateAuthenticationView(response) {
+    var view = document.getElementById('authentication');
     view.style.display = 'hidden';
 
     if (response.authResponse) {
@@ -64,18 +65,20 @@ window.fbAsyncInit = function() {
             FB.api('/me', facebookGraphApiCallback);
           }
         }, { scope: 'email, publish_stream' });
-      }
+      };
     }
   }
 
-  var view = document.getElementById('authentication');
   FB.getLoginStatus(updateAuthenticationView);
   FB.Event.subscribe('auth.statusChange', updateAuthenticationView);
 };
 
 (function(d) {
-  var js, id = 'facebook-jssdk'; if (d.getElementById(id)) {return;}
-  js = d.createElement('script'); js.id = id; js.async = true;
+  var js, id = 'facebook-jssdk';
+  if (d.getElementById(id)) { return; }
+  js = d.createElement('script');
+  js.id = id;
+  js.async = true;
   js.src = '//connect.facebook.net/en_US/all.js';
   d.getElementsByTagName('head')[0].appendChild(js);
 }(document));

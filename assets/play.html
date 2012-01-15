@@ -1,14 +1,19 @@
-<!DOCTYPE html>
+<!doctype html>
+<!--[if lt IE 7]> <html class='no-js lt-ie9 lt-ie8 lt-ie7' lang='en'> <![endif]-->
+<!--[if IE 7]>    <html class='no-js lt-ie9 lt-ie8' lang='en'> <![endif]-->
+<!--[if IE 8]>    <html class='no-js lt-ie9' lang='en'> <![endif]-->
+<!--[if gt IE 8]><!--> <html class='no-js' lang='en'> <!--<![endif]-->
 <html xmlns:fb='https://www.facebook.com/2008/fbml'>
   <head>
-    <meta http-equiv='content-type' content='text/html; charset=utf-8'>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
     <title>Werld Online</title>
-    <link href='stylesheets/reset.css' rel='stylesheet' type='text/css'>
-    <link href='stylesheets/webfonts.css' rel='stylesheet' type='text/css'>
-    <link href='stylesheets/canvas.css' rel='stylesheet' type='text/css'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <link href='stylesheets/play.css' rel='stylesheet' type='text/css'>
     <link rel='shortcut icon' href='favicon.ico'>
   </head>
   <body>
+    <div id='fb-root'></div>
     <div id='canvas-wrapper'>
       <canvas width='640' height='480'></canvas>
     </div>
@@ -35,19 +40,7 @@
         <!--var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);-->
       <!--})();-->
     <!--</script>-->
-    <script src='javascripts/lib/jquery.js'></script>
-    <script src='javascripts/lib/underscore.js'></script>
-    <script src='javascripts/lib/linchpin.js'></script>
-    <script src='javascripts/werld.js'></script>
-    <script src='javascripts/util.js'></script>
-    <script src='javascripts/canvas.js'></script>
-    <script src='javascripts/views/character.js'></script>
-    <script src='javascripts/models/character.js'></script>
-    <script src='javascripts/models/tile.js'></script>
-    <script src='javascripts/views/tile.js'></script>
-    <script src='javascripts/views/message_input_form.js'></script>
-    <script src='javascripts/views/character_name_input_form.js'></script>
-    <script src='javascripts/models/map.js'></script>
-    <script src='javascripts/views/map.js'></script>
+    <script src='javascripts/libs.js'></script>
+    <script src='javascripts/app.js'></script>
   </body>
 </html>

@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+var express = require('express');
+var server = express.createServer();
+var port = 9000;
+
+var baseDirectory = './dist/' + (process.argv[2] === 'production' ? 'production' : 'development');
+
+server.use('/javascripts', express.static(baseDirectory + '/javascripts'));
+server.use('/stylesheets', express.static(baseDirectory + '/stylesheets'));
+server.use('/images', express.static(baseDirectory + '/images'));
+server.use('/sounds', express.static(baseDirectory + '/sounds'));
+server.use('/webfonts', express.static(baseDirectory + '/webfonts'));
+
+server.use(express.favicon(baseDirectory + '/favicon.ico'));
+
+server.get('/', function(request, result) {
+  fs.createReadStream(baseDirectory + '/index.html').pipe(result);
+});
+
+server.get('/play', function(request, result) {
+  fs.createReadStream(baseDirectory + '/play.html').pipe(result);
+});
+
+server.listen(port);
+console.log('Server listening on http://www.werldonline.lan:' + port);

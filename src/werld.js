@@ -58,16 +58,6 @@ var Werld = {
   },
   init: function() {
     this.loadSounds();
-    var mapTiles = new Array();
-    for (var i = 0; i < 16; i++) {
-      mapTiles[i] = new Array();
-      for (var j = 0; j < 12; j++) {
-        mapTiles[i][j] = new Werld.Models.Tile({
-          type: (Math.random() > 0.75 ? 'dirt' : 'grass'), coordinates: [i * 40, j * 40]
-        });
-      }
-    }
-    this.map = new Werld.Models.Map(mapTiles);
     this.canvas.init();
   }
 };

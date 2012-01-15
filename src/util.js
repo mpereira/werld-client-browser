@@ -8,8 +8,8 @@ Werld.util = {
 };
 
 Werld.Util.Queue = function() {
-  this.elements = new Array();
-}
+  this.elements = [];
+};
 
 Werld.Util.Queue.prototype = {
   enqueue: function(element) {
@@ -27,4 +27,4 @@ Werld.Util.Queue.prototype = {
   size: function() {
     return(this.elements.length);
   }
-}
+};
