@@ -1,5 +1,9 @@
 Werld.Views.Map = Backbone.View.extend({
   initialize: function() {
+    this.character = this.options.character;
+    this.createTileViews();
+  },
+  createTileViews: function() {
     this.tileViews = new Array();
     var self = this;
     this.model.get('tiles').forEach(function(tileArray) {

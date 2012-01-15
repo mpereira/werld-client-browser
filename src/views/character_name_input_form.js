@@ -22,15 +22,15 @@ Werld.Views.CharacterNameInputForm = Backbone.View.extend({
         });
       }
     }
-    Werld.map = new Werld.Models.Map({
-      tiles: mapTiles, character: Werld.character
+    Werld.map = new Werld.Models.Map({ tiles: mapTiles });
+    Werld.canvas.mapView = new Werld.Views.Map({
+      model: Werld.map, character: Werld.character
     });
-    Werld.canvas.mapView = new Werld.Views.Map({ model: Werld.map });
     window.addEventListener('keydown', Werld.canvas.keyboardHandler.bind(Werld.canvas), false);
     Werld.canvas.interval = setInterval(Werld.canvas.drawGameScreen.bind(Werld.canvas), Werld.Config.FRAME_RATE());
     Werld.canvas.drawGameScreen();
 
-    $('input', this.el).val('').blur();;
+    $('input', this.el).val('').blur();
     $(this.el).hide();
 
     Werld.state = Werld.States.GAME_STARTED;
