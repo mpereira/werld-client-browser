@@ -1,16 +1,20 @@
 Werld.Views.Screen = Backbone.View.extend({
   initialize: function() {
     this.model.bind('change:coordinates', this.draw, this);
-    this.createTileViews();
+    this.createMapTileViews();
   },
-  createTileViews: function() {
-    this.tileViews = new Array();
-    var self = this;
-    this.model.get('map').get('tiles').forEach(function(tileArray) {
-      tileArray.forEach(function(tile) {
-        self.tileViews.push(new Werld.Views.Tile({ model: tile }));
-      });
-    });
+  createMapTileViews: function() {
+    var mapTiles = this.model.get('map').get('tiles');
+
+    this.mapTileViews = [];
+    for (var i = 0; i < mapTiles.length; i++) {
+      this.mapTileViews[i] = [];
+      for (var j = 0; j < mapTiles[i].length; j++) {
+        this.mapTileViews[i][j] = new Werld.Views.Tile({
+          model: mapTiles[i][j]
+        });
+      }
+    }
   },
   draw: function() {
     var mapTiles = this.model.get('map').get('tiles');
@@ -23,10 +27,7 @@ Werld.Views.Screen = Backbone.View.extend({
 
         if (screenColumn > 0 && screenColumn < Werld.Config.WORLD_MAP_WIDTH &&
               screenRow > 0 && screenRow < Werld.Config.WORLD_MAP_HEIGHT) {
-          // TODO: Get tile view from the tile views already instantiated.
-          (new Werld.Views.Tile({
-            model: mapTiles[screenColumn][screenRow]
-          })).draw([i, j]);
+          this.mapTileViews[screenColumn][screenRow].draw([i, j]);
         } else {
           Werld.canvas.context.fillStyle = 'black';
           Werld.canvas.context.fillRect(
