@@ -41,7 +41,7 @@ Werld.canvas = {
     }
   },
   drawGameScreen: function() {
-    this.mapView.draw();
+    this.screenView.draw();
     this.characterView.draw();
   },
   mouseCoordinates: function(e) {

@@ -1,13 +1,11 @@
-Werld.Views.Tile = function(model) {
-  this.model = model;
-}
-
-Werld.Views.Tile.prototype = {
-  draw: function() {
-    Werld.canvas.context.drawImage(Werld.canvas.textures.tiles[this.model.type],
-                                   this.model.coordinates[0],
-                                   this.model.coordinates[1],
-                                   40,
-                                   40);
+Werld.Views.Tile = Backbone.View.extend({
+  draw: function(coordinates) {
+    Werld.canvas.context.drawImage(
+      Werld.canvas.textures.tiles[this.model.get('type')],
+      coordinates[0] * Werld.Config.PIXELS_PER_TILE,
+      coordinates[1] * Werld.Config.PIXELS_PER_TILE,
+      Werld.Config.PIXELS_PER_TILE,
+      Werld.Config.PIXELS_PER_TILE
+    );
   }
-}
+});

@@ -1,8 +1,7 @@
 Werld.Models.Character = Backbone.Model.extend({
   initialize: function() {
     this.messages = new Werld.Util.Queue();
-    this.row = this.get('coordinates')[0];
-    this.column = this.get('coordinates')[1];
+    this.set({ fixedCoordinates: this.get('coordinates') });
     $(this.messages).bind('add', this.messagesSweeper.bind(this));
     this.messagesSweeperIntervalId = setInterval(this.messagesSweeper.bind(this), 1000);
   },
@@ -12,10 +11,16 @@ Werld.Models.Character = Backbone.Model.extend({
     $(this.messages).trigger('add');
   },
   moveTo: function(coordinates) {
+    var screenDestinationColumn = Math.floor(coordinates[0] / Werld.Config.PIXELS_PER_TILE);
+    var screenDestinationRow = Math.floor(coordinates[1] / Werld.Config.PIXELS_PER_TILE);
+    var columnOffset = screenDestinationColumn - this.get('fixedCoordinates')[0];
+    var rowOffset = screenDestinationRow - this.get('fixedCoordinates')[1];
+
     this.set({
-      destinationColumn: Math.floor(coordinates[0] / Werld.Config.PIXELS_PER_TILE),
-      destinationRow: Math.floor(coordinates[1] / Werld.Config.PIXELS_PER_TILE)
+      destinationColumn: this.get('coordinates')[0] + columnOffset,
+      destinationRow: this.get('coordinates')[1] + rowOffset
     });
+
     this.trigger('move');
   },
   messagesSweeper: function() {

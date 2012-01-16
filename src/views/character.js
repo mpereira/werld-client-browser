@@ -4,6 +4,8 @@ Werld.Views.Character = Backbone.View.extend({
     this.y = this.model.get('coordinates')[1] * Werld.Config.PIXELS_PER_TILE;
     this.destinationX = this.x;
     this.destinationY = this.y;
+    this.fixedX = this.x;
+    this.fixedY = this.y;
     this.spriteSheet = new Image();
     this.spriteSheet.src = '/images/sprite_sheets/character.png';
     this.spriteSheet.onload = this.draw.bind(this);
@@ -50,7 +52,6 @@ Werld.Views.Character = Backbone.View.extend({
       this.x += Werld.Config.CHARACTER_MOVEMENT_SPEED;
     } else {
       this.movement.directionX = 'none';
-      this.model.get('coordinates')[0] = Math.floor(this.x / Werld.PIXELS_PER_TILE);
     }
 
     if (this.y > this.destinationY) {
@@ -61,8 +62,15 @@ Werld.Views.Character = Backbone.View.extend({
       this.y += Werld.Config.CHARACTER_MOVEMENT_SPEED;
     } else {
       this.movement.directionY = 'none';
-      this.model.get('coordinates')[1] = Math.floor(this.y / Werld.PIXELS_PER_TILE);
     }
+
+    var model = this.model;
+    this.model.set({
+      coordinates: [
+        Math.floor(this.x / Werld.Config.PIXELS_PER_TILE),
+        Math.floor(this.y / Werld.Config.PIXELS_PER_TILE)
+      ]
+    });
 
     this.updateDirectionFrame();
 
@@ -73,19 +81,19 @@ Werld.Views.Character = Backbone.View.extend({
     Werld.canvas.context.font = '20px "PowellAntique" serif';
     Werld.canvas.context.textBaseline = 'top';
     Werld.canvas.context.textAlign = 'center';
-    Werld.canvas.context.fillText(this.model.get('name'), this.x + 20, this.y - 30);
+    Werld.canvas.context.fillText(this.model.get('name'), this.fixedX + 20, this.fixedY - 30);
     Werld.canvas.context.drawImage(
       this.spriteSheet,
       this.currentFrame * 40, this.directionFrame, 40, 40,
-      this.x, this.y, 40, 40
+      this.fixedX, this.fixedY, 40, 40
     );
 
     Werld.canvas.context.shadowOffsetX = 0;
     Werld.canvas.context.shadowOffsetY = 0;
     Werld.canvas.context.fillStyle = '#cccccc';
     Werld.canvas.context.font = '16px "PowellAntique" serif';
-    var x = this.x;
-    var y = this.y;
+    var x = this.fixedX;
+    var y = this.fixedY;
     this.model.messages.forEach(function(message) {
       if (message.content !== '') {
         y -= 20;
@@ -94,5 +102,5 @@ Werld.Views.Character = Backbone.View.extend({
     });
 
     this.advanceFrame();
-  },
+  }
 });
