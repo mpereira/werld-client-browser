@@ -1,12 +1,13 @@
 Werld.Views.MessageInputForm = Backbone.View.extend({
   el: '#message-input-form',
   initialize: function() {
+    var self = this;
     $(this.el).submit(function(event) {
-      Werld.character.say($('input', this.el).val());
-      $('input', this.el).val('').blur();
-      $(this.el).hide();
+      Werld.character.say($('input', self.el).val());
+      $('input', self.el).val('').blur();
+      $(self.el).hide();
       return(false);
-    }.bind(this));
+    });
     return(this);
   },
   showOrSubmit: function(event) {

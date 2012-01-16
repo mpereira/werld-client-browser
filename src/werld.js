@@ -150,10 +150,12 @@ var Werld = {
 
   },
   init: function() {
-    Werld.switchState(Werld.States.INIT);
+    this.switchState(Werld.States.INIT);
     this.loadSounds();
     this.canvas.init();
   }
 };
 
-window.onload = Werld.init.bind(Werld);
+$(function() {
+  Werld.init();
+});

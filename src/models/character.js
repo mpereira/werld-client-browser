@@ -3,7 +3,9 @@ Werld.Models.Character = Backbone.Model.extend({
     this.messages = new Werld.Util.Queue();
     this.set({ fixedCoordinates: this.get('coordinates') });
     $(this.messages).bind('add', this.messagesSweeper.bind(this));
-    this.messagesSweeperIntervalId = setInterval(this.messagesSweeper.bind(this), 1000);
+    this.messagesSweeperIntervalId = setInterval(
+      _.bind(this.messagesSweeper, this), 1000
+    );
   },
   say: function(message) {
     var now = new Date();
@@ -39,10 +41,11 @@ Werld.Models.Character = Backbone.Model.extend({
   },
   messagesSweeper: function() {
     var now = new Date();
+    var self = this;
     this.messages.forEach(function(message) {
       if ((now.getTime() - message.created_at) > Werld.Config.MESSAGE_LIFE_CYCLE) {
-        this.messages.dequeue();
+        self.messages.dequeue();
       }
-    }.bind(this));
+    });
   }
 });
