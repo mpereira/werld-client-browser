@@ -3,9 +3,10 @@ var Werld = {
   Models: {},
   Util: {},
   States: {
-    SPLASH_SCREEN: 1,
-    CHOOSING_NAME: 2,
-    GAME_STARTED: 3
+    INIT: 1,
+    SPLASH_SCREEN: 2,
+    CHOOSING_NAME: 3,
+    GAME_STARTED: 4
   },
   Config: {
     WORLD_MAP_WIDTH: 20,
@@ -60,7 +61,96 @@ var Werld = {
     }
     return(this.messageInputView);
   },
+  switchState: function(state, data) {
+    if (Werld.state === Werld.States.INIT) {
+      if (state === Werld.States.SPLASH_SCREEN) {
+        $(Werld.canvas.el).mousemove(
+          _.bind(Werld.canvas.mouseMoveHandler, Werld.canvas)
+        );
+
+        $(Werld.canvas.el).mouseup(
+          _.bind(Werld.canvas.mouseClickHandler, Werld.canvas)
+        );
+
+        $(window).contextmenu(function() {
+          return(false);
+        });
+
+        clearInterval(Werld.canvas.interval);
+        Werld.canvas.interval = setInterval(
+          _.bind(Werld.canvas.drawSplashScreen, Werld.canvas),
+          Werld.Config.FRAME_RATE()
+        );
+
+        Werld.state = Werld.States.SPLASH_SCREEN;
+      }
+    } else if (Werld.state === Werld.States.SPLASH_SCREEN) {
+      if (state === Werld.States.CHOOSING_NAME) {
+        var characterNameInputForm = new Werld.Views.CharacterNameInputForm();
+        characterNameInputForm.render();
+        Werld.state = Werld.States.CHOOSING_NAME;
+      }
+    } else if (Werld.state === Werld.States.CHOOSING_NAME) {
+      if (state === Werld.States.GAME_STARTED) {
+        clearInterval(Werld.canvas.interval);
+
+        Werld.character = new Werld.Models.Character({
+          name: data.character.name,
+          coordinates: [
+            Math.floor(Werld.Config.SCREEN_WIDTH / 2),
+            Math.floor(Werld.Config.SCREEN_HEIGHT / 2)
+          ]
+        });
+
+        Werld.canvas.characterView = new Werld.Views.Character({
+          model: Werld.character
+        });
+
+        var mapTiles = [];
+        for (var i = 0; i < Werld.Config.WORLD_MAP_WIDTH; i++) {
+          mapTiles[i] = [];
+          for (var j = 0; j < Werld.Config.WORLD_MAP_HEIGHT; j++) {
+            mapTiles[i][j] = new Werld.Models.Tile({
+              type: (Math.random() > 0.75 ? 'dirt' : 'grass'), coordinates: [i, j]
+            });
+          }
+        }
+
+        Werld.map = new Werld.Models.Map({ tiles: mapTiles });
+
+        Werld.screen = new Werld.Models.Screen({
+          map: Werld.map,
+          character: Werld.character,
+          width: Werld.Config.SCREEN_WIDTH,
+          height: Werld.Config.SCREEN_HEIGHT,
+          coordinates: [0, 0]
+        });
+
+        Werld.canvas.screenView = new Werld.Views.Screen({
+          model: Werld.screen
+        });
+
+        window.addEventListener(
+          'keydown', _.bind(Werld.canvas.keyboardHandler, Werld.canvas), false
+        );
+
+        Werld.canvas.interval = setInterval(
+          _.bind(Werld.canvas.drawGameScreen, Werld.canvas),
+          Werld.Config.FRAME_RATE()
+        );
+        Werld.canvas.drawGameScreen();
+
+        Werld.state = Werld.States.GAME_STARTED;
+      }
+    } else {
+      if (state === Werld.States.INIT) {
+        Werld.state = Werld.States.INIT;
+      }
+    }
+
+  },
   init: function() {
+    Werld.switchState(Werld.States.INIT);
     this.loadSounds();
     this.canvas.init();
   }

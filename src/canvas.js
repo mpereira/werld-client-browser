@@ -78,9 +78,7 @@ Werld.canvas = {
     if (Werld.state === Werld.States.SPLASH_SCREEN) {
       if (this.signInLinkArea(coordinates)) {
         this.el.style.cursor = '';
-        var characterNameInputForm = new Werld.Views.CharacterNameInputForm();
-        characterNameInputForm.render();
-        Werld.state = Werld.States.CHOOSING_NAME;
+        Werld.switchState(Werld.States.CHOOSING_NAME);
       }
     } else if (Werld.state === Werld.States.GAME_STARTED) {
       if (e.which === 3) {
@@ -110,11 +108,7 @@ Werld.canvas = {
       this.loadTextures();
       this.loadImages();
 
-      $(this.el).mousemove(this.mouseMoveHandler.bind(this));
-      $(this.el).mouseup(this.mouseClickHandler.bind(this));
-      $(this.el).contextmenu(function() { return(false); });
-      this.interval = setInterval(this.drawSplashScreen.bind(this), Werld.Config.FRAME_RATE());
-      Werld.state = Werld.States.SPLASH_SCREEN;
+      Werld.switchState(Werld.States.SPLASH_SCREEN);
     } else {
       console.log('fail');
     }
