@@ -147,7 +147,6 @@ var Werld = {
         Werld.state = Werld.States.INIT;
       }
     }
-
   },
   init: function() {
     this.switchState(Werld.States.INIT);
