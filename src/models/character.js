@@ -15,10 +15,24 @@ Werld.Models.Character = Backbone.Model.extend({
     var screenDestinationRow = Math.floor(coordinates[1] / Werld.Config.PIXELS_PER_TILE);
     var columnOffset = screenDestinationColumn - this.get('fixedCoordinates')[0];
     var rowOffset = screenDestinationRow - this.get('fixedCoordinates')[1];
+    var destinationColumn = this.get('coordinates')[0] + columnOffset;
+    var destinationRow = this.get('coordinates')[1] + rowOffset;
+
+    if (destinationColumn < 0) {
+      destinationColumn = 0;
+    } else if (destinationColumn >= Werld.Config.WORLD_MAP_WIDTH) {
+      destinationColumn = Werld.Config.WORLD_MAP_WIDTH - 1;
+    }
+
+    if (destinationRow < 0) {
+      destinationRow = 0;
+    } else if (destinationRow >= Werld.Config.WORLD_MAP_HEIGHT) {
+      destinationRow = Werld.Config.WORLD_MAP_HEIGHT - 1;
+    }
 
     this.set({
-      destinationColumn: this.get('coordinates')[0] + columnOffset,
-      destinationRow: this.get('coordinates')[1] + rowOffset
+      destinationColumn: destinationColumn,
+      destinationRow: destinationRow
     });
 
     this.trigger('move');
