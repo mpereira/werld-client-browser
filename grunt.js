@@ -27,7 +27,12 @@ config.init({
   },
 
   concat: {
-    'dist/development/javascripts/libs.js': ['vendor/javascripts/*.js'],
+    'dist/development/javascripts/libs.js': [
+      'vendor/javascripts/underscore-*.js',
+      'vendor/javascripts/jquery-*.js',
+      'vendor/javascripts/backbone-*.js',
+      'vendor/javascripts/jquery.cross-slide-*.js'
+    ],
     'dist/development/javascripts/app.js': ['src/werld.js', 'src/**/*.js'],
     'dist/development/stylesheets/index.css': [
       'vendor/stylesheets/*.css',
