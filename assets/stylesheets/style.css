@@ -51,43 +51,67 @@ p {
   width: 100%;
 }
 
-#authentication {
+#account-bar {
   float: left;
   width: 100%;
 }
 
-#authentication a, #authentication p {
+#account-bar a, #account-bar p {
   font-size: 1.2em;
 }
 
-#authentication a {
+#account-bar a {
   cursor: pointer;
 }
 
-#authentication a:hover {
+#account-bar a:hover {
   text-decoration: underline;
 }
 
 #account {
-  width: 70%;
+  width: 100%;
 }
 
 #account-picture {
-  width: 15%;
   float: left;
+  width: 35px;
 }
 
 #account-name {
-  width: 70%;
+  float: left;
+  width: 50%;
+  white-space: nowrap;
   margin: 0 0.5em;
   padding-right: 0.5em;
-  float: left;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-#fb-auth {
+#facebook-login:link,
+#facebook-login:visited,
+#facebook-login:active,
+#facebook-login {
+  font-size: 1.5em;
+  width: 100%;
+  text-align: center;
+  display: block;
+  text-decoration: none;
+  color: #dc9a44;
+}
+
+#facebook-logout:link,
+#facebook-logout:visited,
+#facebook-logout:active,
+#facebook-logout {
+  text-decoration: none;
+  font-size: 1.2em;
+  color: #dc9a44;
   float: right;
+}
+
+#facebook-login:hover,
+#facebook-logout:hover {
+  text-decoration: underline;
 }
 
 #pitch,

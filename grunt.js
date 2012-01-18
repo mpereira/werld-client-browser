@@ -33,7 +33,15 @@ config.init({
       'vendor/javascripts/backbone-*.js',
       'vendor/javascripts/jquery.cross-slide-*.js'
     ],
-    'dist/development/javascripts/app.js': ['src/werld.js', 'src/**/*.js'],
+    'dist/development/javascripts/app.js': [
+      'src/werld.js',
+      'src/**/*.js'
+    ],
+    'dist/development/javascripts/index.js': [
+      'src/index.js',
+      'src/screenshot_slides.js',
+      'src/facebook.js'
+    ],
     'dist/development/stylesheets/index.css': [
       'vendor/stylesheets/*.css',
       'assets/stylesheets/webfonts.css',
@@ -53,6 +61,7 @@ config.init({
   min: {
     'dist/production/javascripts/libs.js': ['dist/development/javascripts/libs.js'],
     'dist/production/javascripts/app.js': ['dist/development/javascripts/app.js'],
+    'dist/production/javascripts/index.js': ['dist/development/javascripts/index.js'],
     'dist/production/javascripts/templates.js': ['dist/development/javascripts/templates.js']
   },
 
