@@ -33,9 +33,13 @@ config.init({
       'vendor/javascripts/backbone-*.js',
       'vendor/javascripts/jquery.cross-slide-*.js'
     ],
-    'dist/development/javascripts/app.js': [
+    'dist/development/javascripts/play.js': [
       'src/werld.js',
-      'src/**/*.js'
+      'src/canvas.js',
+      'src/util.js',
+      'src/models/*.js',
+      'src/collections/*.js',
+      'src/views/*.js'
     ],
     'dist/development/javascripts/index.js': [
       'src/index.js',
@@ -60,7 +64,7 @@ config.init({
 
   min: {
     'dist/production/javascripts/libs.js': ['dist/development/javascripts/libs.js'],
-    'dist/production/javascripts/app.js': ['dist/development/javascripts/app.js'],
+    'dist/production/javascripts/play.js': ['dist/development/javascripts/play.js'],
     'dist/production/javascripts/index.js': ['dist/development/javascripts/index.js'],
     'dist/production/javascripts/templates.js': ['dist/development/javascripts/templates.js']
   },

@@ -3,7 +3,7 @@
 body {
   background-color: #100800;
   margin: 0.5em 0 2em 1em;
-  width: 1000px;
+  width: 1068px;
   color: #dc9a44;
   font-family: 'PowellAntique', Arial, sans-serif;
   float: left;
@@ -39,7 +39,8 @@ p {
 }
 
 .right-column {
-  width: 280px;
+  width: 300px;
+  margin-left: 1em;
 }
 
 .both-columns {
@@ -112,6 +113,10 @@ p {
 #facebook-login:hover,
 #facebook-logout:hover {
   text-decoration: underline;
+}
+
+#facebook-like-box {
+  float: right;
 }
 
 #pitch,
