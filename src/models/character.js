@@ -13,8 +13,10 @@ Werld.Models.Character = Backbone.Model.extend({
     $(this.messages).trigger('add');
   },
   moveTo: function(coordinates) {
-    var screenDestinationColumn = Math.floor(coordinates[0] / Werld.Config.PIXELS_PER_TILE);
-    var screenDestinationRow = Math.floor(coordinates[1] / Werld.Config.PIXELS_PER_TILE);
+    var screenDestinationColumn =
+      Math.floor(coordinates[0] / Werld.Config.PIXELS_PER_TILE);
+    var screenDestinationRow =
+      Math.floor(coordinates[1] / Werld.Config.PIXELS_PER_TILE);
     var columnOffset = screenDestinationColumn - this.get('fixedCoordinates')[0];
     var rowOffset = screenDestinationRow - this.get('fixedCoordinates')[1];
     var destinationColumn = this.get('coordinates')[0] + columnOffset;

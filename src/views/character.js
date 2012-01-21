@@ -6,12 +6,14 @@ Werld.Views.Character = Backbone.View.extend({
     this.destinationY = this.y;
     this.fixedX = this.x;
     this.fixedY = this.y;
-    this.spriteSheet = new Image();
-    this.spriteSheet.src = '/images/sprite_sheets/character.png';
-    this.spriteSheet.onload = _.bind(this.draw, this);
-    this.currentSpriteFrame = 0;
-    this.currentSpritePartialFrame = 0;
-    this.directionFrame = 0;
+    this.sprite = {
+      frame: 0,
+      partialFrame: 0,
+      directionFrame: 0
+    },
+    this.sprite.sheet = new Image();
+    this.sprite.sheet.src = '/images/sprite_sheets/character.png';
+    this.sprite.sheet.onload = _.bind(this.draw, this);
     this.movement = {};
     this.model.bind('move', this.updateDestination, this);
     $(this.model.messages).bind('add', this.draw.bind(this));
@@ -23,44 +25,44 @@ Werld.Views.Character = Backbone.View.extend({
   updateDirectionFrame: function() {
     if (this.movement.directionX === 'left' &&
           this.movement.directionY === 'up') {
-      this.directionFrame = 120;
+      this.sprite.directionFrame = 120;
     } else if (this.movement.directionX === 'left' &&
                  this.movement.directionY === 'down') {
-      this.directionFrame = 0;
+      this.sprite.directionFrame = 0;
     } else if (this.movement.directionX === 'left' &&
                  this.movement.directionY === 'none') {
-      this.directionFrame = 40;
+      this.sprite.directionFrame = 40;
     } else if (this.movement.directionX === 'right' &&
                  this.movement.directionY === 'up') {
-      this.directionFrame = 120;
+      this.sprite.directionFrame = 120;
     } else if (this.movement.directionX === 'right' &&
                  this.movement.directionY === 'down') {
-      this.directionFrame = 0;
+      this.sprite.directionFrame = 0;
     } else if (this.movement.directionX === 'right' &&
                  this.movement.directionY === 'none') {
-      this.directionFrame = 80;
+      this.sprite.directionFrame = 80;
     } else if (this.movement.directionX === 'none' &&
                  this.movement.directionY === 'up') {
-      this.directionFrame = 120;
+      this.sprite.directionFrame = 120;
     } else if (this.movement.directionX === 'none' &&
                  this.movement.directionY === 'down') {
-      this.directionFrame = 0;
+      this.sprite.directionFrame = 0;
     }
   },
   advanceFrame: function() {
     if (this.movement.directionX === 'none' &&
           this.movement.directionY === 'none') {
-      this.currentSpriteFrame = 0;
+      this.sprite.frame = 0;
     } else {
-      this.currentSpritePartialFrame +=
+      this.sprite.partialFrame +=
         Werld.Config.CHARACTER_MOVEMENT_FRAME_SPEED;
-      if (this.currentSpritePartialFrame >=
+      if (this.sprite.partialFrame >=
             Werld.Config.CHARACTER_SPRITES_NUMBER) {
-        this.currentSpritePartialFrame -=
+        this.sprite.partialFrame -=
           (Werld.Config.CHARACTER_SPRITES_NUMBER - 1);
       }
 
-      this.currentSpriteFrame = Math.floor(this.currentSpritePartialFrame);
+      this.sprite.frame = Math.floor(this.sprite.partialFrame);
     }
   },
   draw: function() {
@@ -104,8 +106,8 @@ Werld.Views.Character = Backbone.View.extend({
       this.model.get('name'), this.fixedX + 20, this.fixedY - 30
     );
     Werld.canvas.context.drawImage(
-      this.spriteSheet,
-      this.currentSpriteFrame * 40, this.directionFrame, 40, 40,
+      this.sprite.sheet,
+      this.sprite.frame * 40, this.sprite.directionFrame, 40, 40,
       this.fixedX, this.fixedY, 40, 40
     );
 
