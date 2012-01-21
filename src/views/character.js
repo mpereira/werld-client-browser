@@ -20,26 +20,35 @@ Werld.Views.Character = Backbone.View.extend({
     this.destinationY = this.model.get('destinationRow') * Werld.Config.PIXELS_PER_TILE;
   },
   updateDirectionFrame: function() {
-    if (this.movement.directionX === 'left' && this.movement.directionY === 'up') {
+    if (this.movement.directionX === 'left' &&
+          this.movement.directionY === 'up') {
       this.directionFrame = 120;
-    } else if (this.movement.directionX === 'left' && this.movement.directionY === 'down') {
+    } else if (this.movement.directionX === 'left' &&
+                 this.movement.directionY === 'down') {
       this.directionFrame = 0;
-    } else if (this.movement.directionX === 'left' && this.movement.directionY === 'none') {
+    } else if (this.movement.directionX === 'left' &&
+                 this.movement.directionY === 'none') {
       this.directionFrame = 40;
-    } else if (this.movement.directionX === 'right' && this.movement.directionY === 'up') {
+    } else if (this.movement.directionX === 'right' &&
+                 this.movement.directionY === 'up') {
       this.directionFrame = 120;
-    } else if (this.movement.directionX === 'right' && this.movement.directionY === 'down') {
+    } else if (this.movement.directionX === 'right' &&
+                 this.movement.directionY === 'down') {
       this.directionFrame = 0;
-    } else if (this.movement.directionX === 'right' && this.movement.directionY === 'none') {
+    } else if (this.movement.directionX === 'right' &&
+                 this.movement.directionY === 'none') {
       this.directionFrame = 80;
-    } else if (this.movement.directionX === 'none' && this.movement.directionY === 'up') {
+    } else if (this.movement.directionX === 'none' &&
+                 this.movement.directionY === 'up') {
       this.directionFrame = 120;
-    } else if (this.movement.directionX === 'none' && this.movement.directionY === 'down') {
+    } else if (this.movement.directionX === 'none' &&
+                 this.movement.directionY === 'down') {
       this.directionFrame = 0;
     }
   },
   advanceFrame: function() {
-    if (this.movement.directionX !== 'none' || this.movement.directionY !== 'none') {
+    if (this.movement.directionX !== 'none' ||
+          this.movement.directionY !== 'none') {
       this.currentFrame = this.currentFrame > 2 ? 0 : (this.currentFrame + 1);
     }
   },
@@ -64,11 +73,10 @@ Werld.Views.Character = Backbone.View.extend({
       this.movement.directionY = 'none';
     }
 
-    var model = this.model;
     this.model.set({
       coordinates: [
-        Math.floor(this.x / Werld.Config.PIXELS_PER_TILE),
-        Math.floor(this.y / Werld.Config.PIXELS_PER_TILE)
+        this.x / Werld.Config.PIXELS_PER_TILE,
+        this.y / Werld.Config.PIXELS_PER_TILE
       ]
     });
 
@@ -81,7 +89,9 @@ Werld.Views.Character = Backbone.View.extend({
     Werld.canvas.context.font = '20px "PowellAntique" serif';
     Werld.canvas.context.textBaseline = 'top';
     Werld.canvas.context.textAlign = 'center';
-    Werld.canvas.context.fillText(this.model.get('name'), this.fixedX + 20, this.fixedY - 30);
+    Werld.canvas.context.fillText(
+      this.model.get('name'), this.fixedX + 20, this.fixedY - 30
+    );
     Werld.canvas.context.drawImage(
       this.spriteSheet,
       this.currentFrame * 40, this.directionFrame, 40, 40,
