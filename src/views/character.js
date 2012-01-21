@@ -9,7 +9,8 @@ Werld.Views.Character = Backbone.View.extend({
     this.spriteSheet = new Image();
     this.spriteSheet.src = '/images/sprite_sheets/character.png';
     this.spriteSheet.onload = _.bind(this.draw, this);
-    this.currentFrame = 0;
+    this.currentSpriteFrame = 0;
+    this.currentSpritePartialFrame = 0;
     this.directionFrame = 0;
     this.movement = {};
     this.model.bind('move', this.updateDestination, this);
@@ -47,9 +48,19 @@ Werld.Views.Character = Backbone.View.extend({
     }
   },
   advanceFrame: function() {
-    if (this.movement.directionX !== 'none' ||
-          this.movement.directionY !== 'none') {
-      this.currentFrame = this.currentFrame > 2 ? 0 : (this.currentFrame + 1);
+    if (this.movement.directionX === 'none' &&
+          this.movement.directionY === 'none') {
+      this.currentSpriteFrame = 0;
+    } else {
+      this.currentSpritePartialFrame +=
+        Werld.Config.CHARACTER_MOVEMENT_FRAME_SPEED;
+      if (this.currentSpritePartialFrame >=
+            Werld.Config.CHARACTER_SPRITES_NUMBER) {
+        this.currentSpritePartialFrame -=
+          (Werld.Config.CHARACTER_SPRITES_NUMBER - 1);
+      }
+
+      this.currentSpriteFrame = Math.floor(this.currentSpritePartialFrame);
     }
   },
   draw: function() {
@@ -94,7 +105,7 @@ Werld.Views.Character = Backbone.View.extend({
     );
     Werld.canvas.context.drawImage(
       this.spriteSheet,
-      this.currentFrame * 40, this.directionFrame, 40, 40,
+      this.currentSpriteFrame * 40, this.directionFrame, 40, 40,
       this.fixedX, this.fixedY, 40, 40
     );
 
