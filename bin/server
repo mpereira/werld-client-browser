@@ -9,18 +9,18 @@ var baseDirectory = './dist/' + (process.argv[2] === 'production' ? 'production'
 
 server.use('/javascripts', express.static(baseDirectory + '/javascripts'));
 server.use('/stylesheets', express.static(baseDirectory + '/stylesheets'));
-server.use('/images', express.static(baseDirectory + '/images'));
-server.use('/sounds', express.static(baseDirectory + '/sounds'));
-server.use('/webfonts', express.static(baseDirectory + '/webfonts'));
+server.use('/images', express.static('assets/images'));
+server.use('/sounds', express.static('assets/sounds'));
+server.use('/webfonts', express.static('assets/webfonts'));
 
 server.use(express.favicon(baseDirectory + '/favicon.ico'));
 
 server.get('/', function(request, result) {
-  fs.createReadStream(baseDirectory + '/index.html').pipe(result);
+  fs.createReadStream('assets/index.html').pipe(result);
 });
 
 server.get('/play', function(request, result) {
-  fs.createReadStream(baseDirectory + '/play.html').pipe(result);
+  fs.createReadStream('assets/play.html').pipe(result);
 });
 
 server.listen(port);

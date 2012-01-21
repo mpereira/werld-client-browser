@@ -1,10 +1,8 @@
 var cleanCSS = require('clean-css');
 var fs = require('fs');
-var fsTools = require('fs-tools');
 var grunt = require('grunt');
 var path = require('path');
 var rimraf = require('rimraf');
-var util = require('util');
 
 config.init({
   meta: {
@@ -74,20 +72,9 @@ config.init({
     'dist/production/stylesheets/play.css': ['dist/development/stylesheets/play.css']
   },
 
-  copyassets: {
-    files: [
-      'assets/index.html',
-      'assets/play.html',
-      'assets/favicon.ico',
-      'assets/images/',
-      'assets/sounds/',
-      'assets/webfonts/'
-    ]
-  },
-
   watch: {
-    files: ['assets/**/*', 'src/**/*'],
-    tasks: 'clean lint:files concat jst copyassets',
+    files: ['assets/**/*', 'src/**/*.js'],
+    tasks: 'clean lint:files concat jst',
 
     min: {
       files: ['assets/**/*', 'src/**/*'],
@@ -200,27 +187,4 @@ task.registerHelper('mincss', function(files) {
   }).join('') : '');
 });
 
-task.registerBasicTask('copyassets', '', function(data, name) {
-  var distProductionDirectory = config(['meta', 'dist', 'production', 'directory']);
-  var distDevelopmentDirectory = config(['meta', 'dist', 'development', 'directory']);
-  var errorCallback = function(error) {
-    if (error) {
-      console.log('Failed to copy ' + this.source + ' into ' + this.destination);
-      console.error(error);
-    } else {
-      console.log('Copied ' + this.source + ' into ' + this.destination);
-    }
-  };
-
-  var source;
-  var destination;
-  data.forEach(function(file) {
-    source = file;
-    destination = distDevelopmentDirectory + path.basename(file);
-    fsTools.copy(file, destination, underscore.bind(errorCallback, { source: source, destination: destination }));
-    destination = distProductionDirectory + path.basename(file);
-    fsTools.copy(source, destination, underscore.bind(errorCallback, { source: source, destination: destination }));
-  });
-});
-
-task.registerTask('default', 'clean lint:files concat jst min mincss copyassets');
+task.registerTask('default', 'clean lint:files concat jst min mincss');
