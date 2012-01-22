@@ -83,7 +83,9 @@ Werld.canvas = {
       }
     } else if (Werld.state === Werld.States.GAME_STARTED) {
       if (e.which === 3) {
-        Werld.character.moveTo(coordinates);
+        Werld.character.move(_(coordinates).map(function(pixels) {
+          return(Werld.util.pixelToTile(pixels));
+        }));
       }
     }
   },

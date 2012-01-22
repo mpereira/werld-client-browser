@@ -1,6 +1,10 @@
 var Werld = {
-  Views: {},
-  Models: {},
+  Views: {
+    Base: {}
+  },
+  Models: {
+    Base: {}
+  },
   Util: {},
   States: {
     INIT: 1,
@@ -9,29 +13,48 @@ var Werld = {
     GAME_STARTED: 4
   },
   Creatures: {
+    CHARACTER: {
+      MOVEMENT_SPEED: 2,
+      BOUNDARIES: {
+        MAX_CRITICAL_HIT_CHANCE: 20,
+        MAX_DEXTERITY: 125,
+        MAX_STRENGHT: 125,
+        MAX_INTELLIGENCE: 125
+      },
+      SPRITE: {
+        SRC: '../images/sprite_sheets/character.png',
+        FRAMES: 4,
+        FRAME_CHANGE_SPEED: 0.25
+      }
+    },
     SILVER_BAT: {
-      NAME: 'a silver bat',
-      SPRITE_SRC: '../images/sprite_sheets/silver_bat.png',
+      name: 'a silver bat',
       MOVEMENT_SPEED: 1,
-      HIT_POINTS: 20,
-      MOVEMENT_FRAME_SPEED: 2.5,
-      SPRITES_NUMBER: 4
+      stats: {
+        strength: 10,
+        dexterity: 10,
+        intelligence: 10
+      },
+      BOUNDARIES: {
+        MAX_CRITICAL_HIT_CHANCE: 20,
+        MAX_DEXTERITY: 125,
+        MAX_STRENGHT: 125,
+        MAX_INTELLIGENCE: 125
+      },
+      SPRITE: {
+        SRC: '../images/sprite_sheets/silver_bat.png',
+        FRAMES: 4,
+        FRAME_CHANGE_SPEED: 0.25
+      }
     }
   },
   Config: {
-    CHARACTER_MAX_CRITICAL_HIT_CHANCE: 20,
-    CHARACTER_MAX_DEXTERITY: 125,
-    CHARACTER_ATTACK_SPEED: 2000,
-    CHARACTER_DAMAGE: 2,
-    CHARACTER_MESSAGE_SWEEPER_POLLING_INTERVAL: 1000,
-    CHARACTER_MOVEMENT_FRAME_SPEED: 0.25,
-    CHARACTER_MOVEMENT_SPEED: 2,
-    CHARACTER_SPRITES_NUMBER: 4,
     FRAMES_PER_SECOND: 30,
     FRAME_RATE: function() {
       return(Math.floor(1000 / Werld.Config.FRAMES_PER_SECOND));
     },
     MESSAGE_LIFE_CYCLE: 5000,
+    MESSAGE_SWEEPER_POLLING_INTERVAL: 1000,
     PIXELS_PER_TILE: 40,
     SCREEN_DIMENSIONS: [16, 12],
     WORLD_MAP_DIMENSIONS: [20, 20]
@@ -109,32 +132,35 @@ var Werld = {
       if (state === Werld.States.GAME_STARTED) {
         clearInterval(Werld.canvas.interval);
 
-        Werld.character = new Werld.Models.Character({
-          name: data.character.name,
-          attackSpeed: Werld.Config.CHARACTER_ATTACK_SPEED,
-          stats: {
-            strength: 20,
-            dexterity: 20,
-            intelligence: 20
-          },
-          coordinates: _([
-            Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
-            Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)
-          ]).map(function(coordinate) {
-            return(coordinate * Werld.Config.PIXELS_PER_TILE);
+        Werld.character = new Werld.Models.Character(
+          _.extend(Werld.Creatures.CHARACTER, {
+            fixed: true,
+            name: data.character.name,
+            stats: {
+              strength: 20,
+              dexterity: 20,
+              intelligence: 20
+            },
+            coordinates: _([
+              Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
+              Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)
+            ]).map(function(coordinate) {
+              return(coordinate * Werld.Config.PIXELS_PER_TILE);
+            })
           })
-        });
+        );
 
         Werld.canvas.characterView = new Werld.Views.Character({
           model: Werld.character
         });
 
-        Werld.creature = new Werld.Models.Creature({
-          type: Werld.Creatures.SILVER_BAT,
-          coordinates: _([3, 4]).map(function(coordinate) {
-            return(coordinate * Werld.Config.PIXELS_PER_TILE);
+        Werld.creature = new Werld.Models.Creature(
+          _.extend(Werld.Creatures.SILVER_BAT, {
+            coordinates: _([3, 4]).map(function(coordinate) {
+              return(coordinate * Werld.Config.PIXELS_PER_TILE);
+            })
           })
-        });
+        );
 
         Werld.canvas.creatureView = new Werld.Views.Creature({
           model: Werld.creature
