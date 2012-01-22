@@ -53,8 +53,6 @@ Werld.Views.Creature = Backbone.View.extend({
     var modelCoordinates = this.model.get('coordinates');
     var modelDestinationCoordinates = this.model.get('destination');
     var screenCoordinates = Werld.screen.get('coordinates');
-    var screenWidth = Werld.screen.get('width');
-    var screenHeight = Werld.screen.get('height');
     var mapDimensions = Werld.map.get('dimensions');
     var creatureScreenCoordinates;
 

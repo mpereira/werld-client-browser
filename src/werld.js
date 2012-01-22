@@ -28,10 +28,8 @@ var Werld = {
     },
     MESSAGE_LIFE_CYCLE: 5000,
     PIXELS_PER_TILE: 40,
-    SCREEN_HEIGHT: 12,
-    SCREEN_WIDTH: 16,
-    WORLD_MAP_HEIGHT: 20,
-    WORLD_MAP_WIDTH: 20
+    SCREEN_DIMENSIONS: [16, 12],
+    WORLD_MAP_DIMENSIONS: [20, 20]
   },
   account: {
     provider: {}
@@ -109,8 +107,8 @@ var Werld = {
         Werld.character = new Werld.Models.Character({
           name: data.character.name,
           coordinates: _([
-            Math.floor(Werld.Config.SCREEN_WIDTH / 2),
-            Math.floor(Werld.Config.SCREEN_HEIGHT / 2)
+            Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
+            Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)
           ]).map(function(coordinate) {
             return(coordinate * Werld.Config.PIXELS_PER_TILE);
           })
@@ -132,9 +130,9 @@ var Werld = {
         });
 
         var mapTiles = [];
-        for (var i = 0; i < Werld.Config.WORLD_MAP_WIDTH; i++) {
+        for (var i = 0; i < Werld.Config.WORLD_MAP_DIMENSIONS[0]; i++) {
           mapTiles[i] = [];
-          for (var j = 0; j < Werld.Config.WORLD_MAP_HEIGHT; j++) {
+          for (var j = 0; j < Werld.Config.WORLD_MAP_DIMENSIONS[1]; j++) {
             mapTiles[i][j] = new Werld.Models.Tile({
               type: (Math.random() > 0.75 ? 'dirt' : 'grass'), coordinates: [i, j]
             });
@@ -146,8 +144,7 @@ var Werld = {
         Werld.screen = new Werld.Models.Screen({
           map: Werld.map,
           character: Werld.character,
-          width: Werld.Config.SCREEN_WIDTH,
-          height: Werld.Config.SCREEN_HEIGHT,
+          dimensions: Werld.Config.SCREEN_DIMENSIONS,
           coordinates: [0, 0]
         });
 

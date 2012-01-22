@@ -20,14 +20,14 @@ Werld.Models.Creature = Backbone.Model.extend({
   move: function(mapDestinationTile) {
     if (mapDestinationTile[0] < 0) {
       mapDestinationTile[0] = 0;
-    } else if (mapDestinationTile[0] >= Werld.Config.WORLD_MAP_WIDTH) {
-      mapDestinationTile[0] = Werld.Config.WORLD_MAP_WIDTH - 1;
+    } else if (mapDestinationTile[0] >= Werld.Config.WORLD_MAP_DIMENSIONS[0]) {
+      mapDestinationTile[0] = Werld.Config.WORLD_MAP_DIMENSIONS[1] - 1;
     }
 
     if (mapDestinationTile[1] < 0) {
       mapDestinationTile[1] = 0;
-    } else if (mapDestinationTile[1] >= Werld.Config.WORLD_MAP_HEIGHT) {
-      mapDestinationTile[1] = Werld.Config.WORLD_MAP_HEIGHT - 1;
+    } else if (mapDestinationTile[1] >= Werld.Config.WORLD_MAP_DIMENSIONS[0]) {
+      mapDestinationTile[1] = Werld.Config.WORLD_MAP_DIMENSIONS[1] - 1;
     }
 
     this.set({

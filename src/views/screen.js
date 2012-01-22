@@ -17,6 +17,7 @@ Werld.Views.Screen = Backbone.View.extend({
   },
   draw: function() {
     var screenCoordinates = this.model.get('coordinates');
+    var screenDimensions = this.model.get('dimensions');
 
     var screenBaseTile = _(screenCoordinates).map(function(pixel) {
       return(Werld.util.pixelToTile(pixel));
@@ -30,12 +31,12 @@ Werld.Views.Screen = Backbone.View.extend({
                Werld.Config.PIXELS_PER_TILE);
     });
 
-    for (var i = 0; i <= this.model.get('width'); i++) {
-      for (var j = 0; j <= this.model.get('height'); j++) {
+    for (var i = 0; i <= screenDimensions[0]; i++) {
+      for (var j = 0; j <= screenDimensions[1]; j++) {
         var screenTile = [i + screenBaseTile[0], j + screenBaseTile[1]];
 
-        if (screenTile[0] > 0 && screenTile[0] < Werld.Config.WORLD_MAP_WIDTH &&
-              screenTile[1] > 0 && screenTile[1] < Werld.Config.WORLD_MAP_HEIGHT) {
+        if (screenTile[0] > 0 && screenTile[0] < Werld.Config.WORLD_MAP_DIMENSIONS[0] &&
+              screenTile[1] > 0 && screenTile[1] < Werld.Config.WORLD_MAP_DIMENSIONS[1]) {
           this.mapTileViews[screenTile[0]][screenTile[1]].draw(
             [Werld.util.tileToPixel(i), Werld.util.tileToPixel(j)], offset
           );
