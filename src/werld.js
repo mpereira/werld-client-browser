@@ -9,19 +9,20 @@ var Werld = {
     GAME_STARTED: 4
   },
   Config: {
-    WORLD_MAP_WIDTH: 20,
-    WORLD_MAP_HEIGHT: 20,
-    SCREEN_WIDTH: 16,
-    SCREEN_HEIGHT: 12,
-    MESSAGE_LIFE_CYCLE: 5000,
-    CHARACTER_MOVEMENT_SPEED: 2,
+    CHARACTER_MESSAGE_SWEEPER_POLLING_INTERVAL: 1000,
     CHARACTER_MOVEMENT_FRAME_SPEED: 0.25,
+    CHARACTER_MOVEMENT_SPEED: 2,
     CHARACTER_SPRITES_NUMBER: 4,
-    PIXELS_PER_TILE: 40,
     FRAMES_PER_SECOND: 30,
     FRAME_RATE: function() {
       return(Math.floor(1000 / Werld.Config.FRAMES_PER_SECOND));
-    }
+    },
+    MESSAGE_LIFE_CYCLE: 5000,
+    PIXELS_PER_TILE: 40,
+    SCREEN_HEIGHT: 12,
+    SCREEN_WIDTH: 16,
+    WORLD_MAP_HEIGHT: 20,
+    WORLD_MAP_WIDTH: 20
   },
   account: {
     provider: {}
@@ -98,10 +99,12 @@ var Werld = {
 
         Werld.character = new Werld.Models.Character({
           name: data.character.name,
-          coordinates: [
+          coordinates: _([
             Math.floor(Werld.Config.SCREEN_WIDTH / 2),
             Math.floor(Werld.Config.SCREEN_HEIGHT / 2)
-          ]
+          ]).map(function(coordinate) {
+            return(coordinate * Werld.Config.PIXELS_PER_TILE);
+          })
         });
 
         Werld.canvas.characterView = new Werld.Views.Character({

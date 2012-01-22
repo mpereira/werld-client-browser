@@ -1,6 +1,5 @@
 Werld.Views.Screen = Backbone.View.extend({
   initialize: function() {
-    this.model.bind('change:coordinates', this.draw, this);
     this.createMapTileViews();
   },
   createMapTileViews: function() {
@@ -17,32 +16,34 @@ Werld.Views.Screen = Backbone.View.extend({
     }
   },
   draw: function() {
-    var mapTiles = this.model.get('map').get('tiles');
     var screenCoordinates = this.model.get('coordinates');
 
-    for (var i = 0; i < this.model.get('width') + 1; i++) {
-      for (var j = 0; j < this.model.get('height') + 1; j++) {
-        var roundedCoordinates = [
-          Math.floor(screenCoordinates[0]),
-          Math.floor(screenCoordinates[1])
-        ];
-        var screenColumn = i + roundedCoordinates[0];
-        var screenRow = j + roundedCoordinates[1];
-        var offset = [
-          (screenCoordinates[0] - roundedCoordinates[0]) *
-            Werld.Config.PIXELS_PER_TILE,
-          (screenCoordinates[1] - roundedCoordinates[1]) *
-            Werld.Config.PIXELS_PER_TILE
-        ];
+    var screenBaseTile = _(screenCoordinates).map(function(pixel) {
+      return(Werld.util.pixelToTile(pixel));
+    });
 
-        if (screenColumn > 0 && screenColumn < Werld.Config.WORLD_MAP_WIDTH &&
-              screenRow > 0 && screenRow < Werld.Config.WORLD_MAP_HEIGHT) {
-          this.mapTileViews[screenColumn][screenRow].draw([i, j], offset);
+    /* The offset has to be >= 0 and <= 40 or else the tiles will flicker when
+     * the offset tends to 40. */
+    var offset = _(screenCoordinates).map(function(pixel) {
+      return(pixel -
+               Math.floor(pixel / Werld.Config.PIXELS_PER_TILE) *
+               Werld.Config.PIXELS_PER_TILE);
+    });
+
+    for (var i = 0; i <= this.model.get('width'); i++) {
+      for (var j = 0; j <= this.model.get('height'); j++) {
+        var screenTile = [i + screenBaseTile[0], j + screenBaseTile[1]];
+
+        if (screenTile[0] > 0 && screenTile[0] < Werld.Config.WORLD_MAP_WIDTH &&
+              screenTile[1] > 0 && screenTile[1] < Werld.Config.WORLD_MAP_HEIGHT) {
+          this.mapTileViews[screenTile[0]][screenTile[1]].draw(
+            [Werld.util.tileToPixel(i), Werld.util.tileToPixel(j)], offset
+          );
         } else {
           Werld.canvas.context.fillStyle = 'black';
           Werld.canvas.context.fillRect(
-            (i * Werld.Config.PIXELS_PER_TILE) - offset[0],
-            (j * Werld.Config.PIXELS_PER_TILE) - offset[1],
+            Werld.util.tileToPixel(i) - offset[0],
+            Werld.util.tileToPixel(j) - offset[1],
             Werld.Config.PIXELS_PER_TILE,
             Werld.Config.PIXELS_PER_TILE
           );

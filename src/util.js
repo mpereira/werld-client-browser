@@ -4,6 +4,12 @@ Werld.util = {
               window.mozRequestAnimationFrame ||
               window.webkitRequestAnimationFrame ||
               window.msRequestAnimationFrame)(callback));
+  },
+  tileToPixel: function(tile) {
+    return(tile * Werld.Config.PIXELS_PER_TILE);
+  },
+  pixelToTile: function(pixel) {
+    return(Math.floor(pixel / Werld.Config.PIXELS_PER_TILE));
   }
 };
 

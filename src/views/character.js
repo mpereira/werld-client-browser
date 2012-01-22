@@ -1,26 +1,11 @@
 Werld.Views.Character = Backbone.View.extend({
   initialize: function() {
-    this.x = this.model.get('coordinates')[0] * Werld.Config.PIXELS_PER_TILE;
-    this.y = this.model.get('coordinates')[1] * Werld.Config.PIXELS_PER_TILE;
-    this.destinationX = this.x;
-    this.destinationY = this.y;
-    this.fixedX = this.x;
-    this.fixedY = this.y;
-    this.sprite = {
-      frame: 0,
-      partialFrame: 0,
-      directionFrame: 0
-    },
+    this.sprite = { frame: 0, partialFrame: 0, directionFrame: 0 };
     this.sprite.sheet = new Image();
     this.sprite.sheet.src = '/images/sprite_sheets/character.png';
     this.sprite.sheet.onload = _.bind(this.draw, this);
     this.movement = {};
-    this.model.bind('move', this.updateDestination, this);
-    $(this.model.messages).bind('add', this.draw.bind(this));
-  },
-  updateDestination: function() {
-    this.destinationX = this.model.get('destinationColumn') * Werld.Config.PIXELS_PER_TILE;
-    this.destinationY = this.model.get('destinationRow') * Werld.Config.PIXELS_PER_TILE;
+    $(this.model.messages).bind('add', _.bind(this.draw, this));
   },
   updateDirectionFrame: function() {
     if (this.movement.directionX === 'left' &&
@@ -66,32 +51,25 @@ Werld.Views.Character = Backbone.View.extend({
     }
   },
   draw: function() {
-    if (this.x > this.destinationX) {
+    var modelCoordinates = this.model.get('coordinates');
+    var modelDestinationCoordinates = this.model.get('destination');
+    var fixedModelCoordinates = this.model.get('fixedCoordinates');
+
+    if (modelCoordinates[0] > modelDestinationCoordinates[0]) {
       this.movement.directionX = 'left';
-      this.x -= Werld.Config.CHARACTER_MOVEMENT_SPEED;
-    } else if (this.x < this.destinationX) {
+    } else if (modelCoordinates[0] < modelDestinationCoordinates[0]) {
       this.movement.directionX = 'right';
-      this.x += Werld.Config.CHARACTER_MOVEMENT_SPEED;
     } else {
       this.movement.directionX = 'none';
     }
 
-    if (this.y > this.destinationY) {
+    if (modelCoordinates[1] > modelDestinationCoordinates[1]) {
       this.movement.directionY = 'up';
-      this.y -= Werld.Config.CHARACTER_MOVEMENT_SPEED;
-    } else if (this.y < this.destinationY) {
+    } else if (modelCoordinates[1] < modelDestinationCoordinates[1]) {
       this.movement.directionY = 'down';
-      this.y += Werld.Config.CHARACTER_MOVEMENT_SPEED;
     } else {
       this.movement.directionY = 'none';
     }
-
-    this.model.set({
-      coordinates: [
-        this.x / Werld.Config.PIXELS_PER_TILE,
-        this.y / Werld.Config.PIXELS_PER_TILE
-      ]
-    });
 
     this.updateDirectionFrame();
 
@@ -103,24 +81,36 @@ Werld.Views.Character = Backbone.View.extend({
     Werld.canvas.context.textBaseline = 'top';
     Werld.canvas.context.textAlign = 'center';
     Werld.canvas.context.fillText(
-      this.model.get('name'), this.fixedX + 20, this.fixedY - 30
+      this.model.get('name'),
+      fixedModelCoordinates[0] + 20,
+      fixedModelCoordinates[1] - 30
     );
     Werld.canvas.context.drawImage(
       this.sprite.sheet,
-      this.sprite.frame * 40, this.sprite.directionFrame, 40, 40,
-      this.fixedX, this.fixedY, 40, 40
+      this.sprite.frame * Werld.Config.PIXELS_PER_TILE,
+      this.sprite.directionFrame,
+      Werld.Config.PIXELS_PER_TILE,
+      Werld.Config.PIXELS_PER_TILE,
+      fixedModelCoordinates[0],
+      fixedModelCoordinates[1],
+      Werld.Config.PIXELS_PER_TILE,
+      Werld.Config.PIXELS_PER_TILE
     );
 
     Werld.canvas.context.shadowOffsetX = 0;
     Werld.canvas.context.shadowOffsetY = 0;
     Werld.canvas.context.fillStyle = '#cccccc';
     Werld.canvas.context.font = '16px "PowellAntique" serif';
-    var x = this.fixedX;
-    var y = this.fixedY;
+
+    var temporaryFixedModelCoordinates = _.clone(fixedModelCoordinates);
     this.model.messages.forEach(function(message) {
       if (message.content !== '') {
-        y -= 20;
-        Werld.canvas.context.fillText(message.content, x + 20, y - 30);
+        temporaryFixedModelCoordinates[1] -= 20;
+        Werld.canvas.context.fillText(
+          message.content,
+          temporaryFixedModelCoordinates[0] + 20,
+          temporaryFixedModelCoordinates[1] - 30
+        );
       }
     });
 
