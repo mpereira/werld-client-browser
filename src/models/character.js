@@ -1,8 +1,11 @@
 Werld.Models.Character = Backbone.Model.extend({
+  defaults: {
+    lastAttackAt: Number.NEGATIVE_INFINITY
+  },
   initialize: function() {
     this.messages = new Werld.Util.Queue();
-    this.set({ fixedCoordinates: _.clone(this.get('coordinates')) });
-    this.set({ destination: _.clone(this.get('coordinates')) });
+    var coordinates = _.clone(this.get('coordinates'));
+    this.set({ fixedCoordinates: coordinates, destination: coordinates });
     $(this.messages).bind('add', _.bind(this.messagesSweeper, this));
     this.messagesSweeperIntervalId = setInterval(
       _.bind(this.messagesSweeper, this),
@@ -10,6 +13,9 @@ Werld.Models.Character = Backbone.Model.extend({
     );
     this.movementHandlerIntervalId = setInterval(
       _.bind(this.movementHandler, this), Werld.Config.FRAME_RATE()
+    );
+    this.attackHandlerIntervalId = setInterval(
+      _.bind(this.attackHandler, this), Werld.Config.FRAME_RATE()
     );
   },
   say: function(message) {
@@ -74,6 +80,44 @@ Werld.Models.Character = Backbone.Model.extend({
     /* TODO: figure out why set() isn't triggering the change event and remove
      *       this hack. */
     this.trigger('change:coordinates');
+  },
+  follow: function(creature) {
+    this.set({ destination: creature.get('coordinates') });
+  },
+  attack: function(creature) {
+    this.follow(creature);
+    this.set({ attacking: creature });
+  },
+  damage: function() {
+    var stats = this.get('stats');
+    var criticalHitChance = (stats.dexterity *
+                              Werld.Config.CHARACTER_MAX_CRITICAL_HIT_CHANCE /
+                              Werld.Config.CHARACTER_MAX_DEXTERITY) / 100;
+    var critical = Math.random() < criticalHitChance;
+    var damage = stats.strength / 10;
+    return(critical ? damage * 2 : damage);
+  },
+  attackHandler: function() {
+    var attackedCreature = this.get('attacking');
+
+    if (attackedCreature) {
+      var coordinates = this.get('coordinates');
+      var attackedCreatureCoordinates = attackedCreature.get('coordinates');
+      var distance =
+        Werld.util.pixelDistance(coordinates, attackedCreatureCoordinates);
+      var lastAttackAt = this.get('lastAttackAt');
+      var attackSpeed = this.get('attackSpeed');
+      var now = new Date();
+
+      if (distance <= Werld.Config.PIXELS_PER_TILE &&
+            (now.getTime() - lastAttackAt) >= attackSpeed) {
+        this.set({ lastAttackAt: now.getTime() });
+        this.hit(attackedCreature);
+      }
+    }
+  },
+  hit: function(creature) {
+    creature.receiveHit(this.damage());
   },
   messagesSweeper: function() {
     var now = new Date();

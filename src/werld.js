@@ -13,11 +13,16 @@ var Werld = {
       NAME: 'a silver bat',
       SPRITE_SRC: '../images/sprite_sheets/silver_bat.png',
       MOVEMENT_SPEED: 1,
+      HIT_POINTS: 20,
       MOVEMENT_FRAME_SPEED: 2.5,
       SPRITES_NUMBER: 4
     }
   },
   Config: {
+    CHARACTER_MAX_CRITICAL_HIT_CHANCE: 20,
+    CHARACTER_MAX_DEXTERITY: 125,
+    CHARACTER_ATTACK_SPEED: 2000,
+    CHARACTER_DAMAGE: 2,
     CHARACTER_MESSAGE_SWEEPER_POLLING_INTERVAL: 1000,
     CHARACTER_MOVEMENT_FRAME_SPEED: 0.25,
     CHARACTER_MOVEMENT_SPEED: 2,
@@ -106,6 +111,12 @@ var Werld = {
 
         Werld.character = new Werld.Models.Character({
           name: data.character.name,
+          attackSpeed: Werld.Config.CHARACTER_ATTACK_SPEED,
+          stats: {
+            strength: 20,
+            dexterity: 20,
+            intelligence: 20
+          },
           coordinates: _([
             Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
             Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)

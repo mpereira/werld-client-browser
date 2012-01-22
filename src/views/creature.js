@@ -5,7 +5,6 @@ Werld.Views.Creature = Backbone.View.extend({
     this.sprite.sheet.src = this.model.get('type').SPRITE_SRC;
     this.sprite.sheet.onload = _.bind(this.draw, this);
     this.movement = {};
-    $(this.model.messages).bind('add', _.bind(this.draw, this));
   },
   updateDirectionFrame: function() {
     if (this.movement.directionX === 'left' &&
@@ -111,18 +110,32 @@ Werld.Views.Creature = Backbone.View.extend({
 
     Werld.canvas.context.shadowOffsetX = 0;
     Werld.canvas.context.shadowOffsetY = 0;
-    Werld.canvas.context.fillStyle = '#cccccc';
-    Werld.canvas.context.font = '16px "PowellAntique" serif';
 
     var temporaryCreatureScreenCoordinates = _.clone(creatureScreenCoordinates);
-    this.model.messages.forEach(function(message) {
+    _(this.model.get('messages')).each(function(message) {
       if (message.content !== '') {
+        Werld.canvas.context.save();
+        if (message.type === 'speech') {
+          Werld.canvas.context.fillStyle = '#cccccc';
+          Werld.canvas.context.font = '16px "PowellAntique" serif';
+        } else if (message.type === 'hit') {
+          Werld.canvas.context.shadowColor = 'black';
+          Werld.canvas.context.shadowOffsetX = 1;
+          Werld.canvas.context.shadowOffsetY = 1;
+          Werld.canvas.context.shadowBlur = 1;
+          Werld.canvas.context.fillStyle = '#ff3300';
+          Werld.canvas.context.font = '14px "PowellAntique" serif';
+        } else {
+          Werld.canvas.context.fillStyle = '#cccccc';
+          Werld.canvas.context.font = '16px "PowellAntique" serif';
+        }
         temporaryCreatureScreenCoordinates[1] -= 20;
         Werld.canvas.context.fillText(
           message.content,
           temporaryCreatureScreenCoordinates[0] + 20,
           temporaryCreatureScreenCoordinates[1] - 30
         );
+        Werld.canvas.context.restore();
       }
     });
 

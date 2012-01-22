@@ -1,9 +1,12 @@
 Werld.Models.Creature = Backbone.Model.extend({
   initialize: function() {
-    this.set({ name: this.get('type').NAME });
-    this.messages = new Werld.Util.Queue();
-    this.set({ destination: _.clone(this.get('coordinates')) });
-    $(this.messages).bind('add', _.bind(this.messagesSweeper, this));
+    var type = this.get('type');
+    this.set({
+      name: type.NAME,
+      hitPoints: type.HIT_POINTS,
+      messages: [],
+      destination: _.clone(this.get('coordinates'))
+    });
     this.messagesSweeperIntervalId = setInterval(
       _.bind(this.messagesSweeper, this),
       Werld.Config.CREATURE_MESSAGE_SWEEPER_POLLING_INTERVAL
@@ -14,8 +17,12 @@ Werld.Models.Creature = Backbone.Model.extend({
   },
   say: function(message) {
     var now = new Date();
-    this.messages.enqueue({ content: message, created_at: now.getTime() });
-    $(this.messages).trigger('add');
+    var messages = this.get('messages');
+
+    messages.unshift({
+      type: 'speech', content: message, created_at: now.getTime()
+    });
+    this.set({ messages: messages });
   },
   move: function(mapDestinationTile) {
     if (mapDestinationTile[0] < 0) {
@@ -58,12 +65,24 @@ Werld.Models.Creature = Backbone.Model.extend({
      *       this hack. */
     this.trigger('change:coordinates');
   },
+  receiveHit: function(damage) {
+    var now = new Date();
+    var messages = this.get('messages');
+
+    this.set({ hitPoints: this.get('hitPoints') - damage });
+    messages.unshift({
+      type: 'hit', content: damage, created_at: now.getTime()
+    });
+    this.set({ messages: messages });
+  },
   messagesSweeper: function() {
     var now = new Date();
     var self = this;
-    this.messages.forEach(function(message) {
+    _(this.get('messages')).each(function(message) {
       if ((now.getTime() - message.created_at) > Werld.Config.MESSAGE_LIFE_CYCLE) {
-        self.messages.dequeue();
+        var messages = self.get('messages');
+        messages.pop();
+        self.set({ messages: messages });
       }
     });
   }
