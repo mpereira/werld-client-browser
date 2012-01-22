@@ -8,6 +8,15 @@ var Werld = {
     CHOOSING_NAME: 3,
     GAME_STARTED: 4
   },
+  Creatures: {
+    SILVER_BAT: {
+      NAME: 'a silver bat',
+      SPRITE_SRC: '../images/sprite_sheets/silver_bat.png',
+      MOVEMENT_SPEED: 1,
+      MOVEMENT_FRAME_SPEED: 2.5,
+      SPRITES_NUMBER: 4
+    }
+  },
   Config: {
     CHARACTER_MESSAGE_SWEEPER_POLLING_INTERVAL: 1000,
     CHARACTER_MOVEMENT_FRAME_SPEED: 0.25,
@@ -109,6 +118,17 @@ var Werld = {
 
         Werld.canvas.characterView = new Werld.Views.Character({
           model: Werld.character
+        });
+
+        Werld.creature = new Werld.Models.Creature({
+          type: Werld.Creatures.SILVER_BAT,
+          coordinates: _([3, 4]).map(function(coordinate) {
+            return(coordinate * Werld.Config.PIXELS_PER_TILE);
+          })
+        });
+
+        Werld.canvas.creatureView = new Werld.Views.Creature({
+          model: Werld.creature
         });
 
         var mapTiles = [];

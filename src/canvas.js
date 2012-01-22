@@ -43,6 +43,7 @@ Werld.canvas = {
   drawGameScreen: function() {
     this.screenView.draw();
     this.characterView.draw();
+    this.creatureView.draw();
   },
   mouseCoordinates: function(e) {
     return([e.offsetX, e.offsetY]);
