@@ -1,7 +1,7 @@
 Werld.Views.CharacterNameInputForm = Backbone.View.extend({
   el: '#character-name-input-form',
   initialize: function() {
-    $(this.el).bind('submit', this.submit.bind(this));
+    $(this.el).bind('submit', _.bind(this.submit, this));
   },
   render: function() {
     $(this.el).show();
