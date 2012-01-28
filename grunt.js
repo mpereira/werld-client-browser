@@ -26,9 +26,10 @@ config.init({
 
   concat: {
     'dist/development/javascripts/libs.js': [
-      'vendor/javascripts/underscore-*.js',
       'vendor/javascripts/jquery-*.js',
+      'vendor/javascripts/underscore-*.js',
       'vendor/javascripts/backbone-*.js',
+      'vendor/javascripts/easel-*.js',
       'vendor/javascripts/jquery.cross-slide-*.js'
     ],
     'dist/development/javascripts/play.js': [
