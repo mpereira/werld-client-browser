@@ -11,61 +11,19 @@ Werld.canvas = {
   },
   loadImages: function(callback) {
     this.images = {};
-    this.images.splash = new Image();
-    this.images.splash.src = '../images/splash.jpg';
-    this.images.splash.onload = callback;
+    this.images.splash = '../images/splash.jpg';
   },
   drawSplashScreen: function() {
-    this.context.drawImage(this.images.splash, 0, 0);
-
-    if (Werld.state !== Werld.States.CHOOSING_NAME) {
-      if (this.signInLinkGradientDrawn) {
-        this.context.fillStyle = this.signInLinkGradient;
-        this.context.globalAlpha = 0.2;
-        this.context.fillRect(0, 0, 640, 480);
-        this.context.globalAlpha = 1;
-      }
-
-      this.context.shadowColor = '#000000';
-      this.context.shadowOffsetX = 4;
-      this.context.shadowOffsetY = 4;
-      this.context.fillStyle = '#dc9a44';
-      this.context.font = '90px "PowellAntique" serif';
-      this.context.textBaseline = 'top';
-      this.context.textAlign = 'center';
-      this.context.fillText('Werld Online', 320, 20);
-      this.context.font = '40px "PowellAntique" serif';
-      this.context.shadowOffsetX = 2;
-      this.context.shadowOffsetY = 2;
-      this.context.fillText('Sign In', 440, 240);
-    }
+    this.stage.update();
   },
   drawGameScreen: function() {
+    this.stage.update();
     this.screenView.draw();
     this.characterView.draw();
     this.creatureView.draw();
   },
   mouseCoordinates: function(e) {
     return([e.offsetX, e.offsetY]);
-  },
-  mouseMoveHandler: function(e) {
-    if (Werld.state === Werld.States.SPLASH_SCREEN) {
-      var x;
-      var y;
-      var coordinates;
-
-      coordinates = this.mouseCoordinates(e);
-      x = coordinates[0];
-      y = coordinates[1];
-
-      if (this.signInLinkArea(coordinates)) {
-        this.signInLinkGradientDrawn = true;
-        this.el.style.cursor = 'pointer';
-      } else {
-        this.signInLinkGradientDrawn = false;
-        this.el.style.cursor = '';
-      }
-    }
   },
   mouseClickHandler: function(e) {
     var x;
@@ -79,7 +37,6 @@ Werld.canvas = {
     if (Werld.state === Werld.States.SPLASH_SCREEN) {
       if (this.signInLinkArea(coordinates)) {
         this.el.style.cursor = '';
-        Werld.switchState(Werld.States.CHOOSING_NAME);
       }
     } else if (Werld.state === Werld.States.GAME_STARTED) {
       if (e.which === 3) {
@@ -99,17 +56,90 @@ Werld.canvas = {
   init: function() {
     this.el = document.getElementsByTagName('canvas')[0];
     this.context = this.el.getContext('2d');
+
     if (this.context) {
-      this.signInLinkGradient = this.context.createRadialGradient(440, 275, 10, 440, 275, 90);
-      this.signInLinkGradient.addColorStop(0.4, '#dc9a44');
-      this.signInLinkGradient.addColorStop(1, '#000000');
-      this.signInLinkArea = function(coordinates) {
-        return(coordinates[0] > 350 && coordinates[0] < 520 &&
-                 coordinates[1] > 230 && coordinates[1] < 310);
+      this.loadImages();
+      this.loadTextures();
+
+      this.stage = new Stage(this.el);
+      this.stage.enableMouseOver();
+
+      var splashImage = new Bitmap(this.images.splash);
+      splashImage.x = 0;
+      splashImage.y = 0;
+
+      var titleText = new Text(
+        'Werld Online',
+        '90px "PowellAntique" serif',
+        '#dc9a44'
+      );
+      titleText.shadow = new Shadow('#000000', 4, 4, 0);
+      titleText.textAlign = 'center';
+      titleText.x = 320;
+      titleText.y = 120;
+
+      signInText = new Text('Sign In', '40px "PowellAntique" serif', '#dc9a44');
+      signInText.textBaseline = 'bottom';
+      signInText.x = 400;
+      signInText.y = 320;
+      signInText.shadow = new Shadow('#000000', 2, 2, 0);
+
+      var signInGraphics = new Graphics();
+      var signInGraphicsX = signInText.x + signInText.getMeasuredWidth() / 2;
+      var signInGraphicsY = signInText.y - signInText.getMeasuredLineHeight() /2;
+      var signInGraphicsInnerRadius = 10;
+      var signInGraphicsOuterRadius = 110;
+      signInGraphics.beginRadialGradientFill(
+        ['#dc9a44', '#000000'], [0, 0.9],
+        signInGraphicsX, signInGraphicsY, signInGraphicsInnerRadius,
+        signInGraphicsX, signInGraphicsY, signInGraphicsOuterRadius
+      );
+      signInGraphics.drawCircle(
+        signInGraphicsX, signInGraphicsY, signInGraphicsOuterRadius
+      );
+
+      var signInGraphicsShape = new Shape(signInGraphics);
+      signInGraphicsShape.alpha = 0.3;
+      signInGraphicsShape.compositeOperation = 'lighter';
+      signInGraphicsShape.visible = false;
+
+      var signInClickableGraphics = new Graphics();
+      var signInClickableGraphicsWidth = signInText.getMeasuredWidth() + 50;
+      var signInClickableGraphicsHeight = signInText.getMeasuredLineHeight() + 50;
+      /* HACK: need to fill something to be able to attach mouse events. */
+      signInClickableGraphics.beginFill('rgba(0,0,0,0.01)');
+      signInClickableGraphics.drawEllipse(
+        signInText.x - (signInClickableGraphicsWidth - signInText.getMeasuredWidth()) / 2,
+        (2 * signInText.y - signInText.getMeasuredLineHeight() - signInClickableGraphicsHeight) / 2,
+        signInClickableGraphicsWidth,
+        signInClickableGraphicsHeight
+      );
+
+      var signInClickableGraphicsShape = new Shape(signInClickableGraphics);
+      signInClickableGraphicsShape.onMouseOver = function() {
+        signInClickableGraphicsShape.parent.canvas.style.cursor = 'pointer';
+        signInGraphicsShape.visible = true;
+      };
+      signInClickableGraphicsShape.onMouseOut = function() {
+        signInClickableGraphicsShape.parent.canvas.style.cursor = '';
+        signInGraphicsShape.visible = false;
+      };
+      signInClickableGraphicsShape.onClick = function() {
+        Werld.switchState(Werld.States.CHOOSING_NAME, {
+          callback: function() {
+            signInClickableGraphicsShape.onMouseOver = null;
+            signInClickableGraphicsShape.onMouseOut = null;
+            signInClickableGraphicsShape.onClick = null;
+            signInClickableGraphicsShape.visible = false;
+          }
+        });
       };
 
-      this.loadTextures();
-      this.loadImages();
+      this.stage.addChild(splashImage);
+      this.stage.addChild(titleText);
+      this.stage.addChild(signInClickableGraphicsShape);
+      this.stage.addChild(signInGraphicsShape);
+      this.stage.addChild(signInText);
 
       Werld.switchState(Werld.States.SPLASH_SCREEN);
     } else {

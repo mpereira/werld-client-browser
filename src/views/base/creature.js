@@ -4,6 +4,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
     this.sprite.sheet = new Image();
     this.sprite.sheet.src = this.model.get('SPRITE').SRC;
     this.sprite.sheet.onload = _.bind(this.draw, this);
+
     this.movement = {};
   },
   updateDirectionFrame: function() {

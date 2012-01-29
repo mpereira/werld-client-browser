@@ -99,21 +99,9 @@ var Werld = {
     }
     return(this.messageInputView);
   },
-  switchState: function(state, data) {
+  switchState: function(state, params) {
     if (Werld.state === Werld.States.INIT) {
       if (state === Werld.States.SPLASH_SCREEN) {
-        $(Werld.canvas.el).mousemove(
-          _.bind(Werld.canvas.mouseMoveHandler, Werld.canvas)
-        );
-
-        $(Werld.canvas.el).mouseup(
-          _.bind(Werld.canvas.mouseClickHandler, Werld.canvas)
-        );
-
-        $(window).contextmenu(function() {
-          return(false);
-        });
-
         clearInterval(Werld.canvas.interval);
         Werld.canvas.interval = setInterval(
           _.bind(Werld.canvas.drawSplashScreen, Werld.canvas),
@@ -131,11 +119,15 @@ var Werld = {
     } else if (Werld.state === Werld.States.CHOOSING_NAME) {
       if (state === Werld.States.GAME_STARTED) {
         clearInterval(Werld.canvas.interval);
+        Werld.canvas.stage.removeAllChildren();
+        $(Werld.canvas.el).mouseup(
+          _.bind(Werld.canvas.mouseClickHandler, Werld.canvas)
+        );
 
         Werld.character = new Werld.Models.Character(
           _.extend(Werld.Creatures.CHARACTER, {
             fixed: true,
-            name: data.character.name,
+            name: params.data.character.name,
             stats: {
               strength: 20,
               dexterity: 20,
@@ -206,8 +198,13 @@ var Werld = {
         Werld.state = Werld.States.INIT;
       }
     }
+    params && params.callback && params.callback();
   },
   init: function() {
+    $(window).contextmenu(function() {
+      return(false);
+    });
+
     this.switchState(Werld.States.INIT);
     this.loadSounds();
     this.canvas.init();
