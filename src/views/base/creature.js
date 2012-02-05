@@ -108,8 +108,10 @@ Werld.Views.Base.Creature = Backbone.View.extend({
 
     Werld.canvas.context.textBaseline = 'top';
     Werld.canvas.context.textAlign = 'center';
+    var name = this.model.get('name');
+    var nameText = this.model.alive() ? name : name + ' corpse';
     Werld.canvas.context.fillText(
-      this.model.get('name'),
+      nameText,
       creatureScreenCoordinates[0] + 20,
       creatureScreenCoordinates[1] - 30
     );

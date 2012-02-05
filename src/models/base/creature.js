@@ -12,6 +12,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
 
     this.set({
+      status: 'alive',
       hitPoints: stats.strength,
       destination: coordinates,
       messages: [],
@@ -29,6 +30,10 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.battleHandlerIntervalId = setInterval(
       _.bind(this.battleHandler, this), Werld.Config.FRAME_RATE()
+    );
+
+    this.hitPointsObserverIntervalId = setInterval(
+      _.bind(this.hitPointsObserver, this), Werld.Config.FRAME_RATE()
     );
   },
   say: function(message) {
@@ -102,7 +107,11 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.trigger('change:coordinates');
   },
   follow: function(creature) {
-    this.set({ destination: creature.get('coordinates') });
+    if (creature) {
+      this.set({ destination: creature.get('coordinates') });
+    } else {
+      this.set({ destination: this.get('coordinates') });
+    }
   },
   damage: function() {
     var stats = this.get('stats');
@@ -128,6 +137,14 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       this.attack(attacker);
     }
   },
+  stopAttacking: function(creature) {
+    this.set({ attacking: null });
+    this.follow(null);
+    creature.acknowledgeAttackStop(this);
+  },
+  acknowledgeAttackStop: function(attacker) {
+    this.set({ attacker: null });
+  },
   hit: function(creature) {
     creature.receiveHit(this.damage());
   },
@@ -145,17 +162,50 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     var attackedCreature = this.get('attacking');
 
     if (attackedCreature) {
-      var coordinates = this.get('coordinates');
-      var attackedCreatureCoordinates = attackedCreature.get('coordinates');
-      var distance =
-        Werld.util.pixelDistance(coordinates, attackedCreatureCoordinates);
-      var lastAttackAt = this.get('lastAttackAt');
-      var now = new Date();
+      if (attackedCreature.alive()) {
+        var coordinates = this.get('coordinates');
+        var attackedCreatureCoordinates = attackedCreature.get('coordinates');
+        var distance =
+          Werld.util.pixelDistance(coordinates, attackedCreatureCoordinates);
+        var lastAttackAt = this.get('lastAttackAt');
+        var now = new Date();
 
-      if (distance <= Werld.Config.PIXELS_PER_TILE &&
-            (now.getTime() - lastAttackAt) >= this.attackSpeed()) {
-        this.set({ lastAttackAt: now.getTime() });
-        this.hit(attackedCreature);
+        if (distance <= Werld.Config.PIXELS_PER_TILE &&
+              (now.getTime() - lastAttackAt) >= this.attackSpeed()) {
+          this.set({ lastAttackAt: now.getTime() });
+          this.hit(attackedCreature);
+        }
+      } else {
+        this.stopAttacking(attackedCreature);
+      }
+    }
+  },
+  alive: function() {
+    return(this.get('status') === 'alive');
+  },
+  dead: function() {
+    return(this.get('status') === 'dead');
+  },
+  die: function() {
+    if (this.get('attacking')) {
+      this.stopAttacking(this.get('attacking'));
+    } else {
+      this.follow(null);
+    }
+    this.set({ messages: [] });
+    this.set({ status: 'dead' });
+  },
+  resurrect: function() {
+    this.set({ status: 'alive' });
+  },
+  hitPointsObserver: function() {
+    if (this.dead()) {
+      if (this.get('hitPoints') > 0) {
+        this.resurrect();
+      }
+    } else {
+      if (this.get('hitPoints') <= 0) {
+        this.die();
       }
     }
   },
