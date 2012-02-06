@@ -28,10 +28,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       _.bind(this.movementHandler, this), Werld.Config.FRAME_RATE()
     );
 
-    this.battleHandlerIntervalId = setInterval(
-      _.bind(this.battleHandler, this), Werld.Config.FRAME_RATE()
-    );
-
     this.hitPointsObserverIntervalId = setInterval(
       _.bind(this.hitPointsObserver, this), Werld.Config.FRAME_RATE()
     );
@@ -47,6 +43,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   move: function(destinationTile) {
     var mapDestinationTile;
+
+    this.follow(null);
 
     if (this.get('fixed')) {
       var fixedCoordinates = this.get('fixedCoordinates');
@@ -85,6 +83,10 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     });
   },
   movementHandler: function() {
+    if (this.get('following')) {
+      this.set({ destination: _.clone(this.get('following').get('coordinates')) });
+    }
+
     var coordinates = this.get('coordinates');
     var destination = this.get('destination');
     var movementSpeed = this.get('MOVEMENT_SPEED');
@@ -107,11 +109,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.trigger('change:coordinates');
   },
   follow: function(creature) {
-    if (creature) {
-      this.set({ destination: creature.get('coordinates') });
-    } else {
-      this.set({ destination: this.get('coordinates') });
-    }
+    this.set({ following: creature });
   },
   damage: function() {
     var stats = this.get('stats');
@@ -127,6 +125,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     return(((-4 * this.get('stats').dexterity / 125) + 5) * 1000);
   },
   attack: function(creature) {
+    this.battleHandlerIntervalId = setInterval(
+      _.bind(this.battleHandler, this), Werld.Config.FRAME_RATE()
+    );
     this.follow(creature);
     this.set({ attacking: creature });
     creature.acknowledgeAttack(this);
@@ -138,6 +139,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
   },
   stopAttacking: function(creature) {
+    clearInterval(this.battleHandlerIntervalId);
     this.set({ attacking: null });
     this.follow(null);
     creature.acknowledgeAttackStop(this);
@@ -196,7 +198,10 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.set({ status: 'dead' });
   },
   resurrect: function() {
-    this.set({ status: 'alive' });
+    this.set({
+      status: 'alive',
+      hitPoints: 1
+    });
   },
   hitPointsObserver: function() {
     if (this.dead()) {
@@ -208,6 +213,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
         this.die();
       }
     }
+  },
+  loot: function() {
   },
   messagesSweeper: function() {
     var now = new Date();

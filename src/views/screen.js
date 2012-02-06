@@ -1,5 +1,7 @@
 Werld.Views.Screen = Backbone.View.extend({
   initialize: function() {
+    this.container = new Container();
+    this.container.tick = _.bind(this.tick, this);
     this.createMapTileViews();
   },
   createMapTileViews: function() {
@@ -15,7 +17,7 @@ Werld.Views.Screen = Backbone.View.extend({
       }
     }
   },
-  draw: function() {
+  tick: function() {
     var screenCoordinates = this.model.get('coordinates');
     var screenDimensions = this.model.get('dimensions');
 

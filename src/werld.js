@@ -102,12 +102,6 @@ var Werld = {
   switchState: function(state, params) {
     if (Werld.state === Werld.States.INIT) {
       if (state === Werld.States.SPLASH_SCREEN) {
-        clearInterval(Werld.canvas.interval);
-        Werld.canvas.interval = setInterval(
-          _.bind(Werld.canvas.drawSplashScreen, Werld.canvas),
-          Werld.Config.FRAME_RATE()
-        );
-
         Werld.state = Werld.States.SPLASH_SCREEN;
       }
     } else if (Werld.state === Werld.States.SPLASH_SCREEN) {
@@ -118,7 +112,6 @@ var Werld = {
       }
     } else if (Werld.state === Werld.States.CHOOSING_NAME) {
       if (state === Werld.States.GAME_STARTED) {
-        clearInterval(Werld.canvas.interval);
         Werld.canvas.stage.removeAllChildren();
         $(Werld.canvas.el).mouseup(
           _.bind(Werld.canvas.mouseClickHandler, Werld.canvas)
@@ -131,7 +124,7 @@ var Werld = {
             stats: {
               strength: 20,
               dexterity: 20,
-              intelligence: 20
+              intelligence: 10
             },
             coordinates: _([
               Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
@@ -185,11 +178,9 @@ var Werld = {
           'keydown', _.bind(Werld.canvas.keyboardHandler, Werld.canvas), false
         );
 
-        Werld.canvas.interval = setInterval(
-          _.bind(Werld.canvas.drawGameScreen, Werld.canvas),
-          Werld.Config.FRAME_RATE()
-        );
-        Werld.canvas.drawGameScreen();
+        Werld.canvas.stage.addChild(Werld.canvas.creatureView.container);
+        Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
+        Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
 
         Werld.state = Werld.States.GAME_STARTED;
       }

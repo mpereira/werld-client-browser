@@ -1,55 +1,129 @@
 Werld.Views.Base.Creature = Backbone.View.extend({
   initialize: function() {
-    this.sprite = { frame: 0, partialFrame: 0, directionFrame: 0 };
-    this.sprite.sheet = new Image();
-    this.sprite.sheet.src = this.model.get('SPRITE').SRC;
-    this.sprite.sheet.onload = _.bind(this.draw, this);
+    this.container = new Container();
+    var image = new Image();
+    image.src = this.model.get('SPRITE').SRC;
+    image.onload = _.bind(function() {
+      var spriteSheet = new SpriteSheet({
+        images: [image],
+        frames: { width: 40, height: 40 },
+        animations: {
+          walkDown:  [0, 3],
+          walkLeft:  [4, 7],
+          walkRight: [8, 11],
+          walkUp:    [12, 15]
+        }
+      });
 
-    this.movement = {};
-  },
-  updateDirectionFrame: function() {
-    if (this.movement.directionX === 'left' &&
-          this.movement.directionY === 'up') {
-      this.sprite.directionFrame = 120;
-    } else if (this.movement.directionX === 'left' &&
-                 this.movement.directionY === 'down') {
-      this.sprite.directionFrame = 0;
-    } else if (this.movement.directionX === 'left' &&
-                 this.movement.directionY === 'none') {
-      this.sprite.directionFrame = 40;
-    } else if (this.movement.directionX === 'right' &&
-                 this.movement.directionY === 'up') {
-      this.sprite.directionFrame = 120;
-    } else if (this.movement.directionX === 'right' &&
-                 this.movement.directionY === 'down') {
-      this.sprite.directionFrame = 0;
-    } else if (this.movement.directionX === 'right' &&
-                 this.movement.directionY === 'none') {
-      this.sprite.directionFrame = 80;
-    } else if (this.movement.directionX === 'none' &&
-                 this.movement.directionY === 'up') {
-      this.sprite.directionFrame = 120;
-    } else if (this.movement.directionX === 'none' &&
-                 this.movement.directionY === 'down') {
-      this.sprite.directionFrame = 0;
-    }
-  },
-  advanceFrame: function() {
-    var sprite = this.model.get('SPRITE');
+      this.bitmapAnimation = new BitmapAnimation(spriteSheet);
+      this.bitmapAnimation.currentFrame = 0;
+      this.bitmapAnimation.mouseEnabled = true;
+      this.bitmapAnimation.onMouseOver = function() {
+        this.parent.getStage().canvas.style.cursor = 'pointer';
+      };
+      this.bitmapAnimation.onMouseOut = function() {
+        this.parent.getStage().canvas.style.cursor = '';
+      };
+      var self = this;
+      this.bitmapAnimation.onPress = function(event) {
+        if (self.model.alive()) {
+          Werld.character.attack(self.model);
+        } else {
+          self.showLoot(self.model.loot());
+        }
+      };
+      this.bitmapAnimation.tick = _.bind(this.bitmapAnimationTick, this);
 
-    if (this.movement.directionX === 'none' &&
-          this.movement.directionY === 'none') {
-      this.sprite.frame = 0;
-    } else {
-      this.sprite.partialFrame += sprite.FRAME_CHANGE_SPEED;
-      if (this.sprite.partialFrame >= sprite.FRAMES) {
-        this.sprite.partialFrame -= (sprite.FRAMES - 1);
+      this.characterNameText = new Text();
+      this.characterNameText.tick = _.bind(this.characterNameTextTick, this);
+
+      this.messagesContainer = new Container();
+      this.messagesContainer.tick = _.bind(this.messagesContainerTick, this);
+
+      this.container.tick = _.bind(this.tick, this);
+
+      this.container.addChild(this.bitmapAnimation);
+      this.container.addChild(this.characterNameText);
+      this.container.addChild(this.messagesContainer);
+    }, this);
+  },
+  showLoot: function() {
+  },
+  bitmapAnimationTick: function() {
+    var modelCoordinates = this.model.get('coordinates');
+    var modelDestinationCoordinates = this.model.get('destination');
+    var throttle = Ticker.getTicks() % 4;
+
+    if (throttle === 0) {
+      if (modelCoordinates[0] > modelDestinationCoordinates[0]) {
+        this.bitmapAnimation.gotoAndPlay('walkLeft');
+      } else if (modelCoordinates[0] < modelDestinationCoordinates[0]) {
+        this.bitmapAnimation.gotoAndPlay('walkRight');
       }
 
-      this.sprite.frame = Math.floor(this.sprite.partialFrame);
+      if (modelCoordinates[1] > modelDestinationCoordinates[1]) {
+        this.bitmapAnimation.gotoAndPlay('walkUp');
+      } else if (modelCoordinates[1] < modelDestinationCoordinates[1]) {
+        this.bitmapAnimation.gotoAndPlay('walkDown');
+      }
     }
   },
-  draw: function() {
+  characterNameTextTick: function() {
+    this.characterNameText.text = _.bind(function() {
+      if (this.model.alive()) {
+        return(this.model.get('name'));
+      } else {
+        return(this.model.get('name') + ' corpse');
+      }
+    }, this)();
+
+    if (this.model instanceof Werld.Models.Character) {
+      this.characterNameText.shadow = new Shadow('#3300ff', 1, 1, 0);
+      this.characterNameText.color = '#00ccff';
+      this.characterNameText.font = '20px "PowellAntique" serif';
+
+    } else {
+      this.characterNameText.color = '#cccccc';
+      this.characterNameText.font = '16px "PowellAntique" serif';
+    }
+
+    this.characterNameText.textBaseline = 'top';
+    this.characterNameText.textAlign = 'center';
+    this.characterNameText.x = 20;
+    this.characterNameText.y = -30;
+  },
+  messagesContainerTick: function() {
+    var temporaryCreatureScreenCoordinates = [0, 0];
+    var self = this;
+
+    this.messagesContainer.removeAllChildren();
+    _(this.model.get('messages')).each(function(message) {
+      if (message.content !== '') {
+        self.messageText = new Text();
+        self.messagesContainer.addChild(self.messageText);
+
+        self.messageText.text = message.content;
+        self.messageText.textAlign = 'center';
+
+        if (message.type === 'speech') {
+          self.messageText.color = '#cccccc';
+          self.messageText.font = '16px "PowellAntique" serif';
+        } else if (message.type === 'hit') {
+          self.messageText.shadow = new Shadow('black', 1, 1, 1);
+          self.messageText.color = '#ff3300';
+          self.messageText.font = '14px "PowellAntique" serif';
+        } else {
+          self.messageText.color = '#cccccc';
+          self.messageText.font = '16px "PowellAntique" serif';
+        }
+
+        temporaryCreatureScreenCoordinates[1] -= 30;
+        self.messageText.x = 20;
+        self.messageText.y = temporaryCreatureScreenCoordinates[1];
+      }
+    });
+  },
+  tick: function() {
     var modelCoordinates = this.model.get('coordinates');
     var fixedModelCoordinates = this.model.get('fixedCoordinates');
     var modelDestinationCoordinates = this.model.get('destination');
@@ -76,89 +150,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       return;
     }
 
-    if (modelCoordinates[0] > modelDestinationCoordinates[0]) {
-      this.movement.directionX = 'left';
-    } else if (modelCoordinates[0] < modelDestinationCoordinates[0]) {
-      this.movement.directionX = 'right';
-    } else {
-      this.movement.directionX = 'none';
-    }
-
-    if (modelCoordinates[1] > modelDestinationCoordinates[1]) {
-      this.movement.directionY = 'up';
-    } else if (modelCoordinates[1] < modelDestinationCoordinates[1]) {
-      this.movement.directionY = 'down';
-    } else {
-      this.movement.directionY = 'none';
-    }
-
-    this.updateDirectionFrame();
-
-    if (this.model instanceof Werld.Models.Character) {
-      Werld.canvas.context.shadowColor = '#3300ff';
-      Werld.canvas.context.shadowOffsetX = 1;
-      Werld.canvas.context.shadowOffsetY = 1;
-      Werld.canvas.context.fillStyle = '#00ccff';
-      Werld.canvas.context.font = '20px "PowellAntique" serif';
-    } else {
-      Werld.canvas.context.shadowOffsetX = 0;
-      Werld.canvas.context.shadowOffsetY = 0;
-      Werld.canvas.context.fillStyle = '#cccccc';
-      Werld.canvas.context.font = '16px "PowellAntique" serif';
-    }
-
-    Werld.canvas.context.textBaseline = 'top';
-    Werld.canvas.context.textAlign = 'center';
-    var name = this.model.get('name');
-    var nameText = this.model.alive() ? name : name + ' corpse';
-    Werld.canvas.context.fillText(
-      nameText,
-      creatureScreenCoordinates[0] + 20,
-      creatureScreenCoordinates[1] - 30
-    );
-    Werld.canvas.context.drawImage(
-      this.sprite.sheet,
-      this.sprite.frame * Werld.Config.PIXELS_PER_TILE,
-      this.sprite.directionFrame,
-      Werld.Config.PIXELS_PER_TILE,
-      Werld.Config.PIXELS_PER_TILE,
-      creatureScreenCoordinates[0],
-      creatureScreenCoordinates[1],
-      Werld.Config.PIXELS_PER_TILE,
-      Werld.Config.PIXELS_PER_TILE
-    );
-
-    Werld.canvas.context.shadowOffsetX = 0;
-    Werld.canvas.context.shadowOffsetY = 0;
-
-    var temporaryCreatureScreenCoordinates = _.clone(creatureScreenCoordinates);
-    _(this.model.get('messages')).each(function(message) {
-      if (message.content !== '') {
-        Werld.canvas.context.save();
-        if (message.type === 'speech') {
-          Werld.canvas.context.fillStyle = '#cccccc';
-          Werld.canvas.context.font = '16px "PowellAntique" serif';
-        } else if (message.type === 'hit') {
-          Werld.canvas.context.shadowColor = 'black';
-          Werld.canvas.context.shadowOffsetX = 1;
-          Werld.canvas.context.shadowOffsetY = 1;
-          Werld.canvas.context.shadowBlur = 1;
-          Werld.canvas.context.fillStyle = '#ff3300';
-          Werld.canvas.context.font = '14px "PowellAntique" serif';
-        } else {
-          Werld.canvas.context.fillStyle = '#cccccc';
-          Werld.canvas.context.font = '16px "PowellAntique" serif';
-        }
-        temporaryCreatureScreenCoordinates[1] -= 20;
-        Werld.canvas.context.fillText(
-          message.content,
-          temporaryCreatureScreenCoordinates[0] + 20,
-          temporaryCreatureScreenCoordinates[1] - 30
-        );
-        Werld.canvas.context.restore();
-      }
-    });
-
-    this.advanceFrame();
+    this.container.x = creatureScreenCoordinates[0];
+    this.container.y = creatureScreenCoordinates[1];
   }
 });
