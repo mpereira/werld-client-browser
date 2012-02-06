@@ -18,6 +18,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       this.bitmapAnimation = new BitmapAnimation(spriteSheet);
       this.bitmapAnimation.currentFrame = 0;
       this.bitmapAnimation.mouseEnabled = true;
+      this.bitmapAnimation.paused = true;
       this.bitmapAnimation.onMouseOver = function() {
         this.parent.getStage().canvas.style.cursor = 'pointer';
       };
@@ -52,20 +53,34 @@ Werld.Views.Base.Creature = Backbone.View.extend({
   bitmapAnimationTick: function() {
     var modelCoordinates = this.model.get('coordinates');
     var modelDestinationCoordinates = this.model.get('destination');
-    var throttle = Ticker.getTicks() % 4;
+    var gotoThrottle = Ticker.getTicks() % 4;
+    var advanceThrottle = Ticker.getTicks() % 8;
+    var walking = [];
 
-    if (throttle === 0) {
+    if (gotoThrottle === 0) {
       if (modelCoordinates[0] > modelDestinationCoordinates[0]) {
-        this.bitmapAnimation.gotoAndPlay('walkLeft');
+        this.bitmapAnimation.gotoAndStop('walkLeft');
+        walking[0] = true;
       } else if (modelCoordinates[0] < modelDestinationCoordinates[0]) {
-        this.bitmapAnimation.gotoAndPlay('walkRight');
+        this.bitmapAnimation.gotoAndStop('walkRight');
+        walking[0] = true;
+      } else {
+        walking[0] = false;
       }
 
       if (modelCoordinates[1] > modelDestinationCoordinates[1]) {
-        this.bitmapAnimation.gotoAndPlay('walkUp');
+        this.bitmapAnimation.gotoAndStop('walkUp');
+        walking[1] = true;
       } else if (modelCoordinates[1] < modelDestinationCoordinates[1]) {
-        this.bitmapAnimation.gotoAndPlay('walkDown');
+        this.bitmapAnimation.gotoAndStop('walkDown');
+        walking[1] = true;
+      } else {
+        walking[1] = false;
       }
+    }
+
+    if ((walking[0] || walking[1]) && advanceThrottle === 0) {
+      this.bitmapAnimation.advance();
     }
   },
   characterNameTextTick: function() {
