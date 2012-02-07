@@ -208,10 +208,10 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     });
   },
   resurrect: function() {
-    this.set({
-      status: 'alive',
-      hitPoints: 1
-    });
+    this.set({ status: 'alive' });
+    if (this.get('hitPoints') <= 0) {
+      this.set({ hitPoints: 1 });
+    }
   },
   hitPointsObserver: function() {
     if (this.dead()) {
