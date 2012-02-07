@@ -139,6 +139,10 @@ var Werld = {
           model: Werld.character
         });
 
+        Werld.canvas.statusBarView = new Werld.Views.StatusBar({
+          model: Werld.character
+        });
+
         Werld.creature = new Werld.Models.Creature(
           _.extend(Werld.Creatures.SILVER_BAT, {
             coordinates: _([3, 4]).map(function(coordinate) {
@@ -181,6 +185,7 @@ var Werld = {
         Werld.canvas.stage.addChild(Werld.canvas.creatureView.container);
         Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
         Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
+        Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
 
         Werld.state = Werld.States.GAME_STARTED;
       }

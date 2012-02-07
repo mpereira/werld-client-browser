@@ -14,6 +14,11 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.set({
       status: 'alive',
       hitPoints: stats.strength,
+      maxHitPoints: stats.strength,
+      mana: stats.intelligence,
+      maxMana: stats.intelligence,
+      stamina: stats.dexterity,
+      maxStamina: stats.dexterity,
       destination: coordinates,
       messages: [],
       fixedCoordinates: fixedCoordinates
@@ -194,8 +199,13 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     } else {
       this.follow(null);
     }
-    this.set({ messages: [] });
-    this.set({ status: 'dead' });
+    this.set({
+      status: 'dead',
+      hitPoints: 0,
+      mana: 0,
+      stamina: 0,
+      messages: []
+    });
   },
   resurrect: function() {
     this.set({
