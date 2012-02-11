@@ -88,7 +88,11 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       if (this.model.alive()) {
         return(this.model.get('name'));
       } else {
-        return(this.model.get('name') + ' corpse');
+        if (this.model instanceof Werld.Models.Creature) {
+          return(this.model.get('name') + ' corpse');
+        } else if (this.model instanceof Werld.Models.Character) {
+          return(this.model.get('name'));
+        }
       }
     }, this)();
 
