@@ -1,7 +1,28 @@
 Werld.Views.Screen = Backbone.View.extend({
   initialize: function() {
     this.container = new Container();
+    var screenRectangle = new Rectangle(0, 0, 640, 480);
+    var screenRectangleGraphics = new Graphics();
+    screenRectangleGraphics.
+      beginFill('rgba(0,0,0,0.01)').
+      drawRect(
+        screenRectangle.x,
+        screenRectangle.y,
+        screenRectangle.width,
+        screenRectangle.height
+      ).
+      endFill();
+    var screenRectangleShape = new Shape(screenRectangleGraphics);
+    this.container.addChild(screenRectangleShape);
     this.container.tick = _.bind(this.tick, this);
+    this.container.onPress = function(event) {
+      var coordinates = [event.stageX, event.stageY];
+
+      Werld.character.move(_(coordinates).map(function(pixels) {
+        return(Werld.util.pixelToTile(pixels));
+      }));
+    };
+
     this.model.get('character').bind('change:status', this.onCharacterChangeStatus, this);
     this.createMapTileViews();
   },

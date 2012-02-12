@@ -120,9 +120,6 @@ var Werld = {
     } else if (Werld.state === Werld.States.CHOOSING_NAME) {
       if (state === Werld.States.GAME_STARTED) {
         Werld.canvas.stage.removeAllChildren();
-        $(Werld.canvas.el).mouseup(
-          _.bind(Werld.canvas.mouseClickHandler, Werld.canvas)
-        );
 
         Werld.character = new Werld.Models.Character(
           _.extend(Werld.Creatures.CHARACTER, {
@@ -201,10 +198,10 @@ var Werld = {
           'keydown', _.bind(Werld.canvas.keyboardHandler, Werld.canvas), false
         );
 
+        Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
         Werld.canvas.stage.addChild(Werld.canvas.creatureView.container);
         Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
         Werld.canvas.stage.addChild(Werld.canvas.altarView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
         Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
 
         Werld.state = Werld.States.GAME_STARTED;
