@@ -2,6 +2,7 @@ Werld.Views.Screen = Backbone.View.extend({
   initialize: function() {
     this.container = new Container();
     this.container.tick = _.bind(this.tick, this);
+    this.model.get('character').bind('change:status', this.onCharacterChangeStatus, this);
     this.createMapTileViews();
   },
   createMapTileViews: function() {
@@ -52,6 +53,25 @@ Werld.Views.Screen = Backbone.View.extend({
           );
         }
       }
+    }
+  },
+  onCharacterChangeStatus: function() {
+    var statusChangeTextHandler = function(text, context) {
+      var text = new Text(text, '40px "PowellAntique" serif', '#dc9a44');
+      text.textAlign = 'center';
+      text.x = 320;
+      text.y = 200;
+      text.shadow = new Shadow('#000000', 2, 2, 0);
+      context.container.addChild(text);
+      _.delay(function(context) {
+        context.container.removeChild(text);
+      }, 3000, context)
+    }
+
+    if (this.model.get('character').alive()) {
+      statusChangeTextHandler('You are alive', this);
+    } else if (this.model.get('character').dead()) {
+      statusChangeTextHandler('You are dead', this);
     }
   }
 });
