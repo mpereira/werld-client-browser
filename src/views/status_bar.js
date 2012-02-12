@@ -1,6 +1,32 @@
 Werld.Views.StatusBar = Backbone.View.extend({
   initialize: function() {
     this.container = new Container();
+    this.container.x = 0;
+    this.container.y = 405;
+
+    var self = this;
+    self.container.onPress = function(event) {
+      var offset = [
+        self.container.x - event.stageX,
+        self.container.y - event.stageY
+      ];
+
+      event.onMouseMove = function(ev) {
+        self.container.x = ev.stageX + offset[0];
+        self.container.y = ev.stageY + offset[1];
+      };
+    };
+
+    this.container.onMouseOver = function() {
+      self.container.parent.getStage().canvas.style.cursor = 'pointer';
+      self.container.scaleX = self.container.scaleY = 1.05;
+    };
+
+    this.container.onMouseOut = function() {
+      self.container.parent.getStage().canvas.style.cursor = '';
+      self.container.scaleX = self.container.scaleY = 1.0;
+    }
+
     this.container.tick = _.bind(this.tick, this);
     this.statusBarRectangle = new Rectangle(0, 0, 200, 75);
     var statusBarRectangle = new Graphics();
@@ -134,8 +160,6 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.container.addChild(this.staminaTextValue);
   },
   tick: function() {
-    this.container.x = 0;
-    this.container.y = 405;
     var barPadding = 5;
     var leftRectangleWidth = this.hitPointsTextKey.x + this.hitPointsTextKey.getMeasuredWidth();
 
