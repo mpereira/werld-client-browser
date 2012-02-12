@@ -130,6 +130,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     return(((-4 * this.get('stats').dexterity / 125) + 5) * 1000);
   },
   attack: function(creature) {
+    if (creature === this) return;
+
     this.battleHandlerIntervalId = setInterval(
       _.bind(this.battleHandler, this), Werld.Config.FRAME_RATE()
     );
