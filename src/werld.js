@@ -23,7 +23,6 @@ var Werld = {
       },
       SPRITE: {
         SRC: '../images/sprite_sheets/character.png',
-        FRAMES: 4,
         FRAME_CHANGE_SPEED: 0.25
       }
     },
