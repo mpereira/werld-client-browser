@@ -84,27 +84,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
     }
   },
   characterNameTextTick: function() {
-    this.characterNameText.text = _.bind(function() {
-      if (this.model.alive()) {
-        return(this.model.get('name'));
-      } else {
-        if (this.model instanceof Werld.Models.Creature) {
-          return(this.model.get('name') + ' corpse');
-        } else if (this.model instanceof Werld.Models.Character) {
-          return(this.model.get('name'));
-        }
-      }
-    }, this)();
-
-    if (this.model instanceof Werld.Models.Character) {
-      this.characterNameText.shadow = new Shadow('#3300ff', 1, 1, 0);
-      this.characterNameText.color = '#00ccff';
-      this.characterNameText.font = '20px "PowellAntique" serif';
-
-    } else {
-      this.characterNameText.color = '#cccccc';
-      this.characterNameText.font = '16px "PowellAntique" serif';
-    }
+    this.characterNameText.text = this._characterNameText();
 
     this.characterNameText.textBaseline = 'top';
     this.characterNameText.textAlign = 'center';
