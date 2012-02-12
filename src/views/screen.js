@@ -77,8 +77,8 @@ Werld.Views.Screen = Backbone.View.extend({
     }
   },
   onCharacterChangeStatus: function() {
-    var statusChangeTextHandler = function(text, context) {
-      var text = new Text(text, '40px "PowellAntique" serif', '#dc9a44');
+    var statusChangeTextHandler = function(string, context) {
+      var text = new Text(string, '40px "PowellAntique" serif', '#dc9a44');
       text.textAlign = 'center';
       text.x = 320;
       text.y = 200;
@@ -86,8 +86,8 @@ Werld.Views.Screen = Backbone.View.extend({
       context.container.addChild(text);
       _.delay(function(context) {
         context.container.removeChild(text);
-      }, 3000, context)
-    }
+      }, 3000, context);
+    };
 
     if (this.model.get('character').alive()) {
       statusChangeTextHandler('You are alive', this);
