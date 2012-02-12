@@ -31,7 +31,7 @@ var Werld = {
       name: 'a silver bat',
       MOVEMENT_SPEED: 1,
       stats: {
-        strength: 10,
+        strength: 15,
         dexterity: 10,
         intelligence: 10
       },
@@ -63,6 +63,7 @@ var Werld = {
     MESSAGE_LIFE_CYCLE: 5000,
     MESSAGE_SWEEPER_POLLING_INTERVAL: 1000,
     PIXELS_PER_TILE: 40,
+    REGENERATION_RATE: 1000,
     SCREEN_DIMENSIONS: [16, 12],
     WORLD_MAP_DIMENSIONS: [20, 20]
   },

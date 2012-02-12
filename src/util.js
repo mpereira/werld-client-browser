@@ -18,5 +18,8 @@ Werld.util = {
     var _pixelDistance = this.pixelDistance(a, b);
     return((_pixelDistance - _pixelDistance % Werld.Config.PIXELS_PER_TILE) /
              Werld.Config.PIXELS_PER_TILE);
+  },
+  capitaliseFirstLetter: function(string) {
+    return(string.charAt(0).toUpperCase() + string.slice(1));
   }
 };

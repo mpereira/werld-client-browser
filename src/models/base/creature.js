@@ -33,8 +33,20 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       _.bind(this.movementHandler, this), Werld.Config.FRAME_RATE()
     );
 
-    this.hitPointsObserverIntervalId = setInterval(
-      _.bind(this.hitPointsObserver, this), Werld.Config.FRAME_RATE()
+    this.statusObserverIntervalId = setInterval(
+      _.bind(this.statusObserver, this), Werld.Config.FRAME_RATE()
+    );
+
+    this.hitPointObserverIntervalId = setInterval(
+      _.bind(this.hitPointObserver, this), Werld.Config.REGENERATION_RATE
+    );
+
+    this.manaObserverIntervalId = setInterval(
+      _.bind(this.manaObserver, this), Werld.Config.REGENERATION_RATE
+    );
+
+    this.staminaObserverIntervalId = setInterval(
+      _.bind(this.staminaObserver, this), Werld.Config.REGENERATION_RATE
     );
   },
   say: function(message) {
@@ -219,7 +231,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       }
     }, this));
   },
-  hitPointsObserver: function() {
+  statusObserver: function() {
     if (this.dead()) {
       if (this.get('hitPoints') > 0) {
         this.resurrect();
@@ -231,6 +243,84 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
   },
   loot: function() {
+  },
+  increase: function(attribute, quantity) {
+    var currentAttributeValue = this.get(attribute);
+    var maxAttributeValue = this.get('max' + Werld.util.capitaliseFirstLetter(attribute))
+    var futureAttributeValue = quantity + currentAttributeValue;
+    var object = {};
+    if (futureAttributeValue > maxAttributeValue) {
+      object[attribute] = maxAttributeValue;
+    } else {
+      object[attribute] = futureAttributeValue;
+    }
+    this.set(object);
+  },
+  hitPointObserver: function() {
+    if (this.alive()) {
+      if (this.get('hitPoints') < this.get('maxHitPoints')) {
+        if (this.hitPointRegeneratorIntervalId === null) {
+          this.hitPointRegeneratorIntervalId = setInterval(
+            _.bind(this.hitPointRegenerator, this),
+            Werld.Config.REGENERATION_RATE
+          );
+        }
+      } else {
+        clearInterval(this.hitPointRegeneratorIntervalId);
+        this.hitPointRegeneratorIntervalId = null;
+      }
+    } else {
+      clearInterval(this.hitPointRegeneratorIntervalId);
+      this.hitPointRegeneratorIntervalId = null;
+    }
+  },
+  hitPointRegenerator: function() {
+    var hitPointsPerSecondRegeneration = this.get('stats').strength / 100;
+    this.increase('hitPoints', hitPointsPerSecondRegeneration);
+  },
+  manaObserver: function() {
+    if (this.alive()) {
+      if (this.get('mana') < this.get('maxMana')) {
+        if (this.manaRegeneratorIntervalId === null) {
+          this.manaRegeneratorIntervalId = setInterval(
+            _.bind(this.manaRegenerator, this),
+            Werld.Config.REGENERATION_RATE
+          );
+        }
+      } else {
+        clearInterval(this.manaRegeneratorIntervalId);
+        this.manaRegeneratorIntervalId = null;
+      }
+    } else {
+      clearInterval(this.manaRegeneratorIntervalId);
+      this.manaRegeneratorIntervalId = null;
+    }
+  },
+  manaRegenerator: function() {
+    var manaPerSecondRegeneration = this.get('stats').intelligence / 100;
+    this.increase('mana', manaPerSecondRegeneration);
+  },
+  staminaObserver: function() {
+    if (this.alive()) {
+      if (this.get('stamina') < this.get('maxStamina')) {
+        if (this.staminaRegeneratorIntervalId === null) {
+          this.staminaRegeneratorIntervalId = setInterval(
+            _.bind(this.staminaRegenerator, this),
+            Werld.Config.REGENERATION_RATE
+          );
+        }
+      } else {
+        clearInterval(this.staminaRegeneratorIntervalId);
+        this.staminaRegeneratorIntervalId = null;
+      }
+    } else {
+      clearInterval(this.staminaRegeneratorIntervalId);
+      this.staminaRegeneratorIntervalId = null;
+    }
+  },
+  staminaRegenerator: function() {
+    var staminaPerSecondRegeneration = this.get('stats').dexterity / 100;
+    this.increase('stamina', staminaPerSecondRegeneration);
   },
   messagesSweeper: function() {
     var now = new Date();
