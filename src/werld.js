@@ -30,7 +30,7 @@ var Werld = {
       name: 'a silver bat',
       MOVEMENT_SPEED: 1,
       stats: {
-        strength: 15,
+        strength: 45,
         dexterity: 10,
         intelligence: 10
       },
@@ -113,8 +113,12 @@ var Werld = {
       }
     } else if (Werld.state === Werld.States.SPLASH_SCREEN) {
       if (state === Werld.States.CHOOSING_NAME) {
-        var characterNameInputForm = new Werld.Views.CharacterNameInputForm();
-        characterNameInputForm.render();
+        //var characterNameInputForm = new Werld.Views.CharacterNameInputForm();
+        //characterNameInputForm.render();
+        var characterForm = new Werld.Views.CharacterForm({
+          canvas: Werld.canvas
+        });
+        characterForm.render();
         Werld.state = Werld.States.CHOOSING_NAME;
       }
     } else if (Werld.state === Werld.States.CHOOSING_NAME) {
@@ -199,10 +203,10 @@ var Werld = {
         );
 
         Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
+        Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
         Werld.canvas.stage.addChild(Werld.canvas.creatureView.container);
         Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
         Werld.canvas.stage.addChild(Werld.canvas.altarView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
 
         Werld.state = Werld.States.GAME_STARTED;
       }

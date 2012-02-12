@@ -18,12 +18,25 @@
     <div id='canvas-wrapper'>
       <canvas width='640' height='480'></canvas>
     </div>
-    <div id='character-name-input-form-wrapper'>
-      <form id='character-name-input-form' style='display: none;'>
-        <label for='character-name-input'>
-          Please choose a name for your character
-        </label>
-        <input id='character-name-input' type='text'>
+    <div id='character-form-wrapper'>
+      <form id='character-form' style='display: none;'>
+        <div id='character-name-input-wrapper'>
+          <label for='character-name-input'>
+            What is your character's name?
+          </label>
+          <input id='character-name-input' type='text'>
+        </div>
+        <div id='character-stat-inputs-wrapper'>
+          <label for='character-stat-inputs-strength-input'>Strength:</label>
+          <input id='character-stat-inputs-strength-input' type='range' min='10' max='50' value='10' required>
+          <p id='character-stat-inputs-strength-value' class='range-value'></p>
+          <label for='character-stat-inputs-dexterity-input'>Dexterity:</label>
+          <input id='character-stat-inputs-dexterity-input' type='range' min='10' max='50' value='10' required>
+          <p id='character-stat-inputs-dexterity-value' class='range-value'></p>
+          <label for='character-stat-inputs-intelligence-input'>Intelligence:</label>
+          <input id='character-stat-inputs-intelligence-input' type='range' min='10' max='50' value='10' required>
+          <p id='character-stat-inputs-intelligence-value' class='range-value'></p>
+        </div>
       </form>
     </div>
     <div id='message-input-form-wrapper'>

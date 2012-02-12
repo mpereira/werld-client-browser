@@ -13,11 +13,12 @@ body {
   margin: 2em 0;
 }
 
-#message-input-form-wrapper, #character-name-input-form-wrapper {
+#message-input-form-wrapper,
+#character-name-input-wrapper {
   text-align: center;
 }
 
-#message-input-form input, #character-name-input-form-wrapper input {
+#message-input-form input {
   width: 624px;
   background-color: #1b1207;
   color: #dc9a44;
@@ -28,15 +29,59 @@ body {
   font-size: 1.2em;
 }
 
-#message-input-form input:focus, #character-name-input-form-wrapper input:focus {
+#character-name-input-wrapper input {
+  background-color: black;
+  color: #dc9a44;
+  border-radius: 5px;
+  border-color: #1b1207;
+  padding: 0.3em;
+  font-family: 'PowellAntique', Arial, sans-serif;
+  font-size: 1em;
+  margin-top: 0.5em;
+}
+
+#message-input-form input:focus,
+#character-form-wrapper input:focus {
   outline: none;
 }
 
-#character-name-input-form-wrapper {
+#character-form {
+  float: left;
+  position: absolute;
+  background-color: #1b1207;
+  border-radius: 5px;
+  padding: 0.5em 1em;
   font-size: 1.4em;
+  opacity: 0.95;
+  filter: alpha(opacity=95); /* For IE8 and earlier */
 }
 
-#character-name-input-form-wrapper input {
-  width: 300px;
-  font-size: 1em;
+#character-name-input-wrapper,
+#character-stat-inputs-wrapper {
+  position: relative;
+  float: left;
+}
+
+#character-stat-inputs-wrapper {
+}
+
+#character-stat-inputs-wrapper label {
+  width: 6em;
+  float: left;
+  clear: left;
+  margin-bottom: 1em;
+}
+
+#character-stat-inputs-wrapper input {
+  max-width: 25%;
+  float: left;
+  margin-bottom: 1em;
+}
+
+#character-stat-inputs-wrapper .range-value {
+  max-width: 10%;
+  margin-left: 1em;
+  margin-bottom: 1em;
+  float: left;
+  clear: right;
 }
