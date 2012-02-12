@@ -22,7 +22,7 @@ Werld.canvas = {
     y = coordinates[1];
 
     if (Werld.state === Werld.States.GAME_STARTED) {
-      if (e.which === 3) {
+      if (e.which === 1) {
         Werld.character.move(_(coordinates).map(function(pixels) {
           return(Werld.util.pixelToTile(pixels));
         }));
