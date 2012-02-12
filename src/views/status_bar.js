@@ -25,7 +25,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.container.onMouseOut = function() {
       self.container.parent.getStage().canvas.style.cursor = '';
       self.container.scaleX = self.container.scaleY = 1.0;
-    }
+    };
 
     this.container.tick = _.bind(this.tick, this);
     this.statusBarRectangle = new Rectangle(0, 0, 200, 75);
