@@ -32,8 +32,13 @@ Werld.Views.StatusBar = Backbone.View.extend({
     var statusBarRectangle = new Graphics();
     statusBarRectangle.
       beginFill('#ccc').
-      drawRoundRect(this.statusBarRectangle.x, this.statusBarRectangle.y, this.statusBarRectangle.width, this.statusBarRectangle.height, 5).
-      endStroke().
+      drawRoundRect(
+        this.statusBarRectangle.x,
+        this.statusBarRectangle.y,
+        this.statusBarRectangle.width,
+        this.statusBarRectangle.height,
+        5
+      ).
       endFill();
     this.statusBarRectangleShape = new Shape(statusBarRectangle);
     this.statusBarRectangleShape.alpha = 0.5;
@@ -178,7 +183,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
       endStroke().
       endFill();
     this.hitPointsTextValue.text =
-      this.model.get('hitPoints') + '/' + this.model.get('maxHitPoints');
+      Math.floor(this.model.get('hitPoints')) + '/' + this.model.get('maxHitPoints');
 
     var manaPercentage = this.model.get('mana') / this.model.get('maxMana');
     this.manaBarRectangle.width = manaPercentage * (this.statusBarRectangle.width - leftRectangleWidth - 2 * barPadding);
@@ -195,7 +200,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
       endStroke().
       endFill();
     this.manaTextValue.text =
-      this.model.get('mana') + '/' + this.model.get('maxMana');
+      Math.floor(this.model.get('mana')) + '/' + this.model.get('maxMana');
 
     var staminaPercentage = this.model.get('stamina') / this.model.get('maxStamina');
     this.staminaBarRectangle.width = staminaPercentage * (this.statusBarRectangle.width - leftRectangleWidth - 2 * barPadding);
@@ -212,6 +217,6 @@ Werld.Views.StatusBar = Backbone.View.extend({
       endStroke().
       endFill();
     this.staminaTextValue.text =
-      this.model.get('stamina') + '/' + this.model.get('maxStamina');
+      Math.floor(this.model.get('stamina')) + '/' + this.model.get('maxStamina');
   }
 });

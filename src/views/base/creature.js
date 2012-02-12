@@ -108,6 +108,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
           self.messageText.color = '#cccccc';
           self.messageText.font = '16px "PowellAntique" serif';
         } else if (message.type === 'hit') {
+          self.messageText.text = Math.ceil(self.messageText.text);
           self.messageText.shadow = new Shadow('black', 1, 1, 1);
           self.messageText.color = '#ff3300';
           self.messageText.font = '14px "PowellAntique" serif';
