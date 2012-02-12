@@ -1,14 +1,9 @@
 Werld.Views.Altar = Backbone.View.extend({
   initialize: function() {
-    //var bitmap = new Bitmap(this.model.get('IMAGE').SRC);
     this.container = new Container();
-    var image = new Image();
-    image.src = this.model.get('IMAGE').SRC;
-    image.onload = _.bind(function() {
-      var bitmap = new Bitmap(image);
-      this.container.addChild(bitmap);
-      this.container.tick = _.bind(this.tick, this);
-    }, this);
+    var bitmap = new Bitmap(this.model.get('IMAGE').SRC);
+    this.container.addChild(bitmap);
+    this.container.tick = _.bind(this.tick, this);
   },
   tick: function() {
     var modelCoordinates = this.model.get('coordinates');
