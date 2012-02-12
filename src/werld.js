@@ -48,6 +48,13 @@ var Werld = {
       }
     }
   },
+  Objects: {
+    ALTAR: {
+      IMAGE: {
+        SRC: '../images/objects/altar.png'
+      }
+    }
+  },
   Config: {
     FRAMES_PER_SECOND: 30,
     FRAME_RATE: function() {
@@ -139,6 +146,18 @@ var Werld = {
           model: Werld.character
         });
 
+        Werld.altar = new Werld.Models.Altar(
+          _.extend(Werld.Objects.ALTAR, {
+            coordinates: _([7, 8]).map(function(coordinate) {
+              return(coordinate * Werld.Config.PIXELS_PER_TILE);
+            })
+          })
+        );
+
+        Werld.canvas.altarView = new Werld.Views.Altar({
+          model: Werld.altar
+        });
+
         Werld.canvas.statusBarView = new Werld.Views.StatusBar({
           model: Werld.character
         });
@@ -184,6 +203,7 @@ var Werld = {
 
         Werld.canvas.stage.addChild(Werld.canvas.creatureView.container);
         Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
+        Werld.canvas.stage.addChild(Werld.canvas.altarView.container);
         Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
         Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
 
