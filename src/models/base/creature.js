@@ -246,7 +246,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   increase: function(attribute, quantity) {
     var currentAttributeValue = this.get(attribute);
-    var maxAttributeValue = this.get('max' + Werld.util.capitaliseFirstLetter(attribute))
+    var maxAttributeValue = this.get('max' + Werld.util.capitalizeFirstLetter(attribute))
     var futureAttributeValue = quantity + currentAttributeValue;
     var object = {};
     if (futureAttributeValue > maxAttributeValue) {

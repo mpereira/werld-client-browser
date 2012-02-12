@@ -19,7 +19,7 @@ Werld.util = {
     return((_pixelDistance - _pixelDistance % Werld.Config.PIXELS_PER_TILE) /
              Werld.Config.PIXELS_PER_TILE);
   },
-  capitaliseFirstLetter: function(string) {
+  capitalizeFirstLetter: function(string) {
     return(string.charAt(0).toUpperCase() + string.slice(1));
   }
 };
