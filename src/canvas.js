@@ -21,11 +21,7 @@ Werld.canvas = {
     x = coordinates[0];
     y = coordinates[1];
 
-    if (Werld.state === Werld.States.SPLASH_SCREEN) {
-      if (this.signInLinkArea(coordinates)) {
-        this.el.style.cursor = '';
-      }
-    } else if (Werld.state === Werld.States.GAME_STARTED) {
+    if (Werld.state === Werld.States.GAME_STARTED) {
       if (e.which === 3) {
         Werld.character.move(_(coordinates).map(function(pixels) {
           return(Werld.util.pixelToTile(pixels));
