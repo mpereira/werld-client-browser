@@ -37,8 +37,8 @@ config.init({
       'src/canvas.js',
       'src/util.js',
       'src/**/base/*.js',
-      'src/models/*.js',
       'src/collections/*.js',
+      'src/models/*.js',
       'src/views/*.js'
     ],
     'dist/development/javascripts/index.js': [

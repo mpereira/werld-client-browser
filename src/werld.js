@@ -5,6 +5,7 @@ var Werld = {
   Models: {
     Base: {}
   },
+  Collections: {},
   Util: {},
   States: {
     INIT: 1,
@@ -64,7 +65,7 @@ var Werld = {
     PIXELS_PER_TILE: 40,
     REGENERATION_RATE: 1000,
     SCREEN_DIMENSIONS: [16, 12],
-    WORLD_MAP_DIMENSIONS: [20, 20]
+    WORLD_MAP_DIMENSIONS: [50, 50]
   },
   account: {
     provider: {}
@@ -159,17 +160,16 @@ var Werld = {
           model: Werld.character
         });
 
-        Werld.creature = new Werld.Models.Creature(
-          _.extend(Werld.Creatures.SILVER_BAT, {
-            coordinates: _([3, 4]).map(function(coordinate) {
-              return(coordinate * Werld.Config.PIXELS_PER_TILE);
-            })
-          })
-        );
-
-        Werld.canvas.creatureView = new Werld.Views.Creature({
-          model: Werld.creature
+        var silverBatSpawner = new Werld.Models.CreatureSpawner({
+          creature: Werld.Creatures.SILVER_BAT,
+          coordinates: [4, 4],
+          radius: 3,
+          numberOfCreatures: 3
         });
+
+        Werld.creatureSpawners = new Werld.Collections.CreatureSpawners([
+          silverBatSpawner
+        ]);
 
         var mapTiles = [];
         for (var i = 0; i < Werld.Config.WORLD_MAP_DIMENSIONS[0]; i++) {
@@ -199,10 +199,18 @@ var Werld = {
         );
 
         Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.creatureView.container);
         Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
         Werld.canvas.stage.addChild(Werld.canvas.altarView.container);
         Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
+        _(Werld.creatureSpawners.models).each(function(creatureSpawner) {
+          creatureSpawner.get('creatures').each(function(creature) {
+            var creatureView = new Werld.Views.Creature({
+              model: creature
+            });
+
+            Werld.canvas.stage.addChild(creatureView.container);
+          });
+        });
 
         Werld.state = Werld.States.GAME_STARTED;
       }

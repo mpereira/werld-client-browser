@@ -11,6 +11,12 @@ Werld.util = {
   pixelToTile: function(pixel) {
     return(Math.floor(pixel / Werld.Config.PIXELS_PER_TILE));
   },
+  tilePointToPixelPoint: function(tilePoint) {
+    return(_(tilePoint).map(Werld.util.tileToPixel));
+  },
+  pixelPointToTilePoint: function(pixelPoint) {
+    return(_(pixelPoint).map(Werld.util.pixelToTile));
+  },
   pixelDistance: function(a, b) {
     return(Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2)));
   },
@@ -22,4 +28,22 @@ Werld.util = {
   capitalizeFirstLetter: function(string) {
     return(string.charAt(0).toUpperCase() + string.slice(1));
   }
+};
+
+Werld.Util.Circle = function(params) {
+  this.center = params.center;
+  this.radius = params.radius;
+
+  this.randomTile = function() {
+    var randomAngle = Math.random() * 2 * Math.PI;
+    var randomRadius = Math.random() * this.radius;
+    var rawCoordinates = [
+      this.center[0] + randomRadius * Math.cos(randomAngle),
+      this.center[1] + randomRadius * Math.sin(randomAngle)
+    ];
+
+    return(_(rawCoordinates).map(function(coordinate) {
+      return(coordinate - (coordinate % Werld.Config.PIXELS_PER_TILE));
+    }));
+  };
 };
