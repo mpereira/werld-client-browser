@@ -37,6 +37,7 @@ config.init({
       'src/canvas.js',
       'src/util.js',
       'src/creatures.js',
+      'src/underscore_mixins.js',
       'src/**/base/*.js',
       'src/collections/*.js',
       'src/models/*.js',
