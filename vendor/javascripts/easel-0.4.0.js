@@ -5034,7 +5034,7 @@ var p = BitmapAnimation.prototype = new DisplayObject();
 					this._goto(a.next);
 				} else {
 					this.paused = true;
-					this.currentAnimationFrame = a.frames.length-1;
+					this.currentAnimationFrame = 0;
 					this.currentFrame = a.frames[this.currentAnimationFrame];
 				}
 				if (this.onAnimationEnd) { this.onAnimationEnd(this,a.name); }
