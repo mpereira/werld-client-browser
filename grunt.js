@@ -75,7 +75,7 @@ config.init({
   },
 
   watch: {
-    files: ['assets/**/*', 'src/**/*.js'],
+    files: ['assets/**/*', 'src/**/*.js', 'vendor/**/*.js'],
     tasks: 'clean lint:files concat jst',
 
     min: {
