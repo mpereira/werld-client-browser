@@ -2,11 +2,15 @@ Werld.Views.Base.Creature = Backbone.View.extend({
   initialize: function() {
     this.container = new Container();
     var image = new Image();
-    image.src = this.model.get('SPRITE').SRC;
+    var SPRITE = this.model.get('SPRITE');
+    image.src = SPRITE.SRC;
     image.onload = _.bind(function() {
       var spriteSheet = new SpriteSheet({
         images: [image],
-        frames: { width: 40, height: 40 },
+        frames: {
+          width: SPRITE.DIMENSIONS[0],
+          height: SPRITE.DIMENSIONS[1]
+        },
         animations: {
           walkDown:  [0, 3],
           walkLeft:  [4, 7],

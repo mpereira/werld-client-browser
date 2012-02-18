@@ -36,6 +36,7 @@ config.init({
       'src/werld.js',
       'src/canvas.js',
       'src/util.js',
+      'src/creatures.js',
       'src/**/base/*.js',
       'src/collections/*.js',
       'src/models/*.js',

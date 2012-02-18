@@ -30,6 +30,8 @@ Werld.util = {
   }
 };
 
+Werld.Util = {};
+
 Werld.Util.Circle = function(params) {
   this.center = params.center;
   this.radius = params.radius;

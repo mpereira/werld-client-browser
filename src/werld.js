@@ -1,52 +1,12 @@
 var Werld = {
-  Views: {
-    Base: {}
-  },
-  Models: {
-    Base: {}
-  },
+  Views: { Base: {} },
+  Models: { Base: {} },
   Collections: {},
-  Util: {},
   States: {
     INIT: 1,
     SPLASH_SCREEN: 2,
     CHOOSING_NAME: 3,
     GAME_STARTED: 4
-  },
-  Creatures: {
-    CHARACTER: {
-      MOVEMENT_SPEED: 2,
-      BOUNDARIES: {
-        MAX_CRITICAL_HIT_CHANCE: 20,
-        MAX_DEXTERITY: 125,
-        MAX_STRENGHT: 125,
-        MAX_INTELLIGENCE: 125
-      },
-      SPRITE: {
-        SRC: '../images/sprite_sheets/character.png',
-        FRAME_CHANGE_SPEED: 0.25
-      }
-    },
-    SILVER_BAT: {
-      name: 'a silver bat',
-      MOVEMENT_SPEED: 1,
-      stats: {
-        strength: 15,
-        dexterity: 10,
-        intelligence: 10
-      },
-      BOUNDARIES: {
-        MAX_CRITICAL_HIT_CHANCE: 20,
-        MAX_DEXTERITY: 125,
-        MAX_STRENGHT: 125,
-        MAX_INTELLIGENCE: 125
-      },
-      SPRITE: {
-        SRC: '../images/sprite_sheets/silver_bat.png',
-        FRAMES: 4,
-        FRAME_CHANGE_SPEED: 0.25
-      }
-    }
   },
   Objects: {
     ALTAR: {
@@ -167,8 +127,15 @@ var Werld = {
           numberOfCreatures: 3
         });
 
+        var whiteWolfSpawner = new Werld.Models.CreatureSpawner({
+          creature: Werld.Creatures.WHITE_WOLF,
+          coordinates: [15, 10],
+          radius: 4,
+          numberOfCreatures: 2
+        });
+
         Werld.creatureSpawners = new Werld.Collections.CreatureSpawners([
-          silverBatSpawner
+          silverBatSpawner, whiteWolfSpawner
         ]);
 
         var mapTiles = [];
