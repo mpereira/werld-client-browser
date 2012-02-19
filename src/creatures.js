@@ -54,5 +54,26 @@ Werld.Creatures = {
       FRAMES: 4,
       FRAME_CHANGE_SPEED: 0.25
     }
+  },
+  BLUE_DRAGON: {
+    name: 'a blue dragon',
+    MOVEMENT_SPEED: 2,
+    stats: {
+      strength: 200,
+      dexterity: 200,
+      intelligence: 200
+    },
+    BOUNDARIES: {
+      MAX_CRITICAL_HIT_CHANCE: 20,
+      MAX_DEXTERITY: 125,
+      MAX_STRENGHT: 125,
+      MAX_INTELLIGENCE: 125
+    },
+    SPRITE: {
+      SRC: '../images/sprite_sheets/creatures/blue_dragon.png',
+      DIMENSIONS: [96, 96],
+      FRAMES: 4,
+      FRAME_CHANGE_SPEED: 0.25
+    }
   }
 };

@@ -134,8 +134,15 @@ var Werld = {
           numberOfCreatures: 2
         });
 
+        var blueDragonSpawner = new Werld.Models.CreatureSpawner({
+          creature: Werld.Creatures.BLUE_DRAGON,
+          coordinates: [4, 10],
+          radius: 4,
+          numberOfCreatures: 1
+        });
+
         Werld.creatureSpawners = new Werld.Collections.CreatureSpawners([
-          silverBatSpawner, whiteWolfSpawner
+          silverBatSpawner, whiteWolfSpawner, blueDragonSpawner
         ]);
 
         var mapTiles = [];
