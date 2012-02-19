@@ -177,9 +177,10 @@ var Werld = {
         Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
         Werld.canvas.stage.addChild(Werld.canvas.altarView.container);
         Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
 
         Werld.creatureSpawners.activateAll();
+
+        Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
 
         Werld.state = Werld.States.GAME_STARTED;
       }
