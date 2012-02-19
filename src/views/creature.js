@@ -6,13 +6,13 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
     this.hitPointsBarRectangle = new Rectangle(
       this.container.x -
         ((this.hitPointsBarRectangleWidth - Werld.Config.PIXELS_PER_TILE) / 2),
-      -8,
+      -0.21 * Math.pow(this.model.get('SPRITE').DIMENSIONS[1], 5 / 4),
       this.hitPointsBarRectangleWidth,
       6
     );
     this.hitPointsBarGraphics = new Graphics();
     this.hitPointsBar = new Shape(this.hitPointsBarGraphics);
-    this.hitPointsBar.alpha = 0.85;
+    this.hitPointsBar.alpha = 0.35;
 
     this.container.addChild(this.hitPointsBar);
     this.hitPointsBar.tick = _.bind(this.hitPointsBarTick, this);

@@ -107,7 +107,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
     this.characterNameText.textBaseline = 'top';
     this.characterNameText.textAlign = 'center';
     this.characterNameText.x = 20;
-    this.characterNameText.y = -30;
+    this.characterNameText.y = - (this.spriteSheet._regY + 28);
   },
   messagesContainerTick: function() {
     var temporaryCreatureScreenCoordinates = [0, 0];
