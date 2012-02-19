@@ -142,10 +142,10 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     return(((-4 * this.get('stats').dexterity / 125) + 5) * 1000);
   },
   attack: function(creature) {
-    if (creature === this) return;
+    if (creature === this || this.dead()) return;
 
     this.battleHandlerIntervalId = setInterval(
-      _.bind(this.battleHandler, this), Werld.Config.FRAME_RATE()
+      _(this.battleHandler).bind(this), Werld.Config.FRAME_RATE()
     );
     this.follow(creature);
     this.set({ attacking: creature });
@@ -159,6 +159,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   stopAttacking: function(creature) {
     clearInterval(this.battleHandlerIntervalId);
+    this.battleHandlerIntervalId = null;
     this.set({ attacking: null });
     this.follow(null);
     creature.acknowledgeAttackStop(this);
