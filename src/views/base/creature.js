@@ -1,28 +1,31 @@
 Werld.Views.Base.Creature = Backbone.View.extend({
   initialize: function() {
     this.container = new Container();
+    this.walking = {};
+
     var image = new Image();
     var SPRITE = this.model.get('SPRITE');
     image.src = SPRITE.SRC;
     image.onload = _.bind(function() {
-      var spriteSheet = new SpriteSheet({
+      this.spriteSheet = new SpriteSheet({
         images: [image],
         frames: {
           width: SPRITE.DIMENSIONS[0],
-          height: SPRITE.DIMENSIONS[1]
+          height: SPRITE.DIMENSIONS[1],
+          regX: (SPRITE.DIMENSIONS[0] - Werld.Config.PIXELS_PER_TILE) / 2,
+          regY: (1.7 * SPRITE.DIMENSIONS[1] - Werld.Config.PIXELS_PER_TILE) / 2
         },
         animations: {
-          walkDown:  [0, 3],
-          walkLeft:  [4, 7],
-          walkRight: [8, 11],
-          walkUp:    [12, 15]
+          walkDown:  [0, 3, true, 4],
+          walkLeft:  [4, 7, true, 4],
+          walkRight: [8, 11, true, 4],
+          walkUp:    [12, 15, true, 4]
         }
       });
 
-      this.bitmapAnimation = new BitmapAnimation(spriteSheet);
+      this.bitmapAnimation = new BitmapAnimation(this.spriteSheet);
       this.bitmapAnimation.currentFrame = 0;
       this.bitmapAnimation.mouseEnabled = true;
-      this.bitmapAnimation.paused = true;
       this.bitmapAnimation.onMouseOver = function() {
         this.parent.getStage().canvas.style.cursor = 'pointer';
       };
@@ -57,34 +60,45 @@ Werld.Views.Base.Creature = Backbone.View.extend({
   bitmapAnimationTick: function() {
     var modelCoordinates = this.model.get('coordinates');
     var modelDestinationCoordinates = this.model.get('destination');
-    var gotoThrottle = Ticker.getTicks() % 4;
-    var advanceThrottle = Ticker.getTicks() % 8;
-    var walking = [];
 
-    if (gotoThrottle === 0) {
+    if (modelCoordinates[1] > modelDestinationCoordinates[1]) {
+      if (!this.walking.up) {
+        this.bitmapAnimation.gotoAndPlay('walkUp');
+        this.walking.up = true;
+        this.walking.down = false;
+        this.walking.left = false;
+        this.walking.right = false;
+      }
+    } else if (modelCoordinates[1] < modelDestinationCoordinates[1]) {
+      if (!this.walking.down) {
+        this.bitmapAnimation.gotoAndPlay('walkDown');
+        this.walking.up = false;
+        this.walking.down = true;
+        this.walking.left = false;
+        this.walking.right = false;
+      }
+    } else {
+      this.walking.up = false;
+      this.walking.down = false;
+
       if (modelCoordinates[0] > modelDestinationCoordinates[0]) {
-        this.bitmapAnimation.gotoAndStop('walkLeft');
-        walking[0] = true;
+        if (!this.walking.left) {
+          this.bitmapAnimation.gotoAndPlay('walkLeft');
+          this.walking.left = true;
+          this.walking.right = false;
+        }
       } else if (modelCoordinates[0] < modelDestinationCoordinates[0]) {
-        this.bitmapAnimation.gotoAndStop('walkRight');
-        walking[0] = true;
+        if (!this.walking.right) {
+          this.bitmapAnimation.gotoAndPlay('walkRight');
+          this.walking.left = false;
+          this.walking.right = true;
+        }
       } else {
-        walking[0] = false;
+        this.walking.left = false;
+        this.walking.right = false;
+        this.bitmapAnimation.currentAnimationFrame = 0;
+        this.bitmapAnimation.paused = true;
       }
-
-      if (modelCoordinates[1] > modelDestinationCoordinates[1]) {
-        this.bitmapAnimation.gotoAndStop('walkUp');
-        walking[1] = true;
-      } else if (modelCoordinates[1] < modelDestinationCoordinates[1]) {
-        this.bitmapAnimation.gotoAndStop('walkDown');
-        walking[1] = true;
-      } else {
-        walking[1] = false;
-      }
-    }
-
-    if ((walking[0] || walking[1]) && advanceThrottle === 0) {
-      this.bitmapAnimation.advance();
     }
   },
   characterNameTextTick: function() {
