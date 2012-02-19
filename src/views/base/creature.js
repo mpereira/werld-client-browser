@@ -16,10 +16,10 @@ Werld.Views.Base.Creature = Backbone.View.extend({
           regY: (1.7 * SPRITE.DIMENSIONS[1] - Werld.Config.PIXELS_PER_TILE) / 2
         },
         animations: {
-          walkDown:  [0, 3, true, 4],
-          walkLeft:  [4, 7, true, 4],
-          walkRight: [8, 11, true, 4],
-          walkUp:    [12, 15, true, 4]
+          walkDown:  [0,  3,  true, 1 / SPRITE.FREQUENCY],
+          walkLeft:  [4,  7,  true, 1 / SPRITE.FREQUENCY],
+          walkRight: [8,  11, true, 1 / SPRITE.FREQUENCY],
+          walkUp:    [12, 15, true, 1 / SPRITE.FREQUENCY]
         }
       });
 

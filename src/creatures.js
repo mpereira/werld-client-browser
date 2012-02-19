@@ -10,7 +10,7 @@ Werld.Creatures = {
     SPRITE: {
       SRC: '../images/sprite_sheets/characters/mage.png',
       DIMENSIONS: [40, 40],
-      FRAME_CHANGE_SPEED: 0.25
+      FREQUENCY: 0.25
     }
   },
   SILVER_BAT: {
@@ -31,7 +31,7 @@ Werld.Creatures = {
       SRC: '../images/sprite_sheets/creatures/silver_bat.png',
       DIMENSIONS: [40, 40],
       FRAMES: 4,
-      FRAME_CHANGE_SPEED: 0.25
+      FREQUENCY: 0.25
     }
   },
   WHITE_WOLF: {
@@ -52,7 +52,7 @@ Werld.Creatures = {
       SRC: '../images/sprite_sheets/creatures/white_wolf.png',
       DIMENSIONS: [48, 48],
       FRAMES: 4,
-      FRAME_CHANGE_SPEED: 0.25
+      FREQUENCY: 0.25
     }
   },
   BLUE_DRAGON: {
@@ -73,7 +73,7 @@ Werld.Creatures = {
       SRC: '../images/sprite_sheets/creatures/blue_dragon.png',
       DIMENSIONS: [96, 96],
       FRAMES: 4,
-      FRAME_CHANGE_SPEED: 0.25
+      FREQUENCY: 0.5
     }
   }
 };
