@@ -1,10 +1,4 @@
 Werld.util = {
-  requestAnimationFrame: function(callback) {
-    return((window.requestAnimationFrame ||
-              window.mozRequestAnimationFrame ||
-              window.webkitRequestAnimationFrame ||
-              window.msRequestAnimationFrame)(callback));
-  },
   tileToPixel: function(tile) {
     return(tile * Werld.Config.PIXELS_PER_TILE);
   },
