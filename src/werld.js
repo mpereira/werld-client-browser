@@ -145,6 +145,8 @@ var Werld = {
           silverBatSpawner, whiteWolfSpawner, blueDragonSpawner
         ]);
 
+        Werld.creatureSpawners.activateAll();
+
         var mapTiles = [];
         for (var i = 0; i < Werld.Config.WORLD_MAP_DIMENSIONS[0]; i++) {
           mapTiles[i] = [];
@@ -176,7 +178,7 @@ var Werld = {
         Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
         Werld.canvas.stage.addChild(Werld.canvas.altarView.container);
         Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
-        _(Werld.creatureSpawners.models).each(function(creatureSpawner) {
+        Werld.creatureSpawners.each(function(creatureSpawner) {
           creatureSpawner.get('creatures').each(function(creature) {
             var creatureView = new Werld.Views.Creature({
               model: creature
