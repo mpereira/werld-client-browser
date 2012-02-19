@@ -1,6 +1,10 @@
 Werld.Models.Base.Creature = Backbone.Model.extend({
   defaults: {
-    lastAttackAt: Number.NEGATIVE_INFINITY
+    lastAttackAt: Number.NEGATIVE_INFINITY,
+    aggressivenessRadius: Werld.Config.AGGRESSIVENESS_RADIUS,
+    hitPointRenegerationRate: Werld.Config.REGENERATION_RATE,
+    manaRenegerationRate: Werld.Config.REGENERATION_RATE,
+    staminaRenegerationRate: Werld.Config.REGENERATION_RATE
   },
   initialize: function() {
     var stats = this.get('stats');
@@ -24,44 +28,56 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       fixedCoordinates: fixedCoordinates
     });
 
-    this.messagesSweeperIntervalId = setInterval(
-      _.bind(this.messagesSweeper, this),
-      Werld.Config.MESSAGE_SWEEPER_POLLING_INTERVAL
-    );
+    this.intervalFunctionNamesWithIntervals = {
+      messageSweeper: Werld.Config.MESSAGE_SWEEPER_POLLING_INTERVAL,
+      movementHandler: Werld.Config.FRAME_RATE(),
+      statusObserver: Werld.Config.FRAME_RATE(),
+      aggressivenessHandler: Werld.Config.FRAME_RATE(),
+      hitPointObserver: this.get('hitPointRenegerationRate'),
+      manaObserver: this.get('manaRenegerationRate'),
+      staminaObserver: this.get('staminaRenegerationRate')
+    };
 
-    this.movementHandlerIntervalId = setInterval(
-      _.bind(this.movementHandler, this), Werld.Config.FRAME_RATE()
-    );
+    var contextAndIntervalFunctionNames =
+      _.keys(this.intervalFunctionNamesWithIntervals);
+    contextAndIntervalFunctionNames.unshift(this);
 
-    this.statusObserverIntervalId = setInterval(
-      _.bind(this.statusObserver, this), Werld.Config.FRAME_RATE()
-    );
+    _.bindAll.apply(this, contextAndIntervalFunctionNames);
 
-    this.hitPointObserverIntervalId = setInterval(
-      _.bind(this.hitPointObserver, this), Werld.Config.REGENERATION_RATE
-    );
-
-    this.manaObserverIntervalId = setInterval(
-      _.bind(this.manaObserver, this), Werld.Config.REGENERATION_RATE
-    );
-
-    this.staminaObserverIntervalId = setInterval(
-      _.bind(this.staminaObserver, this), Werld.Config.REGENERATION_RATE
-    );
+    this.installIntervalFunctions();
+  },
+  installIntervalFunctions: function() {
+    var self = this;
+    _.chain(this.intervalFunctionNamesWithIntervals).keys().each(function(key) {
+      self[key + 'IntervalId'] =
+        setInterval(self[key], self.intervalFunctionNamesWithIntervals[key]);
+    });
+  },
+  uninstallIntervalFunctions: function() {
+    var self = this;
+    _.chain(this.intervalFunctionNamesWithIntervals).keys().each(function(key) {
+      clearInterval(self[key + 'IntervalId']);
+      self[key + 'IntervalId'] = null;
+    });
   },
   say: function(message) {
-    var now = new Date();
     var messages = this.get('messages');
 
     messages.unshift({
-      type: 'speech', content: message, created_at: now.getTime()
+      type: 'speech', content: message, created_at: Date.now()
     });
     this.set({ messages: messages });
   },
   move: function(destinationTile) {
     var mapDestinationTile;
 
-    this.follow(null);
+    if (this.get('following')) {
+      this.stopFollowing(this.get('following'));
+    }
+
+    if (this.get('attacking')) {
+      this.stopAttacking(this.get('attacking'));
+    }
 
     if (this.get('fixed')) {
       var fixedCoordinates = this.get('fixedCoordinates');
@@ -101,10 +117,12 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   movementHandler: function() {
     if (this.get('following')) {
-      this.set({ destination: _.clone(this.get('following').get('coordinates')) });
+      this.set({
+        destination: this.get('following').get('coordinates')
+      });
     }
 
-    var coordinates = this.get('coordinates');
+    var coordinates = _.clone(this.get('coordinates'));
     var destination = this.get('destination');
     var movementSpeed = this.get('MOVEMENT_SPEED');
 
@@ -121,12 +139,12 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
 
     this.set({ coordinates: coordinates });
-    /* TODO: figure out why set() isn't triggering the change event and remove
-     *       this hack. */
-    this.trigger('change:coordinates');
   },
   follow: function(creature) {
     this.set({ following: creature });
+  },
+  stopFollowing: function(creature) {
+    this.follow(null);
   },
   damage: function() {
     var stats = this.get('stats');
@@ -157,44 +175,62 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       this.attack(attacker);
     }
   },
+  stopMoving: function() {
+    this.set({ destination: this.get('coordinates') });
+  },
   stopAttacking: function(creature) {
     clearInterval(this.battleHandlerIntervalId);
     this.battleHandlerIntervalId = null;
     this.set({ attacking: null });
-    this.follow(null);
+    this.stopFollowing(creature);
     creature.acknowledgeAttackStop(this);
   },
   acknowledgeAttackStop: function(attacker) {
     this.set({ attacker: null });
   },
   hit: function(creature) {
+    this.set({ lastAttackAt: Date.now() });
     creature.receiveHit(this.damage());
   },
   receiveHit: function(damage) {
-    var now = new Date();
     var messages = this.get('messages');
 
     this.set({ hitPoints: this.get('hitPoints') - damage });
     messages.unshift({
-      type: 'hit', content: damage, created_at: now.getTime()
+      type: 'hit', content: damage, created_at: Date.now()
     });
     this.set({ messages: messages });
+  },
+  aggressivenessHandler: function() {
+    var attackedCreature = this.get('attacking');
+
+    if (attackedCreature && !this.get('attacker')) {
+      var tileDistanceToAttacker =
+        Werld.util.pixelToTile(Werld.util.pixelDistance(
+          this.get('coordinates'), attackedCreature.get('coordinates')
+        ));
+
+      if (tileDistanceToAttacker > this.get('aggressivenessRadius')) {
+        this.stopAttacking(attackedCreature);
+      }
+    }
   },
   battleHandler: function() {
     var attackedCreature = this.get('attacking');
 
     if (attackedCreature) {
+      var tileDistanceToAttacker =
+        Werld.util.pixelToTile(Werld.util.pixelDistance(
+          this.get('coordinates'), attackedCreature.get('coordinates')
+        ));
+
       if (attackedCreature.alive()) {
         var coordinates = this.get('coordinates');
         var attackedCreatureCoordinates = attackedCreature.get('coordinates');
-        var distance =
-          Werld.util.pixelDistance(coordinates, attackedCreatureCoordinates);
         var lastAttackAt = this.get('lastAttackAt');
-        var now = new Date();
 
-        if (distance <= Werld.Config.PIXELS_PER_TILE &&
-              (now.getTime() - lastAttackAt) >= this.attackSpeed()) {
-          this.set({ lastAttackAt: now.getTime() });
+        if (tileDistanceToAttacker < 1 &&
+              (Date.now() - lastAttackAt) >= this.attackSpeed()) {
           this.hit(attackedCreature);
         }
       } else {
@@ -211,9 +247,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   die: function() {
     if (this.get('attacking')) {
       this.stopAttacking(this.get('attacking'));
-    } else {
-      this.follow(null);
     }
+
     this.set({
       status: 'dead',
       hitPoints: 0,
@@ -324,11 +359,10 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     var staminaPerSecondRegeneration = this.get('stats').dexterity / 100;
     this.increase('stamina', staminaPerSecondRegeneration);
   },
-  messagesSweeper: function() {
-    var now = new Date();
+  messageSweeper: function() {
     var self = this;
     _(this.get('messages')).each(function(message) {
-      if ((now.getTime() - message.created_at) > Werld.Config.MESSAGE_LIFE_CYCLE) {
+      if ((Date.now() - message.created_at) > Werld.Config.MESSAGE_LIFE_CYCLE) {
         var messages = self.get('messages');
         messages.pop();
         self.set({ messages: messages });
@@ -337,5 +371,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   destroy: function() {
     this.trigger('destroy', this);
+    this.uninstallIntervalFunctions();
   }
 });

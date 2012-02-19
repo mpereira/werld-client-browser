@@ -16,6 +16,7 @@ var Werld = {
     }
   },
   Config: {
+    AGGRESSIVENESS_RADIUS: 6,
     RESPAWN_TIME: 60 * 1000,
     CORPSE_DECAY_TIME: 80 * 1000,
     FRAMES_PER_SECOND: 30,
