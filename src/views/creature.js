@@ -12,7 +12,7 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
     );
     this.hitPointsBarGraphics = new Graphics();
     this.hitPointsBar = new Shape(this.hitPointsBarGraphics);
-    this.hitPointsBar.alpha = 0.35;
+    this.hitPointsBar.alpha = 0.7;
 
     this.container.addChild(this.hitPointsBar);
     this.hitPointsBar.tick = _.bind(this.hitPointsBarTick, this);

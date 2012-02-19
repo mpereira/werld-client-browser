@@ -3,6 +3,8 @@ Werld.Views.Base.Creature = Backbone.View.extend({
     this.container = new Container();
     this.walking = {};
 
+    this.model.bind('destroy', this.onModelDestroy, this);
+
     var image = new Image();
     var SPRITE = this.model.get('SPRITE');
     image.src = SPRITE.SRC;
@@ -140,6 +142,11 @@ Werld.Views.Base.Creature = Backbone.View.extend({
         self.messageText.y = temporaryCreatureScreenCoordinates[1];
       }
     });
+  },
+  onModelDestroy: function() {
+    this.container.parent.removeChild(this.container);
+    delete this.bitmapAnimation.onMouseOver;
+    delete this.bitmapAnimation.onMouseOut;
   },
   tick: function() {
     var modelCoordinates = this.model.get('coordinates');

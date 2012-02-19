@@ -16,6 +16,8 @@ var Werld = {
     }
   },
   Config: {
+    RESPAWN_TIME: 60 * 1000,
+    CORPSE_DECAY_TIME: 80 * 1000,
     FRAMES_PER_SECOND: 30,
     FRAME_RATE: function() {
       return(Math.floor(1000 / Werld.Config.FRAMES_PER_SECOND));
@@ -145,8 +147,6 @@ var Werld = {
           silverBatSpawner, whiteWolfSpawner, blueDragonSpawner
         ]);
 
-        Werld.creatureSpawners.activateAll();
-
         var mapTiles = [];
         for (var i = 0; i < Werld.Config.WORLD_MAP_DIMENSIONS[0]; i++) {
           mapTiles[i] = [];
@@ -177,16 +177,9 @@ var Werld = {
         Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
         Werld.canvas.stage.addChild(Werld.canvas.altarView.container);
         Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
-        Werld.creatureSpawners.each(function(creatureSpawner) {
-          creatureSpawner.get('creatures').each(function(creature) {
-            var creatureView = new Werld.Views.Creature({
-              model: creature
-            });
-
-            Werld.canvas.stage.addChild(creatureView.container);
-          });
-        });
         Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
+
+        Werld.creatureSpawners.activateAll();
 
         Werld.state = Werld.States.GAME_STARTED;
       }

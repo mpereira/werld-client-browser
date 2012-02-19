@@ -333,5 +333,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
         self.set({ messages: messages });
       }
     });
+  },
+  destroy: function() {
+    this.trigger('destroy', this);
   }
 });
