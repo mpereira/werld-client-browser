@@ -175,9 +175,8 @@ var Werld = {
         );
 
         Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
         Werld.canvas.stage.addChild(Werld.canvas.altarView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
+        Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
         Werld.creatureSpawners.each(function(creatureSpawner) {
           creatureSpawner.get('creatures').each(function(creature) {
             var creatureView = new Werld.Views.Creature({
@@ -187,6 +186,7 @@ var Werld = {
             Werld.canvas.stage.addChild(creatureView.container);
           });
         });
+        Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
 
         Werld.state = Werld.States.GAME_STARTED;
       }
