@@ -2,6 +2,8 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
   initialize: function() {
     Werld.Views.Character.__super__.initialize.call(this);
 
+    this.model.bind('change:status', this.onModelStatusChange, this);
+
     this.hitPointsBarRectangleWidth = 50;
     this.hitPointsBarRectangle = new Rectangle(
       this.container.x -
@@ -49,6 +51,13 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
         ).
         endStroke().
         endFill();
+    }
+  },
+  onModelStatusChange: function() {
+    if (this.model.dead()) {
+      if (this.model.tileDistance(Werld.character) <= 1) {
+        this.showLoot();
+      }
     }
   }
 });

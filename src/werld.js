@@ -110,8 +110,8 @@ var Werld = {
             fixed: true,
             name: params.data.character.name,
             stats: {
-              strength: 200,
-              dexterity: 200,
+              strength: 20,
+              dexterity: 20,
               intelligence: 10
             },
             coordinates: _([
@@ -210,6 +210,7 @@ var Werld = {
 
         Werld.containers.gumps.addChild(Werld.canvas.statusBarView.container);
         Werld.containers.gumps.addChild(Werld.canvas.backpackView.container);
+        Werld.containers.gumps.screen = Werld.screen;
 
         _.chain(Werld.containers).values().each(function(container) {
           Werld.canvas.stage.addChild(container)
