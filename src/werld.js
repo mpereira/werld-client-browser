@@ -2,11 +2,31 @@ var Werld = {
   Views: { Base: {} },
   Models: { Base: {} },
   Collections: {},
+  containers: {},
+  CONTAINER_NAMES: [
+    'terrain',
+    'objects',
+    'creatures',
+    'character',
+    'gumps'
+  ],
   States: {
     INIT: 1,
     SPLASH_SCREEN: 2,
     CHOOSING_NAME: 3,
     GAME_STARTED: 4
+  },
+  IMAGES: {
+    BACKPACK: {
+      IMAGE: {
+        SRC: '../images/backpack.png'
+      }
+    },
+    LOOT_CONTAINER: {
+      IMAGE: {
+        SRC: '../images/loot_container.png'
+      }
+    }
   },
   Objects: {
     ALTAR: {
@@ -90,8 +110,8 @@ var Werld = {
             fixed: true,
             name: params.data.character.name,
             stats: {
-              strength: 20,
-              dexterity: 20,
+              strength: 200,
+              dexterity: 200,
               intelligence: 10
             },
             coordinates: _([
@@ -121,6 +141,10 @@ var Werld = {
 
         Werld.canvas.statusBarView = new Werld.Views.StatusBar({
           model: Werld.character
+        });
+
+        Werld.canvas.backpackView = new Werld.Views.Backpack({
+          model: Werld.character, image: Werld.IMAGES.BACKPACK.IMAGE
         });
 
         var silverBatSpawner = new Werld.Models.CreatureSpawner({
@@ -175,13 +199,21 @@ var Werld = {
           'keydown', _.bind(Werld.canvas.keyboardHandler, Werld.canvas), false
         );
 
-        Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.altarView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
+        _(Werld.CONTAINER_NAMES).each(function(name) {
+          Werld.containers[name] = new Container();
+        });
 
+        Werld.containers.terrain.addChild(Werld.canvas.screenView.container);
+        Werld.containers.objects.addChild(Werld.canvas.altarView.container);
+        Werld.containers.character.addChild(Werld.canvas.characterView.container);
         Werld.creatureSpawners.activateAll();
 
-        Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
+        Werld.containers.gumps.addChild(Werld.canvas.statusBarView.container);
+        Werld.containers.gumps.addChild(Werld.canvas.backpackView.container);
+
+        _.chain(Werld.containers).values().each(function(container) {
+          Werld.canvas.stage.addChild(container)
+        });
 
         Werld.state = Werld.States.GAME_STARTED;
       }

@@ -21,6 +21,15 @@ Werld.util = {
   },
   capitalizeFirstLetter: function(string) {
     return(string.charAt(0).toUpperCase() + string.slice(1));
+  },
+  bringToFront: function(container) {
+    container.parent.sortChildren(function(a, b) {
+      if (a === container) {
+        return(1);
+      } else {
+        return(0);
+      }
+    });
   }
 };
 

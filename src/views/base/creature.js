@@ -5,6 +5,10 @@ Werld.Views.Base.Creature = Backbone.View.extend({
 
     this.model.bind('destroy', this.onModelDestroy, this);
 
+    this.lootContainerView = new Werld.Views.LootContainer({
+      model: this.model
+    });
+
     var image = new Image();
     var SPRITE = this.model.get('SPRITE');
     image.src = SPRITE.SRC;
@@ -35,11 +39,13 @@ Werld.Views.Base.Creature = Backbone.View.extend({
         this.parent.getStage().canvas.style.cursor = '';
       };
       var self = this;
-      this.bitmapAnimation.onPress = function(event) {
+      this.bitmapAnimation.onDoubleClick = function(event) {
         if (self.model.alive()) {
           Werld.character.attack(self.model);
         } else {
-          self.showLoot(self.model.loot());
+          if (Werld.character.tileDistance(self.model) <= 1) {
+            self.showLoot();
+          }
         }
       };
       this.bitmapAnimation.tick = _.bind(this.bitmapAnimationTick, this);
@@ -55,9 +61,11 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       this.container.addChild(this.bitmapAnimation);
       this.container.addChild(this.characterNameText);
       this.container.addChild(this.messagesContainer);
+      Werld.containers.gumps.addChild(this.lootContainerView.container);
     }, this);
   },
   showLoot: function() {
+    this.lootContainerView.show();
   },
   bitmapAnimationTick: function() {
     var modelCoordinates = this.model.get('coordinates');
