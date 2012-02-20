@@ -1,8 +1,6 @@
 Werld.Views.Backpack = Backbone.View.extend({
   initialize: function() {
     this.container = new Container();
-    this.container.x = 50;
-    this.container.y = 50;
     this.image = this.options.image;
     this.bitmap = new Bitmap(this.image.SRC);
 
@@ -29,5 +27,8 @@ Werld.Views.Backpack = Backbone.View.extend({
     };
 
     this.container.addChild(this.bitmap);
+
+    this.container.x = 470;
+    this.container.y = 270;
   }
 });
