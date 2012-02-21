@@ -5,8 +5,9 @@ Werld.Views.Base.Creature = Backbone.View.extend({
 
     this.model.bind('destroy', this.onModelDestroy, this);
 
+    /* FIXME: find a better place to pass the main character to the view. */
     this.lootContainerView = new Werld.Views.LootContainer({
-      model: this.model
+      model: this.model, character: Werld.character
     });
 
     var image = new Image();
