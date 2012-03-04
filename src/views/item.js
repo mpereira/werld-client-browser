@@ -7,6 +7,13 @@ Werld.Views.Item = Backbone.View.extend({
     this.bitmap = new Bitmap(Werld.IMAGES.GOLD.IMAGE.SRC);
     this.container.addChild(this.bitmap);
 
+    this.tooltipView = new Werld.Views.Tooltip({
+      model: this.model, observedProperties: ['quantity'], output: function() {
+        return(this.model.get('quantity'));
+      }
+    });
+    this.container.addChild(this.tooltipView.container);
+
     this.model.bind('destroy', this.onModelDestroy);
 
     this.bitmap.onDoubleClick = this.onContainerDoubleClick;
