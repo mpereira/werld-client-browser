@@ -172,6 +172,13 @@ var Werld = {
           numberOfCreatures: 2
         });
 
+        var fireWolfSpawner = new Werld.Models.CreatureSpawner({
+          creature: Werld.Creatures.FIRE_WOLF,
+          coordinates: [15, 15],
+          radius: 4,
+          numberOfCreatures: 2
+        });
+
         var blueDragonSpawner = new Werld.Models.CreatureSpawner({
           creature: Werld.Creatures.BLUE_DRAGON,
           coordinates: [4, 10],
@@ -180,7 +187,7 @@ var Werld = {
         });
 
         Werld.creatureSpawners = new Werld.Collections.CreatureSpawners([
-          silverBatSpawner, whiteWolfSpawner, blueDragonSpawner
+          silverBatSpawner, whiteWolfSpawner, fireWolfSpawner, blueDragonSpawner
         ]);
 
         var mapTiles = [];

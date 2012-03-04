@@ -61,6 +61,30 @@ Werld.Creatures = {
       FREQUENCY: 0.25
     }
   },
+  FIRE_WOLF: {
+    name: 'a fire wolf',
+    MOVEMENT_SPEED: 1,
+    stats: {
+      strength: 40,
+      dexterity: 50,
+      intelligence: 20
+    },
+    BOUNDARIES: {
+      MAX_CRITICAL_HIT_CHANCE: 20,
+      MAX_DEXTERITY: 125,
+      MAX_STRENGHT: 125,
+      MAX_INTELLIGENCE: 125
+    },
+    ITEMS: {
+      GOLD: [30, 50]
+    },
+    SPRITE: {
+      SRC: '../images/sprite_sheets/creatures/fire_wolf.png',
+      DIMENSIONS: [48, 53],
+      FRAMES: 4,
+      FREQUENCY: 0.25
+    }
+  },
   BLUE_DRAGON: {
     name: 'a blue dragon',
     MOVEMENT_SPEED: 2,
