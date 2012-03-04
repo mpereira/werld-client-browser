@@ -49,12 +49,12 @@ Werld.Views.Item = Backbone.View.extend({
 
     if (targetView instanceof Werld.Views.Item) {
       if (targetModel.same(this.model) && targetModel.stackable()) {
-        this.container.parent.view.model.items.remove(this.model);
+        this.model.collection.remove(this.model);
         targetModel.merge(this.model);
       }
     } else if (targetView instanceof Werld.Views.Base.Container) {
       if (targetView !== this.container.parent.view) {
-        this.container.parent.view.model.items.remove(this.model);
+        this.model.collection.remove(this.model);
         targetModel.items.add(this.model);
       }
     }
