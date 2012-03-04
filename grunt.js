@@ -77,11 +77,27 @@ config.init({
   },
 
   watch: {
-    files: ['assets/**/*', 'src/**/*.js', 'vendor/**/*.js'],
+    files: [
+      'assets/**/*.js',
+      'assets/**/*.css',
+      'assets/**/*.html',
+      'src/**/*.js',
+      'vendor/**/*.js',
+      'vendor/**/*.css'
+    ],
+
     tasks: 'clean lint:files concat jst',
 
     min: {
-      files: ['assets/**/*', 'src/**/*'],
+      files: [
+        'assets/**/*.js',
+        'assets/**/*.css',
+        'assets/**/*.html',
+        'src/**/*.js',
+        'vendor/**/*.js',
+        'vendor/**/*.css'
+      ],
+
       tasks: 'default'
     }
   },

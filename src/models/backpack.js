@@ -1,2 +1,1 @@
-Werld.Models.Backpack = Backbone.Model.extend({
-});
+Werld.Models.Backpack = Werld.Models.Base.Container.extend({});

@@ -1,13 +1,14 @@
 Werld.Views.Base.Creature = Backbone.View.extend({
   initialize: function() {
     this.container = new Container();
+    this.container.view = this;
     this.walking = {};
 
     this.model.bind('destroy', this.onModelDestroy, this);
 
     /* FIXME: find a better place to pass the main character to the view. */
     this.lootContainerView = new Werld.Views.LootContainer({
-      model: this.model, character: Werld.character
+      model: this.model.lootContainer, character: Werld.character
     });
 
     var image = new Image();
@@ -32,7 +33,6 @@ Werld.Views.Base.Creature = Backbone.View.extend({
 
       this.bitmapAnimation = new BitmapAnimation(this.spriteSheet);
       this.bitmapAnimation.currentFrame = 0;
-      this.bitmapAnimation.mouseEnabled = true;
       this.bitmapAnimation.onMouseOver = function() {
         this.parent.getStage().canvas.style.cursor = 'pointer';
       };

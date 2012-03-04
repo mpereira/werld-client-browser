@@ -27,6 +27,9 @@ Werld.Creatures = {
       MAX_STRENGHT: 125,
       MAX_INTELLIGENCE: 125
     },
+    ITEMS: {
+      GOLD: [5, 10]
+    },
     SPRITE: {
       SRC: '../images/sprite_sheets/creatures/silver_bat.png',
       DIMENSIONS: [40, 40],
@@ -48,6 +51,9 @@ Werld.Creatures = {
       MAX_STRENGHT: 125,
       MAX_INTELLIGENCE: 125
     },
+    ITEMS: {
+      GOLD: [15, 20]
+    },
     SPRITE: {
       SRC: '../images/sprite_sheets/creatures/white_wolf.png',
       DIMENSIONS: [48, 48],
@@ -68,6 +74,9 @@ Werld.Creatures = {
       MAX_DEXTERITY: 125,
       MAX_STRENGHT: 125,
       MAX_INTELLIGENCE: 125
+    },
+    ITEMS: {
+      GOLD: [500, 600]
     },
     SPRITE: {
       SRC: '../images/sprite_sheets/creatures/blue_dragon.png',

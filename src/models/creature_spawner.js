@@ -4,6 +4,8 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
     corpseDecayTime: Werld.Config.CORPSE_DECAY_TIME
   },
   initialize: function() {
+    _.bindAll(this);
+
     this.creatures = new Werld.Collections.Creatures();
 
     /* FIXME: put this in a view? */
@@ -30,8 +32,8 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
   },
   onCreatureStatusChange: function(creature) {
     if (creature.dead()) {
-      _(_(creature.destroy).bind(creature)).delay(this.get('corpseDecayTime'));
-      _(_(this.addCreature).bind(this)).delay(this.get('respawnTime'));
+      _(creature.destroy).delay(this.get('corpseDecayTime'));
+      _(this.addCreature).delay(this.get('respawnTime'));
     }
   },
   onCreatureDestroy: function(creature) {

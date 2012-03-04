@@ -6,7 +6,15 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     manaRenegerationRate: Werld.Config.REGENERATION_RATE,
     staminaRenegerationRate: Werld.Config.REGENERATION_RATE
   },
-  initialize: function() {
+  initialize: function(attributes, options) {
+    _.bindAll(this);
+
+    attributes || (attributes = {});
+    this.set(attributes, { silent: true });
+    this.options = options || {};
+
+    this.items = (this.get('items') || new Werld.Collections.Items());
+
     var stats = this.get('stats');
     var coordinates = _.clone(this.get('coordinates'));
     var fixedCoordinates;
@@ -38,11 +46,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       staminaObserver: this.get('staminaRenegerationRate')
     };
 
-    var contextAndIntervalFunctionNames =
-      _.keys(this.intervalFunctionNamesWithIntervals);
-    contextAndIntervalFunctionNames.unshift(this);
-
-    _.bindAll.apply(this, contextAndIntervalFunctionNames);
+    this.lootContainer = new Werld.Models.LootContainer({ owner: this });
 
     this.installIntervalFunctions();
   },
@@ -75,8 +79,13 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       this.stopFollowing(this.get('following'));
     }
 
-    if (this.get('attacking')) {
-      this.stopAttacking(this.get('attacking'));
+    /* Stop attacking if we move beyond the creature being attacked's
+     * aggressiveness radius. */
+    var creatureBeingAttacked = this.get('attacking');
+    if (creatureBeingAttacked &&
+          this.tileDistance(creatureBeingAttacked) >
+          creatureBeingAttacked.get('aggressivenessRadius')) {
+      this.stopAttacking(creatureBeingAttacked);
     }
 
     if (this.get('fixed')) {
@@ -283,8 +292,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       }
     }
   },
-  loot: function() {
-  },
   increase: function(attribute, quantity) {
     var currentAttributeValue = this.get(attribute);
     var maxAttributeValue =
@@ -377,5 +384,21 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   destroy: function() {
     this.trigger('destroy', this);
     this.uninstallIntervalFunctions();
+  },
+  getItem: function(item) {
+    var characterItem;
+
+    if ((characterItem = this.items.find(function(collectionItem) {
+      return(item.stackable() && item.get('name') === collectionItem.get('name'));
+    }))) {
+      characterItem.set({
+        quantity: characterItem.get('quantity') + item.get('quantity')
+      });
+      item.destroy();
+      return(false);
+    } else {
+      this.items.add(item);
+      return(true);
+    }
   }
 });

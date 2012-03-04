@@ -1,25 +1,18 @@
-Werld.Views.LootContainer = Backbone.View.extend({
+Werld.Views.LootContainer = Werld.Views.Base.Container.extend({
   initialize: function() {
-    this.container = new Container();
+    Werld.Views.LootContainer.__super__.initialize.call(this);
+
+    _.bindAll(this);
+
     this.bitmap = new Bitmap(Werld.IMAGES.LOOT_CONTAINER.IMAGE.SRC);
     this.character = this.options.character;
 
-    _.bindAll(
-      this,
-      'onCharacterCoordinatesChange',
-      'onContainerMouseMove',
-      'onContainerMouseOut',
-      'onContainerMouseOver',
-      'onContainerPress'
-    );
+    this.bitmap.onPress = this.onContainerPress;
 
-    this.container.onMouseOut = this.onContainerMouseOut;
-    this.container.onMouseOver = this.onContainerMouseOver;
-    this.container.onPress = this.onContainerPress;
+    this.container.addChild(this.bitmap);
+    this.model.items.each(this.addItem);
 
     this.hide();
-    this.container.alpha = 0.8;
-    this.container.addChild(this.bitmap);
   },
   onContainerPress: function(event) {
     if (event.nativeEvent.which === 1) {
@@ -32,21 +25,15 @@ Werld.Views.LootContainer = Backbone.View.extend({
 
       event.onMouseMove = this.onContainerMouseMove;
     } else if (event.nativeEvent.which === 3) {
-      this.container.visible = false;
+      this.hide();
     }
   },
   onContainerMouseMove: function(event) {
     this.container.x = event.stageX + this.pressEventOffset[0];
     this.container.y = event.stageY + this.pressEventOffset[1];
   },
-  onContainerMouseOver: function() {
-    Werld.canvas.el.style.cursor = 'pointer';
-  },
-  onContainerMouseOut: function() {
-    Werld.canvas.el.style.cursor = '';
-  },
   onCharacterCoordinatesChange: function() {
-    if (this.character.tileDistance(this.model) >= 2) {
+    if (this.character.tileDistance(this.model.owner) >= 2) {
       this.character.unbind('change:coordinates', this.onCharacterCoordinatesChange);
       this.hide();
     }
@@ -54,13 +41,19 @@ Werld.Views.LootContainer = Backbone.View.extend({
   hide: function() {
     this.container.visible = false;
   },
+  hidden: function() {
+    return(!this.container.visible);
+  },
   show: function() {
-    var modelCoordinates = this.model.get('coordinates');
+    if (!this.hidden()) return;
+
+    var ownerCoordinates = this.model.owner.get('coordinates');
     var screenCoordinates = this.container.parent.screen.get('coordinates');
 
-    this.container.x = modelCoordinates[0] - screenCoordinates[0];
-    this.container.y = modelCoordinates[1] - screenCoordinates[1];
+    this.container.x = ownerCoordinates[0] - screenCoordinates[0];
+    this.container.y = ownerCoordinates[1] - screenCoordinates[1];
     this.container.visible = true;
+    Werld.util.bringToFront(this.container);
 
     this.character.bind('change:coordinates', this.onCharacterCoordinatesChange);
   }

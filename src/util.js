@@ -22,6 +22,12 @@ Werld.util = {
   capitalizeFirstLetter: function(string) {
     return(string.charAt(0).toUpperCase() + string.slice(1));
   },
+  randomBetween: function(range) {
+    return(Math.random() * (range[1] - range[0] + 1) + range[0]);
+  },
+  randomIntegerBetween: function(range) {
+    return(Math.floor(this.randomBetween(range)));
+  },
   bringToFront: function(container) {
     container.parent.sortChildren(function(a, b) {
       if (a === container) {

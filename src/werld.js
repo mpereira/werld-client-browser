@@ -16,6 +16,12 @@ var Werld = {
     CHOOSING_NAME: 3,
     GAME_STARTED: 4
   },
+  ITEMS: {
+    GOLD: {
+      name: 'Gold',
+      stackable: true
+    }
+  },
   IMAGES: {
     BACKPACK: {
       IMAGE: {
@@ -25,6 +31,11 @@ var Werld = {
     LOOT_CONTAINER: {
       IMAGE: {
         SRC: '../images/loot_container.png'
+      }
+    },
+    GOLD: {
+      IMAGE: {
+        SRC: '../images/gold.png'
       }
     }
   },
@@ -144,7 +155,7 @@ var Werld = {
         });
 
         Werld.canvas.backpackView = new Werld.Views.Backpack({
-          model: Werld.character, image: Werld.IMAGES.BACKPACK.IMAGE
+          model: Werld.character.backpack, image: Werld.IMAGES.BACKPACK.IMAGE
         });
 
         var silverBatSpawner = new Werld.Models.CreatureSpawner({
