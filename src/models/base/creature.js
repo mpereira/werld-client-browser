@@ -389,7 +389,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     var characterItem;
 
     if ((characterItem = this.items.find(function(collectionItem) {
-      return(item.stackable() && item.get('name') === collectionItem.get('name'));
+      return(item.stackable() && item.same(collectionItem));
     }))) {
       characterItem.set({
         quantity: characterItem.get('quantity') + item.get('quantity')
