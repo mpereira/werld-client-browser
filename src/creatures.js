@@ -85,9 +85,33 @@ Werld.Creatures = {
       FREQUENCY: 0.25
     }
   },
+  LEVIATHAN: {
+    name: 'a leviathan',
+    MOVEMENT_SPEED: 1.5,
+    stats: {
+      strength: 100,
+      dexterity: 100,
+      intelligence: 200
+    },
+    BOUNDARIES: {
+      MAX_CRITICAL_HIT_CHANCE: 20,
+      MAX_DEXTERITY: 125,
+      MAX_STRENGHT: 125,
+      MAX_INTELLIGENCE: 125
+    },
+    ITEMS: {
+      GOLD: [300, 400]
+    },
+    SPRITE: {
+      SRC: '../images/sprite_sheets/creatures/leviathan.png',
+      DIMENSIONS: [96, 96],
+      FRAMES: 4,
+      FREQUENCY: 0.5
+    }
+  },
   BLUE_DRAGON: {
     name: 'a blue dragon',
-    MOVEMENT_SPEED: 2,
+    MOVEMENT_SPEED: 1.5,
     stats: {
       strength: 200,
       dexterity: 200,
