@@ -224,7 +224,7 @@ var Werld = {
         Werld.containers.gumps.screen = Werld.screen;
 
         _.chain(Werld.containers).values().each(function(container) {
-          Werld.canvas.stage.addChild(container)
+          Werld.canvas.stage.addChild(container);
         });
 
         Werld.state = Werld.States.GAME_STARTED;

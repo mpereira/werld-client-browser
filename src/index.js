@@ -34,7 +34,7 @@ Index.Views.AccountBar = Backbone.View.extend({
         model.set({ authenticated: false });
       }
     });
-  },
+  }
 });
 
 $(function() {

@@ -20,5 +20,5 @@ Werld.Views.Base.Container = Backbone.View.extend({
     });
     this.itemViews = _(this.itemViews).without(viewToBeRemoved);
     this.container.removeChild(viewToBeRemoved.container);
-  },
+  }
 });

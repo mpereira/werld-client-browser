@@ -35,5 +35,5 @@ Werld.Views.Backpack = Werld.Views.Base.Container.extend({
   },
   onContainerMouseOut: function() {
     Werld.canvas.el.style.cursor = '';
-  },
+  }
 });

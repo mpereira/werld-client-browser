@@ -165,7 +165,7 @@ task.registerHelper('jst', function(files, namespace, templateSettings) {
            + "');}return(__p.join(''));";
 
       return(new Function('obj', '_', tmpl).toString());
-  };
+  }
 
   namespace = "this['" + namespace + "']";
 

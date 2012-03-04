@@ -1,6 +1,6 @@
 Werld.Models.Item = Backbone.Model.extend({
   stackable: function() {
-    return(this.get('stackable'))
+    return(this.get('stackable'));
   },
   same: function(item) {
     return(this.get('name') === item.get('name'));
