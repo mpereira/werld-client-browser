@@ -2,12 +2,8 @@ Werld.canvas = {
   loadTextures: function(callback) {
     this.textures = {};
     this.textures.tiles = {};
-    this.textures.tiles.grass = new Image();
-    this.textures.tiles.grass.src = '../images/textures/tiles/grass.jpg';
-    this.textures.tiles.grass.onload = callback;
-    this.textures.tiles.dirt = new Image();
-    this.textures.tiles.dirt.src = '../images/textures/tiles/dirt.jpg';
-    this.textures.tiles.dirt.onload = callback;
+    this.textures.tiles.grass = '../images/textures/tiles/grass.jpg';
+    this.textures.tiles.dirt = '../images/textures/tiles/dirt.jpg';
   },
   keyboardHandler: function(event) {
     if (Werld.state === Werld.States.GAME_STARTED) {

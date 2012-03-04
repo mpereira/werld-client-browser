@@ -1,8 +1,12 @@
 Werld.Views.Screen = Backbone.View.extend({
   initialize: function() {
+    _.bindAll(this);
+
     this.container = new Container();
     var screenRectangle = new Rectangle(0, 0, 640, 480);
     var screenRectangleGraphics = new Graphics();
+    /* FIXME: This is done so that we can receive mouse events on the screen
+     *        area. There's probably a better way to do it. */
     screenRectangleGraphics.
       beginFill('rgba(0,0,0,0.01)').
       drawRect(
@@ -14,7 +18,6 @@ Werld.Views.Screen = Backbone.View.extend({
       endFill();
     var screenRectangleShape = new Shape(screenRectangleGraphics);
     this.container.addChild(screenRectangleShape);
-    this.container.tick = _.bind(this.tick, this);
     this.container.onPress = function(event) {
       var coordinates = [event.stageX, event.stageY];
 
@@ -23,7 +26,9 @@ Werld.Views.Screen = Backbone.View.extend({
       }));
     };
 
-    this.model.get('character').bind('change:status', this.onCharacterChangeStatus, this);
+    this.model.get('character').bind('change:status', this.onCharacterChangeStatus);
+    this.model.get('character').bind('change:coordinates', this.onCharacterChangeCoordinates);
+
     this.createMapTileViews();
   },
   createMapTileViews: function() {
@@ -36,10 +41,12 @@ Werld.Views.Screen = Backbone.View.extend({
         this.mapTileViews[i][j] = new Werld.Views.Tile({
           model: mapTiles[i][j]
         });
+        this.mapTileViews[i][j].hide();
+        this.container.addChild(this.mapTileViews[i][j].container);
       }
     }
   },
-  tick: function() {
+  onCharacterChangeCoordinates: function() {
     var screenCoordinates = this.model.get('coordinates');
     var screenDimensions = this.model.get('dimensions');
 
@@ -55,23 +62,26 @@ Werld.Views.Screen = Backbone.View.extend({
                Werld.Config.PIXELS_PER_TILE);
     });
 
+    /* FIXME: Find a more performant way to render tile views. Right now we
+     *        traverse all tiles hiding them, and then traverse them again
+     *        updating the screen position and unhiding the ones that appear
+     *        on the viewport. */
+    for (var i = 0; i < this.mapTileViews.length; i++) {
+      for (var j = 0; j < this.mapTileViews[i].length; j++) {
+        this.mapTileViews[i][j].hide();
+      }
+    }
+
     for (var i = 0; i <= screenDimensions[0]; i++) {
       for (var j = 0; j <= screenDimensions[1]; j++) {
         var screenTile = [i + screenBaseTile[0], j + screenBaseTile[1]];
 
         if (screenTile[0] > 0 && screenTile[0] < Werld.Config.WORLD_MAP_DIMENSIONS[0] &&
               screenTile[1] > 0 && screenTile[1] < Werld.Config.WORLD_MAP_DIMENSIONS[1]) {
-          this.mapTileViews[screenTile[0]][screenTile[1]].draw(
+          this.mapTileViews[screenTile[0]][screenTile[1]].update(
             [Werld.util.tileToPixel(i), Werld.util.tileToPixel(j)], offset
           );
-        } else {
-          Werld.canvas.context.fillStyle = 'black';
-          Werld.canvas.context.fillRect(
-            Werld.util.tileToPixel(i) - offset[0],
-            Werld.util.tileToPixel(j) - offset[1],
-            Werld.Config.PIXELS_PER_TILE,
-            Werld.Config.PIXELS_PER_TILE
-          );
+          this.mapTileViews[screenTile[0]][screenTile[1]].unhide();
         }
       }
     }
