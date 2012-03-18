@@ -50,7 +50,7 @@ Werld.Views.Item = Backbone.View.extend({
     /* FIXME: Getting the DisplayObject below the item's DisplayObject. Is
      *        there a better way to do this? */
     var targetDisplayObject =
-      Werld.canvas.stage.getObjectsUnderPoint(event.stageX, event.stageY)[1];
+      Werld.stage.getObjectsUnderPoint(event.stageX, event.stageY)[1];
     var targetView = targetDisplayObject.parent.view;
     var targetModel = targetView.model;
 

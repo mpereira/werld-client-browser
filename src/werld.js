@@ -95,6 +95,13 @@ var Werld = {
       //music.addEventListener('canplay', music.play, false);
     }
   },
+  keyboardHandler: function(event) {
+    if (Werld.state === Werld.States.GAME_STARTED) {
+      if (event.keyCode === 13) {
+        Werld.messageInputForm().showOrSubmit(event);
+      }
+    }
+  },
   messageInputForm: function() {
     if (!this.messageInputView) {
      this.messageInputView = new Werld.Views.MessageInputForm();
@@ -114,7 +121,7 @@ var Werld = {
       }
     } else if (Werld.state === Werld.States.CHOOSING_NAME) {
       if (state === Werld.States.GAME_STARTED) {
-        Werld.canvas.stage.removeAllChildren();
+        Werld.stage.removeAllChildren();
 
         Werld.character = new Werld.Models.Character(
           _.extend(Werld.Creatures.CHARACTER, {
@@ -224,9 +231,7 @@ var Werld = {
           model: Werld.screen
         });
 
-        window.addEventListener(
-          'keydown', _.bind(Werld.canvas.keyboardHandler, Werld.canvas), false
-        );
+        $(window).keypress(Werld.keyboardHandler);
 
         _(Werld.CONTAINER_NAMES).each(function(name) {
           Werld.containers[name] = new Container();
@@ -242,7 +247,7 @@ var Werld = {
         Werld.containers.gumps.screen = Werld.screen;
 
         _.chain(Werld.containers).values().each(function(container) {
-          Werld.canvas.stage.addChild(container);
+          Werld.stage.addChild(container);
         });
 
         Werld.state = Werld.States.GAME_STARTED;
@@ -255,13 +260,22 @@ var Werld = {
     params && params.callback && params.callback();
   },
   init: function() {
-    $(window).contextmenu(function() {
-      return(false);
-    });
+    $(window).contextmenu(function() { return(false); });
 
-    this.switchState(Werld.States.INIT);
-    this.loadSounds();
-    this.canvas.init();
+    Werld.switchState(Werld.States.INIT);
+    Werld.loadSounds();
+
+    Werld.canvas = new Werld.Canvas();
+
+    Werld.stage = new Stage(Werld.canvas.el);
+    Werld.stage.enableMouseOver();
+    Ticker.addListener(Werld.stage);
+    Ticker.setFPS(Werld.Config.FRAME_RATE());
+
+    var splashScreenView = new Werld.Views.SplashScreen();
+    Werld.stage.addChild(splashScreenView.container);
+
+    Werld.switchState(Werld.States.SPLASH_SCREEN);
   }
 };
 
