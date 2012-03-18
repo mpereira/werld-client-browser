@@ -208,17 +208,7 @@ var Werld = {
           blueDragonSpawner
         ]);
 
-        var mapTiles = [];
-        for (var i = 0; i < Werld.Config.WORLD_MAP_DIMENSIONS[0]; i++) {
-          mapTiles[i] = [];
-          for (var j = 0; j < Werld.Config.WORLD_MAP_DIMENSIONS[1]; j++) {
-            mapTiles[i][j] = new Werld.Models.Tile({
-              type: (Math.random() > 0.75 ? 'dirt' : 'grass'), coordinates: [i, j]
-            });
-          }
-        }
-
-        Werld.map = new Werld.Models.Map({ tiles: mapTiles });
+        Werld.map = new Werld.Models.Map();
 
         Werld.screen = new Werld.Models.Screen({
           map: Werld.map,

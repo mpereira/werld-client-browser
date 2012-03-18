@@ -16,6 +16,7 @@ Werld.Views.Item = Backbone.View.extend({
 
     this.model.bind('destroy', this.onModelDestroy);
 
+    //_(this.bitmap).extend(Werld.Mixins.Draggable);
     this.bitmap.onDoubleClick = this.onContainerDoubleClick;
     this.bitmap.onPress = this.onContainerPress;
     this.bitmap.onMouseOut = this.onContainerMouseOut;
@@ -23,6 +24,7 @@ Werld.Views.Item = Backbone.View.extend({
   },
   onModelDestroy: function(model) {
     this.container.parent.removeChild(this.container);
+    //this.bitmap.destroy();
     delete this.bitmap.onDoubleClick;
     delete this.bitmap.onPress;
     delete this.bitmap.onMouseOut;
@@ -64,13 +66,26 @@ Werld.Views.Item = Backbone.View.extend({
         this.model.collection.remove(this.model);
         targetModel.items.add(this.model);
       }
+    } else if (targetView instanceof Werld.Views.Tile) {
+      if (Werld.character.tileDistance(targetModel) <= 2) {
+        this.model.collection.remove(this.model);
+        targetModel.items.add(this.model);
+      }
     }
 
   },
   onContainerMouseOver: function() {
     Werld.canvas.el.style.cursor = 'pointer';
+    this.showToolTip();
   },
   onContainerMouseOut: function() {
     Werld.canvas.el.style.cursor = '';
+    this.hideToolTip();
+  },
+  showToolTip: function() {
+    console.log('[ItemView][showToolTip]')
+  },
+  hideToolTip: function() {
+    console.log('[ItemView][hideToolTip]')
   }
 });

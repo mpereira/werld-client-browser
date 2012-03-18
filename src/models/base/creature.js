@@ -276,9 +276,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       }
     }, this));
   },
-  tileDistance: function(creature) {
+  tileDistance: function(thing) {
     return(Werld.util.tileDistance(
-      this.get('coordinates'), creature.get('coordinates')
+      this.get('coordinates'), thing.get('coordinates')
     ));
   },
   statusObserver: function() {

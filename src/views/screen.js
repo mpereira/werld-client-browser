@@ -2,29 +2,8 @@ Werld.Views.Screen = Backbone.View.extend({
   initialize: function() {
     _.bindAll(this);
 
+    this.mapTileViews = [];
     this.container = new Container();
-    var screenRectangle = new Rectangle(0, 0, 640, 480);
-    var screenRectangleGraphics = new Graphics();
-    /* FIXME: This is done so that we can receive mouse events on the screen
-     *        area. There's probably a better way to do it. */
-    screenRectangleGraphics.
-      beginFill('rgba(0,0,0,0.01)').
-      drawRect(
-        screenRectangle.x,
-        screenRectangle.y,
-        screenRectangle.width,
-        screenRectangle.height
-      ).
-      endFill();
-    var screenRectangleShape = new Shape(screenRectangleGraphics);
-    this.container.addChild(screenRectangleShape);
-    this.container.onPress = function(event) {
-      var coordinates = [event.stageX, event.stageY];
-
-      Werld.character.move(_(coordinates).map(function(pixels) {
-        return(Werld.util.pixelToTile(pixels));
-      }));
-    };
 
     this.model.get('character').bind('change:status', this.onCharacterChangeStatus);
     this.model.get('character').bind('change:coordinates', this.onCharacterChangeCoordinates);
@@ -34,19 +13,19 @@ Werld.Views.Screen = Backbone.View.extend({
   createMapTileViews: function() {
     var mapTiles = this.model.get('map').get('tiles');
 
-    this.mapTileViews = [];
     for (var i = 0; i < mapTiles.length; i++) {
       this.mapTileViews[i] = [];
       for (var j = 0; j < mapTiles[i].length; j++) {
         this.mapTileViews[i][j] = new Werld.Views.Tile({
           model: mapTiles[i][j]
         });
-        this.mapTileViews[i][j].hide();
         this.container.addChild(this.mapTileViews[i][j].container);
       }
     }
+
+    this.update();
   },
-  onCharacterChangeCoordinates: function() {
+  update: function() {
     var screenCoordinates = this.model.get('coordinates');
     var screenDimensions = this.model.get('dimensions');
 
@@ -78,13 +57,20 @@ Werld.Views.Screen = Backbone.View.extend({
 
         if (screenTile[0] > 0 && screenTile[0] < Werld.Config.WORLD_MAP_DIMENSIONS[0] &&
               screenTile[1] > 0 && screenTile[1] < Werld.Config.WORLD_MAP_DIMENSIONS[1]) {
-          this.mapTileViews[screenTile[0]][screenTile[1]].update(
-            [Werld.util.tileToPixel(i), Werld.util.tileToPixel(j)], offset
-          );
+          this.mapTileViews[screenTile[0]][screenTile[1]].model.set({
+            coordinates: [
+              Werld.util.tileToPixel(i),
+              Werld.util.tileToPixel(j)
+            ],
+            offset: offset
+          });
           this.mapTileViews[screenTile[0]][screenTile[1]].unhide();
         }
       }
     }
+  },
+  onCharacterChangeCoordinates: function() {
+    this.update();
   },
   onCharacterChangeStatus: function() {
     var statusChangeTextHandler = function(string, context) {
