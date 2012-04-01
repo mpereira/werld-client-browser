@@ -12,6 +12,9 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
     this.container.addChild(this.bitmap);
   },
   onBitmapPress: function(event) {
+    console.log('[itemView][onBitmapPress]');
+    console.log(this.model.get('coordinates'))
+    console.log(_(this.model.get('coordinates')).map(Werld.util.pixelToTile))
     Werld.character.move(_(this.model.get('coordinates')).map(Werld.util.pixelToTile));
   },
   onModelChange: function(event) {
@@ -25,11 +28,15 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
     this.container.visible = true;
   },
   handleItemDrop: function(item) {
+    console.log('[tileView][handleItemDrop] distance between character and tile: ' + Werld.character.tileDistance(this.model));
+
     if (Werld.character.tileDistance(this.model) <= 2) {
+      console.log('[tileView][handleItemDrop] success');
       item.collection.remove(item);
       this.model.items.add(item);
       return(true);
     } else {
+      console.log('[tileView][handleItemDrop] failure');
       return(false);
     }
   }

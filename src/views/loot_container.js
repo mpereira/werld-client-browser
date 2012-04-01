@@ -6,12 +6,17 @@ Werld.Views.LootContainer = Werld.Views.Base.Container.extend({
 
     this.character = this.options.character;
 
+    this.model.owner.on('destroy', this.removeContainerFromGumpsContainer);
+
     this.bitmap = new Bitmap(Werld.IMAGES.LOOT_CONTAINER.IMAGE.SRC);
     this.bitmap.onPress = this.onBitmapPress;
-
     this.container.addChildAt(this.bitmap, 0);
+    Werld.containers.gumps.addChild(this.container);
 
     this.hide();
+  },
+  removeContainerFromGumpsContainer: function(event) {
+    Werld.containers.gumps.removeChild(this.container);
   },
   onBitmapPress: function(event) {
     if (event.nativeEvent.which === 1) {

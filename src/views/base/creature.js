@@ -1,18 +1,22 @@
 Werld.Views.Base.Creature = Backbone.View.extend({
   initialize: function() {
+    _.bindAll(this);
+
     this.container = new Container();
     this.container.view = this;
     this.walking = {};
 
     this.model.bind('destroy', this.onModelDestroy, this);
 
-    /* FIXME: find a better place to pass the main character to the view. */
+    // TODO: find a better place to pass the main character to the view.
     this.lootContainerView = new Werld.Views.LootContainer({
-      model: this.model.lootContainer, character: Werld.character
+      model: this.model.lootContainer,
+      character: Werld.character
     });
 
-    var image = new Image();
+    // TODO: load images asynchronously when the game starts, not inside views.
     var SPRITE = this.model.get('SPRITE');
+    var image = new Image();
     image.src = SPRITE.SRC;
     image.onload = _.bind(function() {
       this.spriteSheet = new SpriteSheet({
@@ -33,37 +37,38 @@ Werld.Views.Base.Creature = Backbone.View.extend({
 
       this.bitmapAnimation = new BitmapAnimation(this.spriteSheet);
       this.bitmapAnimation.currentFrame = 0;
-      this.bitmapAnimation.onMouseOver = function() {
-        this.parent.getStage().canvas.style.cursor = 'pointer';
-      };
-      this.bitmapAnimation.onMouseOut = function() {
-        this.parent.getStage().canvas.style.cursor = '';
-      };
-      var self = this;
-      this.bitmapAnimation.onDoubleClick = function(event) {
-        if (self.model.alive()) {
-          Werld.character.attack(self.model);
-        } else {
-          if (Werld.character.tileDistance(self.model) <= 1) {
-            self.showLoot();
-          }
-        }
-      };
-      this.bitmapAnimation.tick = _.bind(this.bitmapAnimationTick, this);
+      this.bitmapAnimation.onMouseOver = this.onBitmapAnimationMouseOver;
+      this.bitmapAnimation.onMouseOut = this.onBitmapAnimationMouseOut;
+      this.bitmapAnimation.onDoubleClick = this.onBitmapAnimationDoubleClick;
+      this.bitmapAnimation.tick = this.bitmapAnimationTick;
 
       this.characterNameText = new Text();
-      this.characterNameText.tick = _.bind(this.characterNameTextTick, this);
+      this.characterNameText.tick = this.characterNameTextTick;
 
       this.messagesContainer = new Container();
-      this.messagesContainer.tick = _.bind(this.messagesContainerTick, this);
+      this.messagesContainer.tick = this.messagesContainerTick;
 
-      this.container.tick = _.bind(this.tick, this);
+      this.container.tick = this.tick;
 
       this.container.addChild(this.bitmapAnimation);
       this.container.addChild(this.characterNameText);
       this.container.addChild(this.messagesContainer);
-      Werld.containers.gumps.addChild(this.lootContainerView.container);
     }, this);
+  },
+  onBitmapAnimationMouseOver: function(event) {
+    Werld.canvas.el.style.cursor = 'pointer';
+  },
+  onBitmapAnimationMouseOut: function(event) {
+    Werld.canvas.el.style.cursor = '';
+  },
+  onBitmapAnimationDoubleClick: function(event) {
+    if (this.model.alive()) {
+      Werld.character.attack(this.model);
+    } else {
+      if (Werld.character.tileDistance(this.model) <= 1) {
+        this.showLoot();
+      }
+    }
   },
   showLoot: function() {
     this.lootContainerView.show();

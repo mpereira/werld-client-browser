@@ -124,6 +124,10 @@ var Werld = {
       if (state === Werld.States.GAME_STARTED) {
         Werld.stage.removeAllChildren();
 
+        _(Werld.CONTAINER_NAMES).each(function(name) {
+          Werld.containers[name] = new Container();
+        });
+
         Werld.character = new Werld.Models.Character(
           _.extend(Werld.Creatures.CHARACTER, {
             fixed: true,
@@ -223,10 +227,6 @@ var Werld = {
         });
 
         $(window).keypress(Werld.keyboardHandler);
-
-        _(Werld.CONTAINER_NAMES).each(function(name) {
-          Werld.containers[name] = new Container();
-        });
 
         Werld.containers.terrain.addChild(Werld.canvas.screenView.container);
         Werld.containers.objects.addChild(Werld.canvas.altarView.container);
