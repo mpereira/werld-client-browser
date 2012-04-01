@@ -4,17 +4,16 @@ Werld.Views.LootContainer = Werld.Views.Base.Container.extend({
 
     _.bindAll(this);
 
-    this.bitmap = new Bitmap(Werld.IMAGES.LOOT_CONTAINER.IMAGE.SRC);
     this.character = this.options.character;
 
-    this.bitmap.onPress = this.onContainerPress;
+    this.bitmap = new Bitmap(Werld.IMAGES.LOOT_CONTAINER.IMAGE.SRC);
+    this.bitmap.onPress = this.onBitmapPress;
 
-    this.container.addChild(this.bitmap);
-    this.model.items.each(this.addItem);
+    this.container.addChildAt(this.bitmap, 0);
 
     this.hide();
   },
-  onContainerPress: function(event) {
+  onBitmapPress: function(event) {
     if (event.nativeEvent.which === 1) {
       Werld.util.bringToFront(this.container);
 
@@ -23,18 +22,21 @@ Werld.Views.LootContainer = Werld.Views.Base.Container.extend({
         this.container.y - event.stageY
       ];
 
-      event.onMouseMove = this.onContainerMouseMove;
+      event.onMouseMove = this.onBitmapMouseMove;
     } else if (event.nativeEvent.which === 3) {
       this.hide();
     }
   },
-  onContainerMouseMove: function(event) {
+  onBitmapMouseMove: function(event) {
     this.container.x = event.stageX + this.pressEventOffset[0];
     this.container.y = event.stageY + this.pressEventOffset[1];
   },
   onCharacterCoordinatesChange: function() {
     if (this.character.tileDistance(this.model.owner) >= 2) {
-      this.character.unbind('change:coordinates', this.onCharacterCoordinatesChange);
+      this.character.unbind(
+        'change:coordinates',
+        this.onCharacterCoordinatesChange
+      );
       this.hide();
     }
   },

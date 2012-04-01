@@ -1,6 +1,6 @@
 Werld.Views.Creature = Werld.Views.Base.Creature.extend({
   initialize: function() {
-    Werld.Views.Character.__super__.initialize.call(this);
+    Werld.Views.Creature.__super__.initialize.call(this);
 
     this.model.bind('change:status', this.onModelStatusChange, this);
 

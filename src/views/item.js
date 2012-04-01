@@ -16,22 +16,31 @@ Werld.Views.Item = Backbone.View.extend({
 
     this.model.bind('destroy', this.onModelDestroy);
 
-    //_(this.bitmap).extend(Werld.Mixins.Draggable);
-    this.bitmap.onDoubleClick = this.onContainerDoubleClick;
-    this.bitmap.onPress = this.onContainerPress;
-    this.bitmap.onMouseOut = this.onContainerMouseOut;
-    this.bitmap.onMouseOver = this.onContainerMouseOver;
+    // TODO: maybe we could create an abstraction for these, e.g.:
+    //       _(this.bitmap).extend(Werld.Mixins.Draggable); */
+    this.bitmap.onDoubleClick = this.onBitmapDoubleClick;
+    this.bitmap.onPress = this.onBitmapPress;
+    this.bitmap.onMouseOut = this.onBitmapMouseOut;
+    this.bitmap.onMouseOver = this.onBitmapMouseOver;
   },
   onModelDestroy: function(model) {
     this.container.parent.removeChild(this.container);
-    //this.bitmap.destroy();
+    // TODO: maybe we could create an abstraction for these, e.g.:
+    //       this.bitmap.destroy(); */
     delete this.bitmap.onDoubleClick;
     delete this.bitmap.onPress;
     delete this.bitmap.onMouseOut;
     delete this.bitmap.onMouseOver;
   },
-  onContainerPress: function(event) {
-    Werld.util.bringToFront(this.container.parent);
+  onBitmapPress: function(event) {
+    Werld.containers.itemTransfer.x = this.container.parent.x;
+    Werld.containers.itemTransfer.y = this.container.parent.y;
+    this.container.parentBeforePress = this.container.parent;
+    this.container.parent.removeChild(this.container);
+    Werld.containers.itemTransfer.addChild(this.container);
+
+    this.coordinatesBeforePress = [this.container.x, this.container.y];
+
     if (event.nativeEvent.which === 1) {
       Werld.util.bringToFront(this.container);
 
@@ -40,45 +49,52 @@ Werld.Views.Item = Backbone.View.extend({
         this.container.y - event.stageY
       ];
 
-      event.onMouseMove = this.onContainerMouseMove;
-      event.onMouseUp = this.onContainerMouseUp;
+      event.onMouseMove = this.onBitmapMouseMove;
+      event.onMouseUp = this.onBitmapMouseUp;
     }
   },
-  onContainerMouseMove: function(event) {
+  onBitmapMouseMove: function(event) {
     this.container.x = event.stageX + this.pressEventOffset[0];
     this.container.y = event.stageY + this.pressEventOffset[1];
   },
-  onContainerMouseUp: function(event) {
-    /* FIXME: Getting the DisplayObject below the item's DisplayObject. Is
-     *        there a better way to do this? */
+  handleItemDrop: function(item) {
+    if (this.model.same(item) && this.model.stackable()) {
+      item.collection.remove(item);
+      this.model.merge(item);
+      return(true);
+    } else {
+      return(false);
+    }
+  },
+  onBitmapMouseUp: function(event) {
+    // Getting the DisplayObject below the item's DisplayObject, which is
+    // possibly the bitmap of a Werld container (loot container, backpack etc.)
+    // on which we're dropping the item.
+    //
+    // Is there a better way to do this?
     var targetDisplayObject =
       Werld.stage.getObjectsUnderPoint(event.stageX, event.stageY)[1];
     var targetView = targetDisplayObject.parent.view;
     var targetModel = targetView.model;
 
-    if (targetView instanceof Werld.Views.Item) {
-      if (targetModel.same(this.model) && targetModel.stackable()) {
-        this.model.collection.remove(this.model);
-        targetModel.merge(this.model);
-      }
-    } else if (targetView instanceof Werld.Views.Base.Container) {
-      if (targetView !== this.container.parent.view) {
-        this.model.collection.remove(this.model);
-        targetModel.items.add(this.model);
-      }
-    } else if (targetView instanceof Werld.Views.Tile) {
-      if (Werld.character.tileDistance(targetModel) <= 2) {
-        this.model.collection.remove(this.model);
-        targetModel.items.add(this.model);
-      }
-    }
+    Werld.containers.itemTransfer.removeChild(this.container);
+    this.container.parent = this.container.parentBeforePress;
+    this.container.parent.addChild(this.container);
+    delete this.container.parentBeforePress;
 
+    if (!Werld.Util.Callback.run(targetView.handleItemDrop, this.model)) {
+      this.cancelMovement();
+    }
   },
-  onContainerMouseOver: function() {
+  cancelMovement: function() {
+    this.container.x = this.coordinatesBeforePress[0];
+    this.container.y = this.coordinatesBeforePress[1];
+  },
+  onBitmapMouseOver: function() {
     Werld.canvas.el.style.cursor = 'pointer';
     this.showToolTip();
   },
-  onContainerMouseOut: function() {
+  onBitmapMouseOut: function() {
     Werld.canvas.el.style.cursor = '';
     this.hideToolTip();
   },

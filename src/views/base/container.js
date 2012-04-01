@@ -6,19 +6,29 @@ Werld.Views.Base.Container = Backbone.View.extend({
     this.container = new Container();
     this.container.view = this;
 
-    this.model.items.bind('add', this.addItem);
-    this.model.items.bind('remove', this.removeItem);
+    this.model.items.bind('add', this.addItemView);
+    this.model.items.bind('remove', this.removeItemView);
+
+    this.model.items.each(this.addItemView);
   },
-  addItem: function(item) {
+  addItemView: function(item) {
     var itemView = new Werld.Views.Item({ model: item });
     this.itemViews.push(itemView);
     this.container.addChild(itemView.container);
   },
-  removeItem: function(item) {
+  removeItemView: function(item) {
     var viewToBeRemoved = _(this.itemViews).find(function(itemView) {
       return(itemView.model === item);
     });
     this.itemViews = _(this.itemViews).without(viewToBeRemoved);
     this.container.removeChild(viewToBeRemoved.container);
+  },
+  handleItemDrop: function(item) {
+    if (item.collection !== this.model.items) {
+      item.collection.remove(item);
+      this.model.items.add(item);
+    }
+
+    return(true);
   }
 });

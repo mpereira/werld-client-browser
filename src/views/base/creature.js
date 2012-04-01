@@ -159,32 +159,15 @@ Werld.Views.Base.Creature = Backbone.View.extend({
   },
   tick: function() {
     var modelCoordinates = this.model.get('coordinates');
-    var fixedModelCoordinates = this.model.get('fixedCoordinates');
-    var modelDestinationCoordinates = this.model.get('destination');
     var screenCoordinates = Werld.screen.get('coordinates');
     var mapDimensions = Werld.map.get('dimensions');
-    var creatureScreenCoordinates;
 
     if (modelCoordinates[0] >= 0 &&
           modelCoordinates[0] < Werld.util.tileToPixel(mapDimensions[0]) &&
           modelCoordinates[1] >= 0 &&
           modelCoordinates[1] < Werld.util.tileToPixel(mapDimensions[1])) {
-      if (this.model.get('fixed')) {
-        creatureScreenCoordinates = [
-          fixedModelCoordinates[0],
-          fixedModelCoordinates[1]
-        ];
-      } else {
-        creatureScreenCoordinates = [
-          modelCoordinates[0] - screenCoordinates[0],
-          modelCoordinates[1] - screenCoordinates[1]
-        ];
-      }
-    } else {
-      return;
+      this.container.x = modelCoordinates[0] - screenCoordinates[0];
+      this.container.y = modelCoordinates[1] - screenCoordinates[1];
     }
-
-    this.container.x = creatureScreenCoordinates[0];
-    this.container.y = creatureScreenCoordinates[1];
   }
 });

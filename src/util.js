@@ -41,6 +41,17 @@ Werld.util = {
 
 Werld.Util = {};
 
+Werld.Util.Callback = {
+  run: function(callback) {
+    if (callback instanceof Function) {
+      return(callback.apply(
+        null,
+        Array.prototype.slice.call(_(arguments).toArray(), 1)
+      ));
+    }
+  }
+};
+
 Werld.Util.Circle = function(params) {
   this.center = params.center;
   this.radius = params.radius;

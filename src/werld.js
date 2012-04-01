@@ -8,7 +8,8 @@ var Werld = {
     'objects',
     'creatures',
     'character',
-    'gumps'
+    'gumps',
+    'itemTransfer'
   ],
   States: {
     INIT: 1,
@@ -269,6 +270,4 @@ var Werld = {
   }
 };
 
-$(function() {
-  Werld.init();
-});
+$(Werld.init);

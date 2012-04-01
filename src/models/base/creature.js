@@ -17,11 +17,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     var stats = this.get('stats');
     var coordinates = _.clone(this.get('coordinates'));
-    var fixedCoordinates;
-
-    if (this.get('fixed')) {
-      fixedCoordinates = coordinates;
-    }
 
     this.set({
       status: 'alive',
@@ -32,8 +27,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       stamina: stats.dexterity,
       maxStamina: stats.dexterity,
       destination: coordinates,
-      messages: [],
-      fixedCoordinates: fixedCoordinates
+      messages: []
     });
 
     this.intervalFunctionNamesWithIntervals = {
@@ -73,8 +67,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.set({ messages: messages });
   },
   move: function(destinationTile) {
-    var mapDestinationTile;
-
     if (this.get('following')) {
       this.stopFollowing(this.get('following'));
     }
@@ -88,40 +80,20 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       this.stopAttacking(creatureBeingAttacked);
     }
 
-    if (this.get('fixed')) {
-      var fixedCoordinates = this.get('fixedCoordinates');
-      var coordinates = this.get('coordinates');
-
-      var tileOffset = [
-        destinationTile[0] - Werld.util.pixelToTile(fixedCoordinates[0]),
-        destinationTile[1] - Werld.util.pixelToTile(fixedCoordinates[1])
-      ];
-
-      mapDestinationTile = [
-        Werld.util.pixelToTile(coordinates[0]) + tileOffset[0],
-        Werld.util.pixelToTile(coordinates[1]) + tileOffset[1]
-      ];
-
-    } else {
-      mapDestinationTile = destinationTile;
+    if (destinationTile[0] < 0) {
+      destinationTile[0] = 0;
+    } else if (destinationTile[0] >= Werld.Config.WORLD_MAP_DIMENSIONS[0]) {
+      destinationTile[0] = Werld.Config.WORLD_MAP_DIMENSIONS[1] - 1;
     }
 
-    if (mapDestinationTile[0] < 0) {
-      mapDestinationTile[0] = 0;
-    } else if (mapDestinationTile[0] >= Werld.Config.WORLD_MAP_DIMENSIONS[0]) {
-      mapDestinationTile[0] = Werld.Config.WORLD_MAP_DIMENSIONS[1] - 1;
-    }
-
-    if (mapDestinationTile[1] < 0) {
-      mapDestinationTile[1] = 0;
-    } else if (mapDestinationTile[1] >= Werld.Config.WORLD_MAP_DIMENSIONS[0]) {
-      mapDestinationTile[1] = Werld.Config.WORLD_MAP_DIMENSIONS[1] - 1;
+    if (destinationTile[1] < 0) {
+      destinationTile[1] = 0;
+    } else if (destinationTile[1] >= Werld.Config.WORLD_MAP_DIMENSIONS[0]) {
+      destinationTile[1] = Werld.Config.WORLD_MAP_DIMENSIONS[1] - 1;
     }
 
     this.set({
-      destination: _(mapDestinationTile).map(function(column) {
-        return(Werld.util.tileToPixel(column));
-      })
+      destination: _(destinationTile).map(Werld.util.tileToPixel)
     });
   },
   movementHandler: function() {

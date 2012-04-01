@@ -58,11 +58,10 @@ Werld.Views.Screen = Backbone.View.extend({
         if (screenTile[0] > 0 && screenTile[0] < Werld.Config.WORLD_MAP_DIMENSIONS[0] &&
               screenTile[1] > 0 && screenTile[1] < Werld.Config.WORLD_MAP_DIMENSIONS[1]) {
           this.mapTileViews[screenTile[0]][screenTile[1]].model.set({
-            coordinates: [
-              Werld.util.tileToPixel(i),
-              Werld.util.tileToPixel(j)
-            ],
-            offset: offset
+            onScreenCoordinates: [
+              Werld.util.tileToPixel(i) - offset[0],
+              Werld.util.tileToPixel(j) - offset[1]
+            ]
           });
           this.mapTileViews[screenTile[0]][screenTile[1]].unhide();
         }

@@ -6,9 +6,7 @@ Werld.Models.Item = Backbone.Model.extend({
     return(this.get('name') === item.get('name'));
   },
   merge: function(item) {
-    this.set({
-      quantity: this.get('quantity') + item.get('quantity')
-    });
+    this.set('quantity', this.get('quantity') + item.get('quantity'));
   },
   destroy: function() {
     this.trigger('destroy', this);

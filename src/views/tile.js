@@ -1,6 +1,6 @@
 Werld.Views.Tile = Werld.Views.Base.Container.extend({
   initialize: function() {
-    Werld.Views.LootContainer.__super__.initialize.call(this);
+    Werld.Views.Tile.__super__.initialize.call(this);
 
     _.bindAll(this)
 
@@ -12,20 +12,25 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
     this.container.addChild(this.bitmap);
   },
   onBitmapPress: function(event) {
-    Werld.character.move(_(this.model.get('coordinates')).map(function(pixels) {
-      return(Werld.util.pixelToTile(pixels));
-    }));
+    Werld.character.move(_(this.model.get('coordinates')).map(Werld.util.pixelToTile));
   },
   onModelChange: function(event) {
-    this.container.x =
-      this.model.get('coordinates')[0] - this.model.get('offset')[0];
-    this.container.y =
-      this.model.get('coordinates')[1] - this.model.get('offset')[1];
+    this.container.x = this.model.get('onScreenCoordinates')[0];
+    this.container.y = this.model.get('onScreenCoordinates')[1];
   },
   hide: function() {
     this.container.visible = false;
   },
   unhide: function() {
     this.container.visible = true;
+  },
+  handleItemDrop: function(item) {
+    if (Werld.character.tileDistance(this.model) <= 2) {
+      item.collection.remove(item);
+      this.model.items.add(item);
+      return(true);
+    } else {
+      return(false);
+    }
   }
 });
