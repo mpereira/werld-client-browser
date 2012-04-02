@@ -43,6 +43,10 @@ Werld.Views.Item = Backbone.View.extend({
       ];
 
       if (Werld.character.tileDistance(this.model) <= 1) {
+        // Put the item's view EaselJS container on the "itemTransfer" EaselJS
+        // container so that the item appears above all other display objects.
+        // Also save the container's parent so that we can restore it after
+        // the item is dropped.
         Werld.containers.itemTransfer.x = this.container.parent.x;
         Werld.containers.itemTransfer.y = this.container.parent.y;
         this.container.parentBeforePress = this.container.parent;
@@ -77,6 +81,8 @@ Werld.Views.Item = Backbone.View.extend({
       Werld.stage.getObjectsUnderPoint(event.stageX, event.stageY)[1];
     var targetView = targetDisplayObject.parent.view;
 
+    // Restore this view's EaselJS container parent to what it was previous to
+    // putting it into the "itemTransfer" EaselJS container.
     Werld.containers.itemTransfer.removeChild(this.container);
     this.container.parent = this.container.parentBeforePress;
     this.container.parent.addChild(this.container);
