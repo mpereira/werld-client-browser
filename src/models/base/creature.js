@@ -248,10 +248,15 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       }
     }, this));
   },
+  coordinates: function() {
+    return(this.get('coordinates'));
+  },
   tileDistance: function(thing) {
-    return(Werld.util.tileDistance(
-      this.get('coordinates'), thing.get('coordinates')
-    ));
+    if (!this.coordinates || !thing.coordinates) {
+      throw new Error('Both objects must implement a "coordinates" function');
+    }
+
+    return(Werld.util.tileDistance(this.coordinates(), thing.coordinates()));
   },
   statusObserver: function() {
     if (this.dead()) {

@@ -1,13 +1,14 @@
 Werld.Models.Creature = Werld.Models.Base.Creature.extend({
   initialize: function() {
+    Werld.Models.Creature.__super__.initialize.call(this);
+
     var goldQuantityRange = this.get('ITEMS').GOLD;
     var goldQuantity = Werld.util.randomIntegerBetween(goldQuantityRange);
-    var goldItemObject = _(Werld.ITEMS.GOLD).extend({ quantity: goldQuantity });
-    var goldItem = new Werld.Models.Item(goldItemObject);
 
-    Werld.Models.Creature.__super__.initialize.call(this, {
-      items: new Werld.Collections.Items([goldItem])
-    });
+    this.items.add(new Werld.Models.Item(_({
+      container: this.lootContainer,
+      quantity: goldQuantity
+    }).extend(Werld.ITEMS.GOLD)));
   },
   stopAttacking: function(creature) {
     Werld.Models.Creature.__super__.stopAttacking.call(this, creature);

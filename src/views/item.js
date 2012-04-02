@@ -33,24 +33,25 @@ Werld.Views.Item = Backbone.View.extend({
     delete this.bitmap.onMouseOver;
   },
   onBitmapPress: function(event) {
-    Werld.containers.itemTransfer.x = this.container.parent.x;
-    Werld.containers.itemTransfer.y = this.container.parent.y;
-    this.container.parentBeforePress = this.container.parent;
-    this.container.parent.removeChild(this.container);
-    Werld.containers.itemTransfer.addChild(this.container);
-
-    this.coordinatesBeforePress = [this.container.x, this.container.y];
-
     if (event.nativeEvent.which === 1) {
       Werld.util.bringToFront(this.container);
 
+      this.coordinatesOnPress = [this.container.x, this.container.y];
       this.pressEventOffset = [
         this.container.x - event.stageX,
         this.container.y - event.stageY
       ];
 
-      event.onMouseMove = this.onBitmapMouseMove;
-      event.onMouseUp = this.onBitmapMouseUp;
+      if (Werld.character.tileDistance(this.model) <= 1) {
+        Werld.containers.itemTransfer.x = this.container.parent.x;
+        Werld.containers.itemTransfer.y = this.container.parent.y;
+        this.container.parentBeforePress = this.container.parent;
+        this.container.parent.removeChild(this.container);
+        Werld.containers.itemTransfer.addChild(this.container);
+
+        event.onMouseMove = this.onBitmapMouseMove;
+        event.onMouseUp = this.onBitmapMouseUp;
+      }
     }
   },
   onBitmapMouseMove: function(event) {
@@ -75,20 +76,23 @@ Werld.Views.Item = Backbone.View.extend({
     var targetDisplayObject =
       Werld.stage.getObjectsUnderPoint(event.stageX, event.stageY)[1];
     var targetView = targetDisplayObject.parent.view;
-    var targetModel = targetView.model;
 
     Werld.containers.itemTransfer.removeChild(this.container);
     this.container.parent = this.container.parentBeforePress;
     this.container.parent.addChild(this.container);
     delete this.container.parentBeforePress;
 
-    if (!Werld.Util.Callback.run(targetView.handleItemDrop, this.model)) {
+    // TODO: pass item transfer handling logic to models and have views only
+    //       responding to events.
+    if (Werld.Util.Callback.run(targetView.handleItemDrop, this.model)) {
+      this.model.transfer(targetView.model);
+    } else {
       this.cancelMovement();
     }
   },
   cancelMovement: function() {
-    this.container.x = this.coordinatesBeforePress[0];
-    this.container.y = this.coordinatesBeforePress[1];
+    this.container.x = this.coordinatesOnPress[0];
+    this.container.y = this.coordinatesOnPress[1];
   },
   onBitmapMouseOver: function() {
     Werld.canvas.el.style.cursor = 'pointer';

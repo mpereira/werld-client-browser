@@ -19,5 +19,12 @@ Werld.Models.Base.Container = Backbone.Model.extend({
         this.items = new Werld.Collections.Items();
       }
     }
+  },
+  coordinates: function() {
+    if (!this.owner) {
+      throw new Error('Item must have an owner to have coordinates');
+    }
+
+    return(this.owner.coordinates());
   }
 });
