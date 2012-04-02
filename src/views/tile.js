@@ -30,7 +30,7 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
   handleItemDrop: function(item) {
     console.log('[tileView][handleItemDrop] distance between character and tile: ' + Werld.character.tileDistance(this.model));
 
-    if (Werld.character.tileDistance(this.model) <= 2) {
+    if (Werld.character.tileDistance(this.model) <= 1) {
       console.log('[tileView][handleItemDrop] success');
       item.collection.remove(item);
       this.model.items.add(item);
