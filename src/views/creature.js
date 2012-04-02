@@ -2,7 +2,8 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
   initialize: function() {
     Werld.Views.Creature.__super__.initialize.call(this);
 
-    this.model.bind('change:status', this.onModelStatusChange, this);
+    this.model.bind('change:status', this.onModelStatusChange);
+    this.model.bind('change:hitPoints', this.updateHitPointsBar);
 
     this.hitPointsBarRectangleWidth = 50;
     this.hitPointsBarRectangle = new Rectangle(
@@ -17,7 +18,8 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
     this.hitPointsBar.alpha = 0.7;
 
     this.container.addChild(this.hitPointsBar);
-    this.hitPointsBar.tick = _.bind(this.hitPointsBarTick, this);
+
+    this.updateHitPointsBar(this.model);
   },
   characterNameTextTick: function() {
     Werld.Views.Character.__super__.characterNameTextTick.call(this);
@@ -31,7 +33,7 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
       return(this.model.get('name') + ' corpse');
     }
   },
-  hitPointsBarTick: function() {
+  updateHitPointsBar: function(model) {
     var hitPointsPercentage =
       this.model.get('hitPoints') / this.model.get('maxHitPoints');
     this.hitPointsBarRectangle.width =
