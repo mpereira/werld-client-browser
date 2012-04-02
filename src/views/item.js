@@ -102,10 +102,6 @@ Werld.Views.Item = Backbone.View.extend({
     Werld.canvas.el.style.cursor = '';
     this.hideToolTip();
   },
-  showToolTip: function() {
-    console.log('[ItemView][showToolTip]')
-  },
-  hideToolTip: function() {
-    console.log('[ItemView][hideToolTip]')
-  }
+  showToolTip: function() {},
+  hideToolTip: function() {}
 });
