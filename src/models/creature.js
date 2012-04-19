@@ -3,7 +3,7 @@ Werld.Models.Creature = Werld.Models.Base.Creature.extend({
     Werld.Models.Creature.__super__.initialize.call(this);
 
     var goldQuantityRange = this.get('ITEMS').GOLD;
-    var goldQuantity = Werld.util.randomIntegerBetween(goldQuantityRange);
+    var goldQuantity = Werld.Utils.Math.randomIntegerBetween(goldQuantityRange);
 
     this.items.add(new Werld.Models.Item(_({
       container: this.lootContainer,

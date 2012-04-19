@@ -8,7 +8,7 @@ Werld.Views.CharacterNameInputForm = Backbone.View.extend({
     $('input', this.el).focus();
   },
   submit: function() {
-    Werld.switchState(Werld.States.GAME_STARTED, {
+    Werld.switchState(Werld.STATES.GAME_STARTED, {
       data: {
         character: { name: $('#character-name-input', this.el).val() }
       }

@@ -30,7 +30,7 @@ Werld.Views.Screen = Backbone.View.extend({
     var screenDimensions = this.model.get('dimensions');
 
     var screenBaseTile = _(screenCoordinates).map(function(pixel) {
-      return(Werld.util.pixelToTile(pixel));
+      return(Werld.Utils.Geometry.pixelsToTiles(pixel));
     });
 
     /* The offset has to be >= 0 and <= 40 or else the tiles will flicker when
@@ -59,8 +59,8 @@ Werld.Views.Screen = Backbone.View.extend({
               screenTile[1] > 0 && screenTile[1] < Werld.Config.WORLD_MAP_DIMENSIONS[1]) {
           this.mapTileViews[screenTile[0]][screenTile[1]].model.set({
             onScreenCoordinates: [
-              Werld.util.tileToPixel(i) - offset[0],
-              Werld.util.tileToPixel(j) - offset[1]
+              Werld.Utils.Geometry.tilesToPixels(i) - offset[0],
+              Werld.Utils.Geometry.tilesToPixels(j) - offset[1]
             ]
           });
           this.mapTileViews[screenTile[0]][screenTile[1]].unhide();

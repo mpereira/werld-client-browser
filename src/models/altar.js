@@ -1,15 +1,21 @@
 Werld.Models.Altar = Backbone.Model.extend({
   initialize: function() {
-    this.characterResurrectionObserverIntervalId = setInterval(
-      _.bind(this.characterResurrectionObserver, this),
-      Werld.Config.FRAME_RATE()
+    _.bindAll(this);
+
+    Werld.Utils.Interval.set(
+      this,
+      'characterResurrectionObserverIntervalId',
+      this.characterResurrectionObserver,
+      Werld.Config.ALTAR_CHARACTER_RESURRECTION_OBSERVER_INTERVAL
     );
   },
+  coordinates: function() {
+    return(this.get('coordinates'));
+  },
   characterResurrectionObserver: function() {
-    var character = Werld.character;
-    if (Werld.util.tileDistance(this.get('coordinates'), character.get('coordinates')) <= 1) {
-      if (character.dead()) {
-        character.resurrect();
+    if (Werld.character.tileDistance(this) <= 1) {
+      if (Werld.character.dead()) {
+        Werld.character.resurrect();
       }
     }
   }

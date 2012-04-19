@@ -13,7 +13,7 @@ Werld.Views.Backpack = Werld.Views.Base.Container.extend({
   },
   onBitmapPress: function(event) {
     if (event.nativeEvent.which === 1) {
-      Werld.util.bringToFront(this.container);
+      Werld.Utils.Easel.bringDisplayObjectToFront(this.container);
 
       this.pressEventOffset = [
         this.container.x - event.stageX,

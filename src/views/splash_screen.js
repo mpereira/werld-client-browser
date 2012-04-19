@@ -62,7 +62,7 @@ Werld.Views.SplashScreen = Backbone.View.extend({
     };
     signInClickableGraphicsShape.onClick = function() {
       signInClickableGraphicsShape.getStage().canvas.style.cursor = '';
-      Werld.switchState(Werld.States.CHOOSING_NAME, {
+      Werld.switchState(Werld.STATES.CHOOSING_NAME, {
         callback: function() {
           signInClickableGraphicsShape.onMouseOver = null;
           signInClickableGraphicsShape.onMouseOut = null;

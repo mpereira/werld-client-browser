@@ -20,7 +20,7 @@ Werld.Views.LootContainer = Werld.Views.Base.Container.extend({
   },
   onBitmapPress: function(event) {
     if (event.nativeEvent.which === 1) {
-      Werld.util.bringToFront(this.container);
+      Werld.Utils.Easel.bringDisplayObjectToFront(this.container);
 
       this.pressEventOffset = [
         this.container.x - event.stageX,
@@ -38,7 +38,7 @@ Werld.Views.LootContainer = Werld.Views.Base.Container.extend({
   },
   onCharacterCoordinatesChange: function() {
     if (this.character.tileDistance(this.model.owner) >= 2) {
-      this.character.unbind(
+      this.character.off(
         'change:coordinates',
         this.onCharacterCoordinatesChange
       );
@@ -60,8 +60,8 @@ Werld.Views.LootContainer = Werld.Views.Base.Container.extend({
     this.container.x = ownerCoordinates[0] - screenCoordinates[0];
     this.container.y = ownerCoordinates[1] - screenCoordinates[1];
     this.container.visible = true;
-    Werld.util.bringToFront(this.container);
+    Werld.Utils.Easel.bringDisplayObjectToFront(this.container);
 
-    this.character.bind('change:coordinates', this.onCharacterCoordinatesChange);
+    this.character.on('change:coordinates', this.onCharacterCoordinatesChange);
   }
 });

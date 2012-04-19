@@ -4,9 +4,6 @@ Werld.Views.Base.Creature = Backbone.View.extend({
 
     this.container = new Container();
     this.container.view = this;
-    this.walking = {};
-
-    this.model.bind('destroy', this.onModelDestroy, this);
 
     // TODO: find a better place to pass the main character to the view.
     this.lootContainerView = new Werld.Views.LootContainer({
@@ -40,20 +37,34 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       this.bitmapAnimation.onMouseOver = this.onBitmapAnimationMouseOver;
       this.bitmapAnimation.onMouseOut = this.onBitmapAnimationMouseOut;
       this.bitmapAnimation.onDoubleClick = this.onBitmapAnimationDoubleClick;
-      this.bitmapAnimation.tick = this.bitmapAnimationTick;
 
       this.characterNameText = new Text();
-      this.characterNameText.tick = this.characterNameTextTick;
+      //this.updateCreatureName();
+      this.characterNameText.tick = this.updateCreatureName;
 
       this.messagesContainer = new Container();
       this.messagesContainer.tick = this.messagesContainerTick;
 
-      this.container.tick = this.tick;
-
       this.container.addChild(this.bitmapAnimation);
       this.container.addChild(this.characterNameText);
       this.container.addChild(this.messagesContainer);
+
+      this.updateContainerOnScreenCoordinates();
+
+      this.model.on('destroy', this.onModelDestroy);
+      this.model.on('change:status', this.updateCreatureName);
+      this.model.on('death', this.pauseBitmapAnimation);
+      this.model.on('idle', this.pauseBitmapAnimation);
+      this.model.on('change:coordinates', this.updateBitmapAnimation);
+      this.model.on('change:coordinates', this.updateContainerOnScreenCoordinates);
     }, this);
+  },
+  updateContainerOnScreenCoordinates: function() {
+    var onScreenCoordinates =
+      Werld.screen.objectCoordinates(this.model);
+
+    this.container.x = onScreenCoordinates[0];
+    this.container.y = onScreenCoordinates[1];
   },
   onBitmapAnimationMouseOver: function(event) {
     Werld.canvas.el.style.cursor = 'pointer';
@@ -73,53 +84,40 @@ Werld.Views.Base.Creature = Backbone.View.extend({
   showLoot: function() {
     this.lootContainerView.show();
   },
-  bitmapAnimationTick: function() {
-    var modelCoordinates = this.model.get('coordinates');
-    var modelDestinationCoordinates = this.model.get('destination');
+  pauseBitmapAnimation: function(creature) {
+    this.bitmapAnimation.currentAnimationFrame = 0;
+    this.bitmapAnimation.paused = true;
+  },
+  updateBitmapAnimation: function(creature) {
+    this.bitmapAnimation.paused = false;
 
-    if (modelCoordinates[1] > modelDestinationCoordinates[1]) {
-      if (!this.walking.up) {
-        this.bitmapAnimation.gotoAndPlay('walkUp');
-        this.walking.up = true;
-        this.walking.down = false;
-        this.walking.left = false;
-        this.walking.right = false;
-      }
-    } else if (modelCoordinates[1] < modelDestinationCoordinates[1]) {
-      if (!this.walking.down) {
+    // If the creature is moving diagonally give precedence to vertical
+    // animations (i.e. "walkDown" and "walkUp") because we don't have diagonal
+    // animations.
+    if (this.model.get('coordinates')[1] > this.model.previous('coordinates')[1]) {
+      if (this.bitmapAnimation.currentAnimation !== 'walkDown') {
         this.bitmapAnimation.gotoAndPlay('walkDown');
-        this.walking.up = false;
-        this.walking.down = true;
-        this.walking.left = false;
-        this.walking.right = false;
+      }
+    } else if (this.model.get('coordinates')[1] < this.model.previous('coordinates')[1]) {
+      if (this.bitmapAnimation.currentAnimation !== 'walkUp') {
+        this.bitmapAnimation.gotoAndPlay('walkUp');
       }
     } else {
-      this.walking.up = false;
-      this.walking.down = false;
-
-      if (modelCoordinates[0] > modelDestinationCoordinates[0]) {
-        if (!this.walking.left) {
-          this.bitmapAnimation.gotoAndPlay('walkLeft');
-          this.walking.left = true;
-          this.walking.right = false;
-        }
-      } else if (modelCoordinates[0] < modelDestinationCoordinates[0]) {
-        if (!this.walking.right) {
+      if (this.model.get('coordinates')[0] > this.model.previous('coordinates')[0]) {
+        if (this.bitmapAnimation.currentAnimation !== 'walkRight') {
           this.bitmapAnimation.gotoAndPlay('walkRight');
-          this.walking.left = false;
-          this.walking.right = true;
         }
-      } else {
-        this.walking.left = false;
-        this.walking.right = false;
-        this.bitmapAnimation.currentAnimationFrame = 0;
-        this.bitmapAnimation.paused = true;
+      } else if (this.model.get('coordinates')[0] < this.model.previous('coordinates')[0]) {
+        if (this.bitmapAnimation.currentAnimation !== 'walkLeft') {
+          this.bitmapAnimation.gotoAndPlay('walkLeft');
+        }
       }
     }
   },
-  characterNameTextTick: function() {
+  updateCreatureName: function() {
     this.characterNameText.text = this._characterNameText();
 
+    this.characterNameText.color = '#cccccc';
     this.characterNameText.textBaseline = 'top';
     this.characterNameText.textAlign = 'center';
     this.characterNameText.x = 20;
@@ -161,18 +159,5 @@ Werld.Views.Base.Creature = Backbone.View.extend({
     this.container.parent.removeChild(this.container);
     delete this.bitmapAnimation.onMouseOver;
     delete this.bitmapAnimation.onMouseOut;
-  },
-  tick: function() {
-    var modelCoordinates = this.model.get('coordinates');
-    var screenCoordinates = Werld.screen.get('coordinates');
-    var mapDimensions = Werld.map.get('dimensions');
-
-    if (modelCoordinates[0] >= 0 &&
-          modelCoordinates[0] < Werld.util.tileToPixel(mapDimensions[0]) &&
-          modelCoordinates[1] >= 0 &&
-          modelCoordinates[1] < Werld.util.tileToPixel(mapDimensions[1])) {
-      this.container.x = modelCoordinates[0] - screenCoordinates[0];
-      this.container.y = modelCoordinates[1] - screenCoordinates[1];
-    }
   }
 });

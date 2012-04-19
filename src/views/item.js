@@ -34,7 +34,7 @@ Werld.Views.Item = Backbone.View.extend({
   },
   onBitmapPress: function(event) {
     if (event.nativeEvent.which === 1) {
-      Werld.util.bringToFront(this.container);
+      Werld.Utils.Easel.bringDisplayObjectToFront(this.container);
 
       this.coordinatesOnPress = [this.container.x, this.container.y];
       this.pressEventOffset = [
@@ -90,7 +90,7 @@ Werld.Views.Item = Backbone.View.extend({
 
     // TODO: pass item transfer handling logic to models and have views only
     //       responding to events.
-    if (Werld.Util.Callback.run(targetView.handleItemDrop, this.model)) {
+    if (Werld.Utils.Callback.run(targetView.handleItemDrop, this.model)) {
       this.model.transfer(targetView.model);
     } else {
       this.cancelMovement();

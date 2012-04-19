@@ -7,7 +7,7 @@ Werld.Models.Map = Backbone.Model.extend({
       for (var j = 0; j < Werld.Config.WORLD_MAP_DIMENSIONS[1]; j++) {
         tiles[i][j] = new Werld.Models.Tile({
           type: (Math.random() > 0.75 ? 'dirt' : 'grass'),
-          coordinates: _([i, j]).map(Werld.util.tileToPixel)
+          coordinates: _([i, j]).map(Werld.Utils.Geometry.tilesToPixels)
         });
       }
     }

@@ -11,7 +11,7 @@ var Werld = {
     'gumps',
     'itemTransfer'
   ],
-  States: {
+  STATES: {
     INIT: 1,
     SPLASH_SCREEN: 2,
     CHOOSING_NAME: 3,
@@ -40,7 +40,7 @@ var Werld = {
       }
     }
   },
-  Objects: {
+  OBJECTS: {
     ALTAR: {
       IMAGE: {
         SRC: '../images/objects/altar.png'
@@ -49,12 +49,10 @@ var Werld = {
   },
   Config: {
     AGGRESSIVENESS_RADIUS: 6,
+    ALTAR_CHARACTER_RESURRECTION_OBSERVER_INTERVAL: 1000,
     RESPAWN_TIME: 60 * 1000,
     CORPSE_DECAY_TIME: 80 * 1000,
     FRAMES_PER_SECOND: 30,
-    FRAME_RATE: function() {
-      return(Math.floor(1000 / Werld.Config.FRAMES_PER_SECOND));
-    },
     MESSAGE_LIFE_CYCLE: 5000,
     MESSAGE_SWEEPER_POLLING_INTERVAL: 1000,
     PIXELS_PER_TILE: 40,
@@ -62,66 +60,24 @@ var Werld = {
     SCREEN_DIMENSIONS: [16, 12],
     WORLD_MAP_DIMENSIONS: [50, 50]
   },
-  account: {
-    provider: {}
-  },
-  sounds: {
-    music: {
-      ogg: '../sounds/music.ogg',
-      mp3: '../sounds/music.mp3',
-      wav: '../sounds/music.wav'
-    }
-  },
-  setAccount: function(providerName, apiResponse) {
-    this.account.name = apiResponse.name;
-    this.account.email = apiResponse.email;
-    this.account.provider.id = apiResponse.id;
-    this.account.provider.name = providerName;
-  },
-  loadSounds: function() {
-    var music = document.createElement('audio');
-    var supportedType;
-
-    if (music.canPlayType('audio/mp3')) {
-      supportedType = 'mp3';
-    } else if (music.canPlayType('audio/wav')) {
-      supportedType = 'wav';
-    } else if (music.canPlayType('audio/ogg')) {
-      supportedType = 'ogg';
-    }
-
-    if (supportedType) {
-      document.body.appendChild(music);
-      music.setAttribute('src', this.sounds.music[supportedType]);
-      //music.addEventListener('canplay', music.play, false);
-    }
-  },
-  keyboardHandler: function(event) {
-    if (Werld.state === Werld.States.GAME_STARTED) {
-      if (event.keyCode === 13) {
-        Werld.messageInputForm().showOrSubmit(event);
-      }
-    }
-  },
-  messageInputForm: function() {
-    if (!this.messageInputView) {
-     this.messageInputView = new Werld.Views.MessageInputForm();
-    }
-    return(this.messageInputView);
+  frameRate: function() {
+    return(Math.floor(1000 / Werld.Config.FRAMES_PER_SECOND));
   },
   switchState: function(state, params) {
-    if (Werld.state === Werld.States.INIT) {
-      if (state === Werld.States.SPLASH_SCREEN) {
-        Werld.state = Werld.States.SPLASH_SCREEN;
+    params || (params = {});
+
+    if (Werld.state === Werld.STATES.INIT) {
+      if (state === Werld.STATES.SPLASH_SCREEN) {
+        Werld.state = Werld.STATES.SPLASH_SCREEN;
       }
-    } else if (Werld.state === Werld.States.SPLASH_SCREEN) {
-      if (state === Werld.States.CHOOSING_NAME) {
+    } else if (Werld.state === Werld.STATES.SPLASH_SCREEN) {
+      if (state === Werld.STATES.CHOOSING_NAME) {
         var characterNameInputForm = new Werld.Views.CharacterNameInputForm();
         characterNameInputForm.render();
-        Werld.state = Werld.States.CHOOSING_NAME;
+        Werld.state = Werld.STATES.CHOOSING_NAME;
       }
-    } else if (Werld.state === Werld.States.CHOOSING_NAME) {
-      if (state === Werld.States.GAME_STARTED) {
+    } else if (Werld.state === Werld.STATES.CHOOSING_NAME) {
+      if (state === Werld.STATES.GAME_STARTED) {
         Werld.stage.removeAllChildren();
 
         _(Werld.CONTAINER_NAMES).each(function(name) {
@@ -129,12 +85,12 @@ var Werld = {
         });
 
         Werld.character = new Werld.Models.Character(
-          _.extend(Werld.Creatures.CHARACTER, {
+          _.extend(Werld.CREATURES.CHARACTER, {
             fixed: true,
             name: params.data.character.name,
             stats: {
-              strength: 20,
-              dexterity: 20,
+              strength: 200,
+              dexterity: 100,
               intelligence: 10
             },
             coordinates: _([
@@ -151,7 +107,7 @@ var Werld = {
         });
 
         Werld.altar = new Werld.Models.Altar(
-          _.extend(Werld.Objects.ALTAR, {
+          _.extend(Werld.OBJECTS.ALTAR, {
             coordinates: _([7, 8]).map(function(coordinate) {
               return(coordinate * Werld.Config.PIXELS_PER_TILE);
             })
@@ -171,35 +127,35 @@ var Werld = {
         });
 
         var silverBatSpawner = new Werld.Models.CreatureSpawner({
-          creature: Werld.Creatures.SILVER_BAT,
+          creature: Werld.CREATURES.SILVER_BAT,
           coordinates: [4, 4],
           radius: 3,
           numberOfCreatures: 3
         });
 
         var whiteWolfSpawner = new Werld.Models.CreatureSpawner({
-          creature: Werld.Creatures.WHITE_WOLF,
+          creature: Werld.CREATURES.WHITE_WOLF,
           coordinates: [15, 10],
           radius: 4,
           numberOfCreatures: 2
         });
 
         var fireWolfSpawner = new Werld.Models.CreatureSpawner({
-          creature: Werld.Creatures.FIRE_WOLF,
+          creature: Werld.CREATURES.FIRE_WOLF,
           coordinates: [15, 15],
           radius: 4,
           numberOfCreatures: 2
         });
 
         var leviathanSpawner = new Werld.Models.CreatureSpawner({
-          creature: Werld.Creatures.LEVIATHAN,
+          creature: Werld.CREATURES.LEVIATHAN,
           coordinates: [4, 15],
           radius: 4,
           numberOfCreatures: 1
         });
 
         var blueDragonSpawner = new Werld.Models.CreatureSpawner({
-          creature: Werld.Creatures.BLUE_DRAGON,
+          creature: Werld.CREATURES.BLUE_DRAGON,
           coordinates: [4, 10],
           radius: 4,
           numberOfCreatures: 1
@@ -226,7 +182,8 @@ var Werld = {
           model: Werld.screen
         });
 
-        $(window).keypress(Werld.keyboardHandler);
+
+        new Werld.Views.MessageInputFormHandler();
 
         Werld.containers.terrain.addChild(Werld.canvas.screenView.container);
         Werld.containers.objects.addChild(Werld.canvas.altarView.container);
@@ -241,32 +198,32 @@ var Werld = {
           Werld.stage.addChild(container);
         });
 
-        Werld.state = Werld.States.GAME_STARTED;
+        Werld.state = Werld.STATES.GAME_STARTED;
       }
     } else {
-      if (state === Werld.States.INIT) {
-        Werld.state = Werld.States.INIT;
+      if (state === Werld.STATES.INIT) {
+        Werld.state = Werld.STATES.INIT;
       }
     }
-    params && params.callback && params.callback();
+
+    Werld.Utils.Callback.run(params.callback);
   },
   init: function() {
-    $(window).contextmenu(function() { return(false); });
+    // Disabling right click.
+    $(window).contextmenu(function(event) { return(false); });
 
-    Werld.switchState(Werld.States.INIT);
-    Werld.loadSounds();
+    Werld.switchState(Werld.STATES.INIT);
 
     Werld.canvas = new Werld.Canvas();
-
     Werld.stage = new Stage(Werld.canvas.el);
     Werld.stage.enableMouseOver();
     Ticker.addListener(Werld.stage);
-    Ticker.setFPS(Werld.Config.FRAME_RATE());
+    Ticker.setFPS(Werld.frameRate());
 
     var splashScreenView = new Werld.Views.SplashScreen();
     Werld.stage.addChild(splashScreenView.container);
 
-    Werld.switchState(Werld.States.SPLASH_SCREEN);
+    Werld.switchState(Werld.STATES.SPLASH_SCREEN);
   }
 };
 

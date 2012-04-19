@@ -2,9 +2,6 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
   initialize: function() {
     Werld.Views.Creature.__super__.initialize.call(this);
 
-    this.model.bind('change:status', this.onModelStatusChange);
-    this.model.bind('change:hitPoints', this.updateHitPointsBar);
-
     this.hitPointsBarRectangleWidth = 50;
     this.hitPointsBarRectangle = new Rectangle(
       this.container.x -
@@ -20,6 +17,10 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
     this.container.addChild(this.hitPointsBar);
 
     this.updateHitPointsBar(this.model);
+
+    this.model.on('death', this.showLootIfCharacterIsClose);
+    this.model.on('change:hitPoints', this.updateHitPointsBar);
+    Werld.character.on('change:coordinates', this.updateContainerOnScreenCoordinates);
   },
   characterNameTextTick: function() {
     Werld.Views.Character.__super__.characterNameTextTick.call(this);
@@ -55,11 +56,9 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
         endFill();
     }
   },
-  onModelStatusChange: function() {
-    if (this.model.dead()) {
-      if (this.model.tileDistance(Werld.character) <= 1) {
-        this.showLoot();
-      }
+  showLootIfCharacterIsClose: function() {
+    if (this.model.tileDistance(Werld.character) <= 1) {
+      this.showLoot();
     }
   }
 });

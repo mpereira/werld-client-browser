@@ -1,4 +1,4 @@
-Werld.Creatures = {
+Werld.CREATURES = {
   CHARACTER: {
     MOVEMENT_SPEED: 2,
     BOUNDARIES: {

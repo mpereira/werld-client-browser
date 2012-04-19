@@ -32,9 +32,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.intervalFunctionNamesWithIntervals = {
       messageSweeper: Werld.Config.MESSAGE_SWEEPER_POLLING_INTERVAL,
-      movementHandler: Werld.Config.FRAME_RATE(),
-      statusObserver: Werld.Config.FRAME_RATE(),
-      aggressivenessHandler: Werld.Config.FRAME_RATE(),
+      movementHandler: Werld.frameRate(),
+      statusObserver: Werld.frameRate(),
+      aggressivenessHandler: Werld.frameRate(),
       hitPointObserver: this.get('hitPointRenegerationRate'),
       manaObserver: this.get('manaRenegerationRate'),
       staminaObserver: this.get('staminaRenegerationRate')
@@ -47,15 +47,18 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   installIntervalFunctions: function() {
     var self = this;
     _.chain(this.intervalFunctionNamesWithIntervals).keys().each(function(key) {
-      self[key + 'IntervalId'] =
-        setInterval(self[key], self.intervalFunctionNamesWithIntervals[key]);
+      Werld.Utils.Interval.set(
+        self,
+        self[key + 'IntervalId'],
+        self[key],
+        self.intervalFunctionNamesWithIntervals[key]
+      );
     });
   },
   uninstallIntervalFunctions: function() {
     var self = this;
     _.chain(this.intervalFunctionNamesWithIntervals).keys().each(function(key) {
-      clearInterval(self[key + 'IntervalId']);
-      self[key + 'IntervalId'] = null;
+      Werld.Utils.Interval.clear(self, self[key + 'IntervalId']);
     });
   },
   say: function(message) {
@@ -93,18 +96,27 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
 
     this.set({
-      destination: _(destinationTile).map(Werld.util.tileToPixel)
+      destination: _(destinationTile).map(Werld.Utils.Geometry.tilesToPixels)
     });
   },
   movementHandler: function() {
-    if (this.get('following')) {
-      this.set({
-        destination: this.get('following').get('coordinates')
-      });
+    // If we're following something, update our "destination" with their
+    // "coordinates" unless they're already equal.
+    var followee = this.get('following');
+    if (followee) {
+      if (!_(followee.get('coordinates')).isEqual(this.get('coordinates'))) {
+        this.set('destination', followee.get('coordinates'));
+      }
     }
 
-    var coordinates = _.clone(this.get('coordinates'));
+    // TODO: don't trigger on every `movementHandler()` call.
+    if (_(this.get('coordinates')).isEqual(this.get('destination'))) {
+      this.trigger('idle', this);
+      return;
+    }
+
     var destination = this.get('destination');
+    var coordinates = _.clone(this.get('coordinates'));
     var movementSpeed = this.get('MOVEMENT_SPEED');
 
     if (coordinates[0] > destination[0]) {
@@ -119,7 +131,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       coordinates[1] += movementSpeed;
     }
 
-    this.set({ coordinates: coordinates });
+    this.set('coordinates', coordinates);
   },
   follow: function(creature) {
     this.set({ following: creature });
@@ -143,8 +155,11 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   attack: function(creature) {
     if (creature === this || this.dead()) return;
 
-    this.battleHandlerIntervalId = setInterval(
-      _(this.battleHandler).bind(this), Werld.Config.FRAME_RATE()
+    Werld.Utils.Interval.set(
+      this,
+      'battleHandlerIntervalId',
+      this.battleHandler,
+      Werld.frameRate()
     );
     this.follow(creature);
     this.set({ attacking: creature });
@@ -160,8 +175,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.set({ destination: this.get('coordinates') });
   },
   stopAttacking: function(creature) {
-    clearInterval(this.battleHandlerIntervalId);
-    this.battleHandlerIntervalId = null;
+    Werld.Utils.Interval.clear(this, 'battleHandlerIntervalId');
     this.set({ attacking: null });
     this.stopFollowing(creature);
     creature.acknowledgeAttackStop(this);
@@ -185,13 +199,10 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   aggressivenessHandler: function() {
     var attackedCreature = this.get('attacking');
 
+    // Stop attacking if the creature we're attacking is no longer attacking us
+    // and out of our agressiveness radius.
     if (attackedCreature && !this.get('attacker')) {
-      var tileDistanceToAttacker =
-        Werld.util.pixelToTile(Werld.util.pixelDistance(
-          this.get('coordinates'), attackedCreature.get('coordinates')
-        ));
-
-      if (tileDistanceToAttacker > this.get('aggressivenessRadius')) {
+      if (this.tileDistance(attackedCreature) > this.get('aggressivenessRadius')) {
         this.stopAttacking(attackedCreature);
       }
     }
@@ -199,24 +210,18 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   battleHandler: function() {
     var attackedCreature = this.get('attacking');
 
-    if (attackedCreature) {
-      var tileDistanceToAttacker =
-        Werld.util.pixelToTile(Werld.util.pixelDistance(
-          this.get('coordinates'), attackedCreature.get('coordinates')
-        ));
+    if (!attackedCreature) {
+      return;
+    }
 
-      if (attackedCreature.alive()) {
-        var coordinates = this.get('coordinates');
-        var attackedCreatureCoordinates = attackedCreature.get('coordinates');
-        var lastAttackAt = this.get('lastAttackAt');
-
-        if (tileDistanceToAttacker < 1 &&
-              (Date.now() - lastAttackAt) >= this.attackSpeed()) {
+    if (attackedCreature.alive()) {
+      if (this.tileDistance(attackedCreature) < 1) {
+        if ((Date.now() - this.get('lastAttackAt')) >= this.attackSpeed()) {
           this.hit(attackedCreature);
         }
-      } else {
-        this.stopAttacking(attackedCreature);
       }
+    } else {
+      this.stopAttacking(attackedCreature);
     }
   },
   alive: function() {
@@ -237,16 +242,21 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       stamina: 0,
       messages: []
     });
+
+    this.trigger('death', this);
   },
   resurrect: function() {
-    this.set({ status: 'alive' });
-    _(['hitPoints', 'mana', 'stamina']).each(_.bind(function(attribute) {
-      if (this.get(attribute) <= 0) {
-        var object = {};
-        object[attribute] = 1;
-        this.set(object);
+    var object = { status: 'alive' };
+    var creature = this;
+
+    _(['hitPoints', 'mana', 'stamina']).each(function(attributeName) {
+      if (creature.get(attributeName) <= 0) {
+        object[attributeName] = 1;
       }
-    }, this));
+    });
+
+    this.set(object);
+    this.trigger('resurrection', this);
   },
   coordinates: function() {
     return(this.get('coordinates'));
@@ -256,8 +266,14 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       throw new Error('Both objects must implement a "coordinates" function');
     }
 
-    return(Werld.util.tileDistance(this.coordinates(), thing.coordinates()));
+    return(
+      Werld.Utils.Geometry.tileDistance(this.coordinates(), thing.coordinates())
+    );
   },
+  // There's probably a way to accomplish this without polling. Maybe put the
+  // death checking on the battle handler and have some kind of resurrector
+  // object (for ahnks, healers, or even mages with resurecting spells) for
+  // the resurrect checking.
   statusObserver: function() {
     if (this.dead()) {
       if (this.get('hitPoints') > 0) {
@@ -269,35 +285,40 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       }
     }
   },
-  increase: function(attribute, quantity) {
-    var currentAttributeValue = this.get(attribute);
+  increase: function(attributeName, quantity) {
     var maxAttributeValue =
-      this.get('max' + Werld.util.capitalizeFirstLetter(attribute));
-    var futureAttributeValue = quantity + currentAttributeValue;
+      this.get('max' + _.upcaseFirstCharacter(attributeName));
+    var futureAttributeValue = this.get(attributeName) + quantity;
     var object = {};
+
     if (futureAttributeValue > maxAttributeValue) {
-      object[attribute] = maxAttributeValue;
+      object[attributeName] = maxAttributeValue;
     } else {
-      object[attribute] = futureAttributeValue;
+      object[attributeName] = futureAttributeValue;
     }
+
     this.set(object);
   },
   hitPointObserver: function() {
     if (this.alive()) {
       if (this.get('hitPoints') < this.get('maxHitPoints')) {
-        if (this.hitPointRegeneratorIntervalId === null) {
-          this.hitPointRegeneratorIntervalId = setInterval(
-            _.bind(this.hitPointRegenerator, this),
+        if (!this.hitPointRegeneratorIntervalId) {
+          Werld.Utils.Interval.set(
+            this,
+            'hitPointRegeneratorIntervalId',
+            this.hitPointRegenerator,
             Werld.Config.REGENERATION_RATE
           );
         }
       } else {
-        clearInterval(this.hitPointRegeneratorIntervalId);
-        this.hitPointRegeneratorIntervalId = null;
+        if (this.hitPointRegeneratorIntervalId) {
+          Werld.Utils.Interval.clear(this, 'hitPointRegeneratorIntervalId');
+        }
       }
     } else {
-      clearInterval(this.hitPointRegeneratorIntervalId);
-      this.hitPointRegeneratorIntervalId = null;
+      if (this.hitPointRegeneratorIntervalId) {
+        Werld.Utils.Interval.clear(this, 'hitPointRegeneratorIntervalId');
+      }
     }
   },
   hitPointRegenerator: function() {
@@ -307,19 +328,21 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   manaObserver: function() {
     if (this.alive()) {
       if (this.get('mana') < this.get('maxMana')) {
-        if (this.manaRegeneratorIntervalId === null) {
-          this.manaRegeneratorIntervalId = setInterval(
-            _.bind(this.manaRegenerator, this),
-            Werld.Config.REGENERATION_RATE
-          );
-        }
+        Werld.Utils.Interval.set(
+          this,
+          'manaRegeneratorIntervalId',
+          this.manaRegenerator,
+          Werld.Config.REGENERATION_RATE
+        );
       } else {
-        clearInterval(this.manaRegeneratorIntervalId);
-        this.manaRegeneratorIntervalId = null;
+        if (this.manaRegeneratorIntervalId) {
+          Werld.Utils.Interval.clear(this, 'manaRegeneratorIntervalId');
+        }
       }
     } else {
-      clearInterval(this.manaRegeneratorIntervalId);
-      this.manaRegeneratorIntervalId = null;
+      if (this.manaRegeneratorIntervalId) {
+        Werld.Utils.Interval.clear(this, 'manaRegeneratorIntervalId');
+      }
     }
   },
   manaRegenerator: function() {
@@ -329,19 +352,23 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   staminaObserver: function() {
     if (this.alive()) {
       if (this.get('stamina') < this.get('maxStamina')) {
-        if (this.staminaRegeneratorIntervalId === null) {
-          this.staminaRegeneratorIntervalId = setInterval(
-            _.bind(this.staminaRegenerator, this),
+        if (!this.staminaRegeneratorIntervalId) {
+          Werld.Utils.Interval.set(
+            this,
+            'staminaRegeneratorIntervalId',
+            this.staminaRegenerator,
             Werld.Config.REGENERATION_RATE
           );
         }
       } else {
-        clearInterval(this.staminaRegeneratorIntervalId);
-        this.staminaRegeneratorIntervalId = null;
+        if (this.staminaRegeneratorIntervalId) {
+          Werld.Utils.Interval.clear(this, 'staminaRegeneratorIntervalId');
+        }
       }
     } else {
-      clearInterval(this.staminaRegeneratorIntervalId);
-      this.staminaRegeneratorIntervalId = null;
+      if (this.staminaRegeneratorIntervalId) {
+        Werld.Utils.Interval.clear(this, 'staminaRegeneratorIntervalId');
+      }
     }
   },
   staminaRegenerator: function() {
@@ -363,14 +390,12 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.uninstallIntervalFunctions();
   },
   getItem: function(item) {
-    var characterItem;
+    var creatureItem = this.items.find(function(collectionItem) {
+      return(collectionItem.stackable() && collectionItem.same(item));
+    });
 
-    if ((characterItem = this.items.find(function(collectionItem) {
-      return(item.stackable() && item.same(collectionItem));
-    }))) {
-      characterItem.set({
-        quantity: characterItem.get('quantity') + item.get('quantity')
-      });
+    if (creatureItem) {
+      creatureItem.merge(item);
       item.destroy();
       return(false);
     } else {

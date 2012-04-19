@@ -16,9 +16,9 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
   },
   addCreature: function() {
     var creature = new Werld.Models.Creature(_({
-      coordinates: (new Werld.Util.Circle({
-        center: Werld.util.tilePointToPixelPoint(this.get('coordinates')),
-        radius: Werld.util.tileToPixel(this.get('radius'))
+      coordinates: (new Werld.Utils.Circle({
+        center: Werld.Utils.Geometry.tilePointToPixelPoint(this.get('coordinates')),
+        radius: Werld.Utils.Geometry.tilesToPixels(this.get('radius'))
       })).randomTile()
     }).extend(this.get('creature')));
     creature.bind('change:status', this.onCreatureStatusChange, this);

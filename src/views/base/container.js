@@ -6,8 +6,8 @@ Werld.Views.Base.Container = Backbone.View.extend({
     this.container = new Container();
     this.container.view = this;
 
-    this.model.items.bind('add', this.addItemView);
-    this.model.items.bind('remove', this.removeItemView);
+    this.model.items.on('add', this.addItemView);
+    this.model.items.on('remove', this.removeItemView);
 
     this.model.items.each(this.addItemView);
   },
