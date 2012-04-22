@@ -35,7 +35,7 @@ module.exports = function(grunt) {
         }
       }
     },
-    concat: {
+    min: {
       src: {
         src: ['<banner:meta.banner>', '<config:meta.src>'],
         dest: 'build/javascripts/werld.js'
@@ -56,11 +56,11 @@ module.exports = function(grunt) {
       },
       libs: {
         files: '<config:meta.libs>',
-        tasks: 'lint:libs concat:libs'
+        tasks: 'min:libs'
       },
       src: {
         files: '<config:meta.src>',
-        tasks: 'lint:libs concat:src'
+        tasks: 'lint:src min:src'
       },
       ejs: {
         files: 'templates/**/*.ejs',
@@ -118,7 +118,7 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('build', 'lint clean concat ejs less');
+  grunt.registerTask('build', 'lint clean min ejs less');
 
   grunt.registerMultiTask('ejs', 'Compile EJS templates', function() {
     var _ = grunt.utils._;
