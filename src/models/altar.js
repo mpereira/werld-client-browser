@@ -2,6 +2,8 @@ Werld.Models.Altar = Backbone.Model.extend({
   initialize: function() {
     _.bindAll(this);
 
+    // TODO: move this logic to a 'change:coordinates' callback on each
+    // character.
     Werld.Utils.Interval.set(
       this,
       'characterResurrectionObserverIntervalId',

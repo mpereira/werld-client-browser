@@ -107,18 +107,6 @@ var Werld = {
           model: Werld.character
         });
 
-        Werld.altar = new Werld.Models.Altar(
-          _.extend(Werld.OBJECTS.ALTAR, {
-            coordinates: _([7, 8]).map(function(coordinate) {
-              return(coordinate * Werld.Config.PIXELS_PER_TILE);
-            })
-          })
-        );
-
-        Werld.canvas.altarView = new Werld.Views.Altar({
-          model: Werld.altar
-        });
-
         Werld.canvas.statusBarView = new Werld.Views.StatusBar({
           model: Werld.character
         });
@@ -183,6 +171,17 @@ var Werld = {
           model: Werld.screen
         });
 
+        Werld.altar = new Werld.Models.Altar(
+          _.extend(Werld.OBJECTS.ALTAR, {
+            coordinates: _([7, 8]).map(function(coordinate) {
+              return(coordinate * Werld.Config.PIXELS_PER_TILE);
+            })
+          })
+        );
+
+        Werld.canvas.altarView = new Werld.Views.Altar({
+          model: Werld.altar
+        });
 
         new Werld.Views.MessageInputFormHandler();
 

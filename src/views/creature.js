@@ -20,7 +20,10 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
 
     this.model.on('death', this.showLootIfCharacterIsClose);
     this.model.on('change:hitPoints', this.updateHitPointsBar);
-    Werld.character.on('change:coordinates', this.updateContainerOnScreenCoordinates);
+    Werld.character.on(
+      'change:coordinates',
+      this.updateContainerOnScreenCoordinates
+    );
   },
   characterNameTextTick: function() {
     Werld.Views.Character.__super__.characterNameTextTick.call(this);
