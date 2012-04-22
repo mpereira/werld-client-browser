@@ -14,7 +14,7 @@
   },
   "licenses": [{
     "type": "MIT",
-    "url": "https://github.com/mpereira/werld-client-browser/blob/master/LICENSE"
+    "url": "https://github.com/mpereira/werld-client-browser/blob/master/LICENSE.md"
   }],
   "engines": {
     "node": "~0.6"
