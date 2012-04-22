@@ -74,22 +74,24 @@ Werld.Views.Screen = Backbone.View.extend({
     this.update();
   },
   onCharacterChangeStatus: function() {
-    var statusChangeTextHandler = function(string, context) {
+    var view = this;
+
+    var statusChangeTextHandler = function(string) {
       var text = new Text(string, '40px "PowellAntique" serif', '#dc9a44');
       text.textAlign = 'center';
       text.x = 320;
       text.y = 200;
       text.shadow = new Shadow('#000000', 2, 2, 0);
       Werld.containers.gameMessages.addChild(text);
-      _(function(context) {
+      _(function() {
         Werld.containers.gameMessages.removeChild(text);
-      }).delay(3000, context);
+      }).delay(3000);
     };
 
     if (this.model.get('character').alive()) {
-      statusChangeTextHandler('You are alive', this);
+      statusChangeTextHandler('You are alive');
     } else if (this.model.get('character').dead()) {
-      statusChangeTextHandler('You are dead', this);
+      statusChangeTextHandler('You are dead');
     }
   }
 });
