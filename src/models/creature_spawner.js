@@ -9,7 +9,7 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
     this.creatures = new Werld.Collections.Creatures();
 
     /* FIXME: put this in a view? */
-    this.creatures.bind('add', function(creature) {
+    this.creatures.on('add', function(creature) {
       var creatureView = new Werld.Views.Creature({ model: creature });
       Werld.containers.creatures.addChild(creatureView.container);
     });
@@ -21,8 +21,8 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
         radius: Werld.Utils.Geometry.tilesToPixels(this.get('radius'))
       })).randomTile()
     }).extend(this.get('creature')));
-    creature.bind('change:status', this.onCreatureStatusChange, this);
-    creature.bind('destroy', this.onCreatureDestroy, this);
+    creature.on('change:status', this.onCreatureStatusChange);
+    creature.on('destroy', this.onCreatureDestroy);
     this.creatures.add(creature);
   },
   activate: function() {
