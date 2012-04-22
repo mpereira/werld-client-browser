@@ -90,8 +90,8 @@ var Werld = {
             fixed: true,
             name: params.data.character.name,
             stats: {
-              strength: 200,
-              dexterity: 100,
+              strength: 20,
+              dexterity: 10,
               intelligence: 10
             },
             coordinates: _([
