@@ -218,8 +218,9 @@ var Werld = {
     Werld.canvas = new Werld.Canvas();
     Werld.stage = new Stage(Werld.canvas.el);
     Werld.stage.enableMouseOver();
-    Ticker.addListener(Werld.stage);
+    Ticker.useRAF = true;
     Ticker.setFPS(Werld.frameRate());
+    Ticker.addListener(Werld.stage);
 
     var splashScreenView = new Werld.Views.SplashScreen();
     Werld.stage.addChild(splashScreenView.container);
