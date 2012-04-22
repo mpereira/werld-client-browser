@@ -5,8 +5,8 @@ Werld.Views.Screen = Backbone.View.extend({
     this.mapTileViews = [];
     this.container = new Container();
 
-    this.model.get('character').bind('change:status', this.onCharacterChangeStatus);
-    this.model.get('character').bind('change:coordinates', this.onCharacterChangeCoordinates);
+    this.model.get('character').on('change:status', this.onCharacterChangeStatus);
+    this.model.get('character').on('change:coordinates', this.onCharacterChangeCoordinates);
 
     this.createMapTileViews();
   },
@@ -80,10 +80,10 @@ Werld.Views.Screen = Backbone.View.extend({
       text.x = 320;
       text.y = 200;
       text.shadow = new Shadow('#000000', 2, 2, 0);
-      context.container.addChild(text);
-      _.delay(function(context) {
-        context.container.removeChild(text);
-      }, 3000, context);
+      Werld.containers.gameMessages.addChild(text);
+      _(function(context) {
+        Werld.containers.gameMessages.removeChild(text);
+      }).delay(3000, context);
     };
 
     if (this.model.get('character').alive()) {

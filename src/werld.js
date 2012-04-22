@@ -9,7 +9,8 @@ var Werld = {
     'creatures',
     'character',
     'gumps',
-    'itemTransfer'
+    'itemTransfer',
+    'gameMessages'
   ],
   STATES: {
     INIT: 1,
