@@ -39,8 +39,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       this.bitmapAnimation.onDoubleClick = this.onBitmapAnimationDoubleClick;
 
       this.characterNameText = new Text();
-      //this.updateCreatureName();
-      this.characterNameText.tick = this.updateCreatureName;
+      this.updateCreatureName();
 
       this.messagesContainer = new Container();
       this.messagesContainer.tick = this.messagesContainerTick;
