@@ -21,7 +21,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "bbb": "git://github.com/backbone-boilerplate/grunt-bbb.git",
+    "bbb": "https://github.com/backbone-boilerplate/grunt-bbb/tarball/ab822fb6b7",
     "ejs": "0.7.1",
     "express": "2.5.9",
     "grunt": "0.3.9",
