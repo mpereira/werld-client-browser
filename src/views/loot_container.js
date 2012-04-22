@@ -52,7 +52,9 @@ Werld.Views.LootContainer = Werld.Views.Base.Container.extend({
     return(!this.container.visible);
   },
   show: function() {
-    if (!this.hidden()) return;
+    if (!this.hidden()) {
+      return;
+    }
 
     var ownerCoordinates = this.model.owner.get('coordinates');
     var screenCoordinates = this.container.parent.screen.get('coordinates');

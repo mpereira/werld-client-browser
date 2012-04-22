@@ -45,14 +45,16 @@ Werld.Views.Screen = Backbone.View.extend({
      *        traverse all tiles hiding them, and then traverse them again
      *        updating the screen position and unhiding the ones that appear
      *        on the viewport. */
-    for (var i = 0; i < this.mapTileViews.length; i++) {
-      for (var j = 0; j < this.mapTileViews[i].length; j++) {
+    var i;
+    var j;
+    for (i = 0; i < this.mapTileViews.length; i++) {
+      for (j = 0; j < this.mapTileViews[i].length; j++) {
         this.mapTileViews[i][j].hide();
       }
     }
 
-    for (var i = 0; i <= screenDimensions[0]; i++) {
-      for (var j = 0; j <= screenDimensions[1]; j++) {
+    for (i = 0; i <= screenDimensions[0]; i++) {
+      for (j = 0; j <= screenDimensions[1]; j++) {
         var screenTile = [i + screenBaseTile[0], j + screenBaseTile[1]];
 
         if (screenTile[0] > 0 && screenTile[0] < Werld.Config.WORLD_MAP_DIMENSIONS[0] &&

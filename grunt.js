@@ -1,210 +1,142 @@
-var cleanCSS = require('clean-css');
-var fs = require('fs');
-var grunt = require('grunt');
-var path = require('path');
-var rimraf = require('rimraf');
+module.exports = function(grunt) {
+  grunt.loadNpmTasks('bbb');
 
-config.init({
-  meta: {
-    dist: {
-      production: {
-        directory: './dist/production/'
+  grunt.initConfig({
+    pkg: '<json:package.json>',
+    meta: {
+      banner: '// <%= pkg.name %> - v<%= pkg.version %> - ' +
+        '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
+        '<%= pkg.homepage ? "// " + pkg.homepage + "\n" : "" %>' +
+        '// Copyright (c) <%= grunt.template.today("yyyy") %> ' +
+        ' <%= pkg.author %>.\n' +
+        '// All rights reserved.\n' +
+        '// Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %>.',
+      libs: [
+        'vendor/javascripts/jquery-*.js',
+        'vendor/javascripts/underscore-*.js',
+        'vendor/javascripts/backbone-*.js',
+        'vendor/javascripts/easel-*.js'
+      ],
+      src: ['src/**/*.js'],
+      stylesheets: ['assets/stylesheets/**/*.less']
+    },
+    lint: {
+      grunt: ['grunt.js'],
+      scripts: ['scripts/*.js'],
+      src: '<config:meta.src>'
+    },
+    less: {
+      style: {
+        files: {
+          'build/stylesheets/style.css': 'assets/stylesheets/style.less',
+        },
+        options: {
+          compress: true
+        }
+      }
+    },
+    concat: {
+      src: {
+        src: ['<banner:meta.banner>', '<config:meta.src>'],
+        dest: 'build/javascripts/werld.js'
       },
-
-      development: {
-        directory: './dist/development/'
+      libs: {
+        src: '<config:meta.libs>',
+        dest: 'build/javascripts/libs.js'
+      }
+    },
+    watch: {
+      grunt: {
+        files: '<config:lint.grunt>',
+        tasks: 'lint:grunt'
+      },
+      scripts: {
+        files: '<config:lint.scripts>',
+        tasks: 'lint:scripts'
+      },
+      libs: {
+        files: '<config:meta.libs>',
+        tasks: 'lint:libs concat:libs'
+      },
+      src: {
+        files: '<config:meta.src>',
+        tasks: 'lint:libs concat:src'
+      },
+      ejs: {
+        files: 'templates/**/*.ejs',
+        tasks: 'ejs'
+      }
+    },
+    ejs: {
+      index: {
+        src: 'templates/index.html.ejs',
+        dest: 'build/index.html',
+        locals: {
+          src: '<config:meta.src>',
+          libs: '<config:meta.libs>',
+          stylesheets: '<config:meta.stylesheets>'
+        }
+      }
+    },
+    clean: ['build'],
+    jshint: {
+      options: {
+        boss: true,
+        browser: true,
+        curly: true,
+        eqeqeq: true,
+        eqnull: true,
+        es5: true,
+        expr: true,
+        immed: true,
+        latedef: true,
+        newcap: true,
+        noarg: true,
+        node: true,
+        sub: true,
+        undef: true
+      },
+      globals: {
+        '$': true,
+        '_': true,
+        Backbone: true,
+        FB: true,
+        Werld: true,
+        // EaselJS's globals.
+        Bitmap: true,
+        BitmapAnimation: true,
+        Container: true,
+        Graphics: true,
+        Rectangle: true,
+        Shadow: true,
+        Shape: true,
+        SpriteSheet: true,
+        Stage: true,
+        Text: true,
+        Ticker: true
       }
     }
-  },
+  });
 
-  lint: {
-    files: [
-      'grunt.js',
-      'src/**/*.js'
-    ]
-  },
+  grunt.registerTask('build', 'lint clean concat ejs less');
 
-  concat: {
-    'dist/development/javascripts/libs.js': [
-      'vendor/javascripts/jquery-*.js',
-      'vendor/javascripts/underscore-*.js',
-      'vendor/javascripts/backbone-*.js',
-      'vendor/javascripts/easel-*.js',
-      'vendor/javascripts/jquery.cross-slide-*.js'
-    ],
-    'dist/development/javascripts/play.js': [
-      'src/werld.js',
-      'src/canvas.js',
-      'src/util.js',
-      'src/creatures.js',
-      'src/underscore_mixins.js',
-      'src/**/base/*.js',
-      'src/collections/*.js',
-      'src/models/*.js',
-      'src/views/*.js'
-    ],
-    'dist/development/javascripts/index.js': [
-      'src/index.js',
-      'src/screenshot_slides.js',
-      'src/facebook.js'
-    ],
-    'dist/development/stylesheets/index.css': [
-      'vendor/stylesheets/*.css',
-      'assets/stylesheets/webfonts.css',
-      'assets/stylesheets/style.css'
-    ],
-    'dist/development/stylesheets/play.css': [
-      'vendor/stylesheets/*.css',
-      'assets/stylesheets/webfonts.css',
-      'assets/stylesheets/canvas.css'
-    ]
-  },
+  grunt.registerMultiTask('ejs', 'Compile EJS templates', function() {
+    var _ = grunt.utils._;
+    var environment = process.env.NODE_ENV || 'development';
+    var data = require('fs').readFileSync(this.data.src, 'utf-8');
+    var locals = _(this.data.locals).reduce(function(memo, value, key, object) {
+      object[key] = grunt.file.expand(value);
+      _(memo).extend(object);
+      return(memo);
+    }, {});
+    var config = _({
+      environment: environment
+    }).extend(require('./config/environments.js')[environment]);
 
-  jst: {
-    'dist/development/javascripts/templates.js': ['src/templates/*.html']
-  },
+    grunt.file.write(this.data.dest, require('ejs').render(data, {
+      locals: _({ '_': _, Werld: { Config: config } }).extend(locals)
+    }));
 
-  min: {
-    'dist/production/javascripts/libs.js': ['dist/development/javascripts/libs.js'],
-    'dist/production/javascripts/play.js': ['dist/development/javascripts/play.js'],
-    'dist/production/javascripts/index.js': ['dist/development/javascripts/index.js'],
-    'dist/production/javascripts/templates.js': ['dist/development/javascripts/templates.js']
-  },
-
-  mincss: {
-    'dist/production/stylesheets/index.css': ['dist/development/stylesheets/index.css'],
-    'dist/production/stylesheets/play.css': ['dist/development/stylesheets/play.css']
-  },
-
-  watch: {
-    files: [
-      'assets/**/*.js',
-      'assets/**/*.css',
-      'assets/**/*.html',
-      'src/**/*.js',
-      'vendor/**/*.js',
-      'vendor/**/*.css'
-    ],
-
-    tasks: 'clean lint:files concat jst',
-
-    min: {
-      files: [
-        'assets/**/*.js',
-        'assets/**/*.css',
-        'assets/**/*.html',
-        'src/**/*.js',
-        'vendor/**/*.js',
-        'vendor/**/*.css'
-      ],
-
-      tasks: 'default'
-    }
-  },
-
-  clean: {
-    folder: 'dist/'
-  }
-});
-
-task.registerBasicTask('clean', 'Deletes out all contents in a directory', function(data, name) {
-  var errorcount = fail.errorcount;
-  var folder = path.resolve(data);
-
-  // Delete all files inside the folder
-  task.helper('clean', folder);
-});
-
-task.registerHelper('clean', function(folder) {
-  rimraf.sync(folder);
-});
-
-task.registerBasicTask('jst', 'Compile underscore templates to JST file', function(data, name) {
-  // If namespace is specified use that, otherwise fallback
-  var namespace = config('jst.namespace') || 'JST';
-  // If template settings are available use those
-  var templateSettings = config('jst.templateSettings') || null;
-
-  // Create JST file.
-  var errorcount = fail.errorcount;
-  var files = file.expand(data);
-  file.write(name, task.helper('jst', files, namespace, templateSettings));
-
-  // Fail task if there were errors.
-  if (fail.errorcount > errorcount) { return(false); }
-
-  // Otherwise, print a success message.
-  log.writeln('File "' + name + '" created.');
-});
-
-task.registerHelper('jst', function(files, namespace, templateSettings) {
-  // Pulled from underscore 1.2.4
-  function underscoreTemplating(str) {
-      // Merge in the templateSettings that may be passed
-      var c  = _.extend({}, _.templateSettings, templateSettings) ||
-        _.templateSettings;
-
-      var tmpl = 'var __p=[],print=function(){__p.push.apply(__p,arguments);};' +
-        'with(obj||{}){__p.push(\'' +
-        str.replace(/\\/g, '\\\\')
-           .replace(/'/g, '\\\'')
-           .replace(c.escape || noMatch, function(match, code) {
-             return("',_.escape(" + code.replace(/\\'/g, "'") + "),'");
-           })
-           .replace(c.interpolate || noMatch, function(match, code) {
-             return("'," + code.replace(/\\'/g, "'") + ",'");
-           })
-           .replace(c.evaluate || noMatch, function(match, code) {
-             return("');" + code.replace(/\\'/g, "'")
-                                .replace(/[\r\n\t]/g, ' ')
-                                .replace(/\\\\/g, '\\') + ";__p.push('");
-           })
-           .replace(/\r/g, '\\r')
-           .replace(/\n/g, '\\n')
-           .replace(/\t/g, '\\t')
-           + "');}return(__p.join(''));";
-
-      return(new Function('obj', '_', tmpl).toString());
-  }
-
-  namespace = "this['" + namespace + "']";
-
-  // Comes out looking like this["JST"] = this["JST"] || {};
-  var contents = namespace + " = " + namespace + " || {};\n\n";
-
-  // Compile the template and get the function source
-  contents += files ? files.map(function(filepath) {
-    var templateFunction = [
-      "function(data) { ",
-        "return ",
-        underscoreTemplating(file.read(filepath)).replace("anonymous", ""),
-        "(data, _)",
-      "};"].join("");
-
-    return(namespace + "['" + filepath + "'] = " + templateFunction);
-  }).join("\n\n") : "";
-
-  return(contents);
-});
-
-task.registerBasicTask('mincss', 'Compress down CSS files cleanly.', function(data, name) {
-  // Minify CSS.
-  var errorcount = fail.errorcount;
-  var files = file.expand(data);
-  file.write(name, task.helper('mincss', files));
-
-  // Fail task if there were errors.
-  if (fail.errorcount > errorcount) { return(false); }
-
-  // Otherwise, print a success message.
-  log.writeln('File \'' + name + '\' created.');
-});
-
-task.registerHelper('mincss', function(files) {
-  // Minify and combine all CSS
-  return(files ? files.map(function(filepath) {
-    return(cleanCSS.process(file.read(filepath)));
-  }).join('') : '');
-});
-
-task.registerTask('default', 'clean lint:files concat jst min mincss');
+    grunt.log.writeln('File "' + this.data.dest + '" created.');
+  });
+};

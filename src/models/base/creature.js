@@ -153,7 +153,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     return(((-4 * this.get('stats').dexterity / 125) + 5) * 1000);
   },
   attack: function(creature) {
-    if (creature === this || this.dead()) return;
+    if (creature === this || this.dead()) {
+      return;
+    }
 
     Werld.Utils.Interval.set(
       this,

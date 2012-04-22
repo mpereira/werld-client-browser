@@ -14,7 +14,8 @@ Werld.Views.SplashScreen = Backbone.View.extend({
     titleText.x = 320;
     titleText.y = 120;
 
-    signInText = new Text('Sign In', '40px "PowellAntique" serif', '#dc9a44');
+    var signInText =
+      new Text('Sign In', '40px "PowellAntique" serif', '#dc9a44');
     signInText.textBaseline = 'bottom';
     signInText.x = 400;
     signInText.y = 320;
