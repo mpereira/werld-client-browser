@@ -43,7 +43,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
 
       this.messagesContainer = new Container();
       // FIXME: only call the message updating callback on 'change:messages'.
-      this.messagesContainer.tick = this.messagesContainerTick;
+      this.messagesContainer.onTick = this.messagesContainerTick;
 
       this.container.addChild(this.bitmapAnimation);
       this.container.addChild(this.characterNameText);
