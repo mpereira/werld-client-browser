@@ -1,33 +1,17 @@
 Werld.Views.StatusBar = Backbone.View.extend({
   initialize: function() {
+    _.bindAll(this);
+
     this.container = new Container();
+    this.container.view = this;
     this.container.x = 0;
     this.container.y = 405;
 
-    var self = this;
-    self.container.onPress = function(event) {
-      var offset = [
-        self.container.x - event.stageX,
-        self.container.y - event.stageY
-      ];
+    this.container.onPress = this.onContainerPress;
+    this.container.onMouseOver = this.onContainerMouseOver;
+    this.container.onMouseOut = this.onContainerMouseOut;
 
-      event.onMouseMove = function(ev) {
-        self.container.x = ev.stageX + offset[0];
-        self.container.y = ev.stageY + offset[1];
-      };
-    };
-
-    this.container.onMouseOver = function() {
-      self.container.parent.getStage().canvas.style.cursor = 'pointer';
-      self.container.scaleX = self.container.scaleY = 1.05;
-    };
-
-    this.container.onMouseOut = function() {
-      self.container.parent.getStage().canvas.style.cursor = '';
-      self.container.scaleX = self.container.scaleY = 1.0;
-    };
-
-    this.container.tick = _.bind(this.tick, this);
+    // FIXME: refactor this mess.
     this.statusBarRectangle = new Rectangle(0, 0, 200, 75);
     var statusBarRectangle = new Graphics();
     statusBarRectangle.
@@ -163,8 +147,35 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.container.addChild(this.staminaBar);
     this.container.addChild(this.staminaTextKey);
     this.container.addChild(this.staminaTextValue);
+
+    this.model.on(
+      'change:hitPoints change:stamina change:mana',
+      this.update
+    );
   },
-  tick: function() {
+  onContainerPress: function(event) {
+    if (event.nativeEvent.which === 1) {
+      this.pressEventOffset = [
+        this.container.x - event.stageX,
+        this.container.y - event.stageY
+      ];
+
+      event.onMouseMove = this.onContainerMouseMove;
+    }
+  },
+  onContainerMouseMove: function(event) {
+    this.container.x = event.stageX + this.pressEventOffset[0];
+    this.container.y = event.stageY + this.pressEventOffset[1];
+  },
+  onContainerMouseOver: function() {
+    Werld.canvas.el.style.cursor = 'pointer';
+    this.container.scaleX = this.container.scaleY = 1.05;
+  },
+  onContainerMouseOut: function(event) {
+    Werld.canvas.el.style.cursor = '';
+    this.container.scaleX = this.container.scaleY = 1.0;
+  },
+  update: function() {
     var barPadding = 5;
     var leftRectangleWidth = this.hitPointsTextKey.x + this.hitPointsTextKey.getMeasuredWidth();
 
