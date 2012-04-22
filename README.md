@@ -6,6 +6,7 @@
 ## Development
 
 ### Dependencies
+- [GNU make](http://www.gnu.org/software/make/manual/make.html)
 - [node.js](http://nodejs.org/)
 - [npm](http://npmjs.org/)
 
