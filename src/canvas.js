@@ -8,7 +8,7 @@ Werld.Canvas = Backbone.View.extend({
   loadTextures: function(callback) {
     this.textures = {};
     this.textures.tiles = {};
-    this.textures.tiles.grass = '../images/textures/tiles/grass.jpg';
-    this.textures.tiles.dirt = '../images/textures/tiles/dirt.jpg';
+    this.textures.tiles.grass = 'images/textures/tiles/grass.jpg';
+    this.textures.tiles.dirt = 'images/textures/tiles/dirt.jpg';
   }
 });

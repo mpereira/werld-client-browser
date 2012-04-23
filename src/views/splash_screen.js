@@ -1,6 +1,6 @@
 Werld.Views.SplashScreen = Backbone.View.extend({
   initialize: function() {
-    var splashImage = new Bitmap('../images/splash.jpg');
+    var splashImage = new Bitmap('images/splash.jpg');
     splashImage.x = 0;
     splashImage.y = 0;
 

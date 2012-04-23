@@ -27,24 +27,24 @@ var Werld = {
   IMAGES: {
     BACKPACK: {
       IMAGE: {
-        SRC: '../images/backpack.png'
+        SRC: 'images/backpack.png'
       }
     },
     LOOT_CONTAINER: {
       IMAGE: {
-        SRC: '../images/loot_container.png'
+        SRC: 'images/loot_container.png'
       }
     },
     GOLD: {
       IMAGE: {
-        SRC: '../images/gold.png'
+        SRC: 'images/gold.png'
       }
     }
   },
   OBJECTS: {
     ALTAR: {
       IMAGE: {
-        SRC: '../images/objects/altar.png'
+        SRC: 'images/objects/altar.png'
       }
     }
   },

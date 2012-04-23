@@ -8,7 +8,7 @@ Werld.CREATURES = {
       MAX_INTELLIGENCE: 125
     },
     SPRITE: {
-      SRC: '../images/sprite_sheets/characters/mage.png',
+      SRC: 'images/sprite_sheets/characters/mage.png',
       DIMENSIONS: [40, 40],
       FREQUENCY: 0.25
     }
@@ -31,7 +31,7 @@ Werld.CREATURES = {
       GOLD: [5, 10]
     },
     SPRITE: {
-      SRC: '../images/sprite_sheets/creatures/silver_bat.png',
+      SRC: 'images/sprite_sheets/creatures/silver_bat.png',
       DIMENSIONS: [40, 40],
       FRAMES: 4,
       FREQUENCY: 0.25
@@ -55,7 +55,7 @@ Werld.CREATURES = {
       GOLD: [15, 20]
     },
     SPRITE: {
-      SRC: '../images/sprite_sheets/creatures/white_wolf.png',
+      SRC: 'images/sprite_sheets/creatures/white_wolf.png',
       DIMENSIONS: [48, 48],
       FRAMES: 4,
       FREQUENCY: 0.25
@@ -79,7 +79,7 @@ Werld.CREATURES = {
       GOLD: [30, 50]
     },
     SPRITE: {
-      SRC: '../images/sprite_sheets/creatures/fire_wolf.png',
+      SRC: 'images/sprite_sheets/creatures/fire_wolf.png',
       DIMENSIONS: [48, 53],
       FRAMES: 4,
       FREQUENCY: 0.25
@@ -103,7 +103,7 @@ Werld.CREATURES = {
       GOLD: [300, 400]
     },
     SPRITE: {
-      SRC: '../images/sprite_sheets/creatures/leviathan.png',
+      SRC: 'images/sprite_sheets/creatures/leviathan.png',
       DIMENSIONS: [96, 96],
       FRAMES: 4,
       FREQUENCY: 0.5
@@ -127,7 +127,7 @@ Werld.CREATURES = {
       GOLD: [500, 600]
     },
     SPRITE: {
-      SRC: '../images/sprite_sheets/creatures/blue_dragon.png',
+      SRC: 'images/sprite_sheets/creatures/blue_dragon.png',
       DIMENSIONS: [96, 96],
       FRAMES: 4,
       FREQUENCY: 0.5
