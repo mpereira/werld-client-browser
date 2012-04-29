@@ -6,21 +6,26 @@
   "homepage": "http://www.werldonline.com",
   "private": true,
   "scripts": {
-    "start": "bin/server"
+    "start": "node scripts/server"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/mpereira/werld-client-browser.git"
   },
+  "licenses": [{
+    "type": "MIT",
+    "url": "https://github.com/mpereira/werld-client-browser/blob/master/LICENSE.md"
+  }],
   "engines": {
-    "node": "0.6.7"
+    "node": "~0.6"
   },
   "dependencies": {},
   "devDependencies": {
-    "clean-css": "0.3.1",
-    "express": "2.5.4",
-    "grunt": "0.1.2",
-    "rimraf": "1.0.9"
+    "bbb": "https://github.com/backbone-boilerplate/grunt-bbb/tarball/ab822fb6b7",
+    "ejs": "0.7.1",
+    "express": "2.5.9",
+    "grunt": "0.3.9",
+    "rimraf": "2.0.1"
   },
   "optionalDependencies": {},
   "config": {

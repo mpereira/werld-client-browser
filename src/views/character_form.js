@@ -1,6 +1,8 @@
 Werld.Views.CharacterForm = Backbone.View.extend({
   el: '#character-form',
   initialize: function() {
+    _.bindAll(this);
+
     var $canvas = $(this.options.canvas.el);
     $(this.el).css({
       top: $canvas.position().top + $canvas.height() / 4 + 'px',
@@ -22,14 +24,17 @@ Werld.Views.CharacterForm = Backbone.View.extend({
       height: '8em'
     });
 
-    $(this.el).bind('submit', _.bind(this.submit, this));
+    $(this.el).bind('submit', this.submit);
+  },
+  events: {
+    'submit': 'onSubmit'
   },
   render: function() {
     this.characterStatInputsView.render();
     this.characterNameInputView.render();
-    $(this.el).show();
+    this.$el.show();
   },
-  submit: function() {
+  onSubmit: function() {
     var inputValue = function(inputSelector, context) {
       $(inputSelector, context.el).val();
     };
@@ -48,13 +53,20 @@ Werld.Views.CharacterForm = Backbone.View.extend({
       this.characterStatInputsView
     );
 
-    Werld.switchState(Werld.States.GAME_STARTED, {
+    console.log(name)
+    console.log(strength)
+    console.log(dexterity)
+    console.log(intelligence)
+
+    Werld.switchState(Werld.STATES.GAME_STARTED, {
       data: {
         character: {
           name: name,
-          strength: strength,
-          dexterity: dexterity,
-          intelligence: intelligence
+          stats: {
+            strength: strength,
+            dexterity: dexterity,
+            intelligence: intelligence
+          }
         }
       }
     });

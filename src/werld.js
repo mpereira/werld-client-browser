@@ -1,191 +1,159 @@
 var Werld = {
-  Views: {
-    Base: {}
-  },
-  Models: {
-    Base: {}
-  },
-  Util: {},
-  States: {
+  Views: { Base: {} },
+  Models: { Base: {} },
+  Collections: {},
+  containers: {},
+  CONTAINER_NAMES: [
+    'terrain',
+    'objects',
+    'creatures',
+    'character',
+    'gumps',
+    'itemTransfer',
+    'gameMessages'
+  ],
+  STATES: {
     INIT: 1,
     SPLASH_SCREEN: 2,
     CHOOSING_NAME: 3,
     GAME_STARTED: 4
   },
-  Creatures: {
-    CHARACTER: {
-      MOVEMENT_SPEED: 2,
-      BOUNDARIES: {
-        MAX_CRITICAL_HIT_CHANCE: 20,
-        MAX_DEXTERITY: 125,
-        MAX_STRENGHT: 125,
-        MAX_INTELLIGENCE: 125
-      },
-      SPRITE: {
-        SRC: '../images/sprite_sheets/character.png',
-        FRAME_CHANGE_SPEED: 0.25
+  ITEMS: {
+    GOLD: {
+      name: 'Gold',
+      stackable: true
+    }
+  },
+  IMAGES: {
+    BACKPACK: {
+      IMAGE: {
+        SRC: 'images/backpack.png'
       }
     },
-    SILVER_BAT: {
-      name: 'a silver bat',
-      MOVEMENT_SPEED: 1,
-      stats: {
-        strength: 45,
-        dexterity: 10,
-        intelligence: 10
-      },
-      BOUNDARIES: {
-        MAX_CRITICAL_HIT_CHANCE: 20,
-        MAX_DEXTERITY: 125,
-        MAX_STRENGHT: 125,
-        MAX_INTELLIGENCE: 125
-      },
-      SPRITE: {
-        SRC: '../images/sprite_sheets/silver_bat.png',
-        FRAMES: 4,
-        FRAME_CHANGE_SPEED: 0.25
+    LOOT_CONTAINER: {
+      IMAGE: {
+        SRC: 'images/loot_container.png'
+      }
+    },
+    GOLD: {
+      IMAGE: {
+        SRC: 'images/gold.png'
       }
     }
   },
-  Objects: {
+  OBJECTS: {
     ALTAR: {
       IMAGE: {
-        SRC: '../images/objects/altar.png'
+        SRC: 'images/objects/altar.png'
       }
     }
   },
   Config: {
+    AGGRESSIVENESS_RADIUS: 6,
+    ALTAR_CHARACTER_RESURRECTION_OBSERVER_INTERVAL: 1000,
+    RESPAWN_TIME: 60 * 1000,
+    CORPSE_DECAY_TIME: 80 * 1000,
     FRAMES_PER_SECOND: 30,
-    FRAME_RATE: function() {
-      return(Math.floor(1000 / Werld.Config.FRAMES_PER_SECOND));
-    },
     MESSAGE_LIFE_CYCLE: 5000,
     MESSAGE_SWEEPER_POLLING_INTERVAL: 1000,
     PIXELS_PER_TILE: 40,
     REGENERATION_RATE: 1000,
     SCREEN_DIMENSIONS: [16, 12],
-    WORLD_MAP_DIMENSIONS: [20, 20]
+    WORLD_MAP_DIMENSIONS: [50, 50]
   },
-  account: {
-    provider: {}
-  },
-  sounds: {
-    music: {
-      ogg: '../sounds/music.ogg',
-      mp3: '../sounds/music.mp3',
-      wav: '../sounds/music.wav'
-    }
-  },
-  setAccount: function(providerName, apiResponse) {
-    this.account.name = apiResponse.name;
-    this.account.email = apiResponse.email;
-    this.account.provider.id = apiResponse.id;
-    this.account.provider.name = providerName;
-  },
-  loadSounds: function() {
-    var music = document.createElement('audio');
-    var supportedType;
-
-    if (music.canPlayType('audio/mp3')) {
-      supportedType = 'mp3';
-    } else if (music.canPlayType('audio/wav')) {
-      supportedType = 'wav';
-    } else if (music.canPlayType('audio/ogg')) {
-      supportedType = 'ogg';
-    }
-
-    if (supportedType) {
-      document.body.appendChild(music);
-      music.setAttribute('src', this.sounds.music[supportedType]);
-      //music.addEventListener('canplay', music.play, false);
-    }
-  },
-  messageInputForm: function() {
-    if (!this.messageInputView) {
-     this.messageInputView = new Werld.Views.MessageInputForm();
-    }
-    return(this.messageInputView);
+  frameRate: function() {
+    return(Math.floor(1000 / Werld.Config.FRAMES_PER_SECOND));
   },
   switchState: function(state, params) {
-    if (Werld.state === Werld.States.INIT) {
-      if (state === Werld.States.SPLASH_SCREEN) {
-        Werld.state = Werld.States.SPLASH_SCREEN;
+    params || (params = {});
+
+    if (Werld.state === Werld.STATES.INIT) {
+      if (state === Werld.STATES.SPLASH_SCREEN) {
+        Werld.state = Werld.STATES.SPLASH_SCREEN;
       }
-    } else if (Werld.state === Werld.States.SPLASH_SCREEN) {
-      if (state === Werld.States.CHOOSING_NAME) {
-        //var characterNameInputForm = new Werld.Views.CharacterNameInputForm();
-        //characterNameInputForm.render();
+    } else if (Werld.state === Werld.STATES.SPLASH_SCREEN) {
+      if (state === Werld.STATES.CHOOSING_NAME) {
         var characterForm = new Werld.Views.CharacterForm({
           canvas: Werld.canvas
         });
         characterForm.render();
-        Werld.state = Werld.States.CHOOSING_NAME;
+        Werld.state = Werld.STATES.CHOOSING_NAME;
       }
-    } else if (Werld.state === Werld.States.CHOOSING_NAME) {
-      if (state === Werld.States.GAME_STARTED) {
-        Werld.canvas.stage.removeAllChildren();
+    } else if (Werld.state === Werld.STATES.CHOOSING_NAME) {
+      if (state === Werld.STATES.GAME_STARTED) {
+        Werld.stage.removeAllChildren();
+
+        _(Werld.CONTAINER_NAMES).each(function(name) {
+          Werld.containers[name] = new Container();
+        });
 
         Werld.character = new Werld.Models.Character(
-          _.extend(Werld.Creatures.CHARACTER, {
-            fixed: true,
-            name: params.data.character.name,
-            stats: {
-              strength: 20,
-              dexterity: 20,
-              intelligence: 10
-            },
+          _({
             coordinates: _([
               Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
               Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)
             ]).map(function(coordinate) {
               return(coordinate * Werld.Config.PIXELS_PER_TILE);
             })
-          })
+          }).extend(params.data.character, Werld.CREATURES.CHARACTER)
         );
 
         Werld.canvas.characterView = new Werld.Views.Character({
           model: Werld.character
         });
 
-        Werld.altar = new Werld.Models.Altar(
-          _.extend(Werld.Objects.ALTAR, {
-            coordinates: _([7, 8]).map(function(coordinate) {
-              return(coordinate * Werld.Config.PIXELS_PER_TILE);
-            })
-          })
-        );
-
-        Werld.canvas.altarView = new Werld.Views.Altar({
-          model: Werld.altar
-        });
-
         Werld.canvas.statusBarView = new Werld.Views.StatusBar({
           model: Werld.character
         });
 
-        Werld.creature = new Werld.Models.Creature(
-          _.extend(Werld.Creatures.SILVER_BAT, {
-            coordinates: _([3, 4]).map(function(coordinate) {
-              return(coordinate * Werld.Config.PIXELS_PER_TILE);
-            })
-          })
-        );
-
-        Werld.canvas.creatureView = new Werld.Views.Creature({
-          model: Werld.creature
+        Werld.canvas.backpackView = new Werld.Views.Backpack({
+          model: Werld.character.backpack, image: Werld.IMAGES.BACKPACK.IMAGE
         });
 
-        var mapTiles = [];
-        for (var i = 0; i < Werld.Config.WORLD_MAP_DIMENSIONS[0]; i++) {
-          mapTiles[i] = [];
-          for (var j = 0; j < Werld.Config.WORLD_MAP_DIMENSIONS[1]; j++) {
-            mapTiles[i][j] = new Werld.Models.Tile({
-              type: (Math.random() > 0.75 ? 'dirt' : 'grass'), coordinates: [i, j]
-            });
-          }
-        }
+        var silverBatSpawner = new Werld.Models.CreatureSpawner({
+          creature: Werld.CREATURES.SILVER_BAT,
+          coordinates: [4, 4],
+          radius: 3,
+          numberOfCreatures: 3
+        });
 
-        Werld.map = new Werld.Models.Map({ tiles: mapTiles });
+        var whiteWolfSpawner = new Werld.Models.CreatureSpawner({
+          creature: Werld.CREATURES.WHITE_WOLF,
+          coordinates: [15, 10],
+          radius: 4,
+          numberOfCreatures: 2
+        });
+
+        var fireWolfSpawner = new Werld.Models.CreatureSpawner({
+          creature: Werld.CREATURES.FIRE_WOLF,
+          coordinates: [15, 15],
+          radius: 4,
+          numberOfCreatures: 2
+        });
+
+        var leviathanSpawner = new Werld.Models.CreatureSpawner({
+          creature: Werld.CREATURES.LEVIATHAN,
+          coordinates: [4, 15],
+          radius: 4,
+          numberOfCreatures: 1
+        });
+
+        var blueDragonSpawner = new Werld.Models.CreatureSpawner({
+          creature: Werld.CREATURES.BLUE_DRAGON,
+          coordinates: [4, 10],
+          radius: 4,
+          numberOfCreatures: 1
+        });
+
+        Werld.creatureSpawners = new Werld.Collections.CreatureSpawners([
+          silverBatSpawner,
+          whiteWolfSpawner,
+          fireWolfSpawner,
+          leviathanSpawner,
+          blueDragonSpawner
+        ]);
+
+        Werld.map = new Werld.Models.Map();
 
         Werld.screen = new Werld.Models.Screen({
           map: Werld.map,
@@ -198,36 +166,61 @@ var Werld = {
           model: Werld.screen
         });
 
-        window.addEventListener(
-          'keydown', _.bind(Werld.canvas.keyboardHandler, Werld.canvas), false
+        Werld.altar = new Werld.Models.Altar(
+          _.extend(Werld.OBJECTS.ALTAR, {
+            coordinates: _([7, 8]).map(function(coordinate) {
+              return(coordinate * Werld.Config.PIXELS_PER_TILE);
+            })
+          })
         );
 
-        Werld.canvas.stage.addChild(Werld.canvas.screenView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.statusBarView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.creatureView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.characterView.container);
-        Werld.canvas.stage.addChild(Werld.canvas.altarView.container);
+        Werld.canvas.altarView = new Werld.Views.Altar({
+          model: Werld.altar
+        });
 
-        Werld.state = Werld.States.GAME_STARTED;
+        new Werld.Views.MessageInputFormHandler();
+
+        Werld.containers.terrain.addChild(Werld.canvas.screenView.container);
+        Werld.containers.objects.addChild(Werld.canvas.altarView.container);
+        Werld.containers.character.addChild(Werld.canvas.characterView.container);
+        Werld.creatureSpawners.activateAll();
+
+        Werld.containers.gumps.addChild(Werld.canvas.statusBarView.container);
+        Werld.containers.gumps.addChild(Werld.canvas.backpackView.container);
+        Werld.containers.gumps.screen = Werld.screen;
+
+        _.chain(Werld.containers).values().each(function(container) {
+          Werld.stage.addChild(container);
+        });
+
+        Werld.state = Werld.STATES.GAME_STARTED;
       }
     } else {
-      if (state === Werld.States.INIT) {
-        Werld.state = Werld.States.INIT;
+      if (state === Werld.STATES.INIT) {
+        Werld.state = Werld.STATES.INIT;
       }
     }
-    params && params.callback && params.callback();
+
+    Werld.Utils.Callback.run(params.callback);
   },
   init: function() {
-    $(window).contextmenu(function() {
-      return(false);
-    });
+    // Disabling right click.
+    $(window).contextmenu(function(event) { return(false); });
 
-    this.switchState(Werld.States.INIT);
-    this.loadSounds();
-    this.canvas.init();
+    Werld.switchState(Werld.STATES.INIT);
+
+    Werld.canvas = new Werld.Canvas();
+    Werld.stage = new Stage(Werld.canvas.el);
+    Werld.stage.enableMouseOver();
+    Ticker.useRAF = true;
+    Ticker.setFPS(Werld.frameRate());
+    Ticker.addListener(Werld.stage);
+
+    var splashScreenView = new Werld.Views.SplashScreen();
+    Werld.stage.addChild(splashScreenView.container);
+
+    Werld.switchState(Werld.STATES.SPLASH_SCREEN);
   }
 };
 
-$(function() {
-  Werld.init();
-});
+$(Werld.init);

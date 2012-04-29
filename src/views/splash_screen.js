@@ -1,6 +1,6 @@
 Werld.Views.SplashScreen = Backbone.View.extend({
   initialize: function() {
-    var splashImage = new Bitmap('../images/splash.jpg');
+    var splashImage = new Bitmap('images/splash.jpg');
     splashImage.x = 0;
     splashImage.y = 0;
 
@@ -14,7 +14,8 @@ Werld.Views.SplashScreen = Backbone.View.extend({
     titleText.x = 320;
     titleText.y = 120;
 
-    signInText = new Text('Sign In', '40px "PowellAntique" serif', '#dc9a44');
+    var signInText =
+      new Text('Sign In', '40px "PowellAntique" serif', '#dc9a44');
     signInText.textBaseline = 'bottom';
     signInText.x = 400;
     signInText.y = 320;
@@ -62,7 +63,7 @@ Werld.Views.SplashScreen = Backbone.View.extend({
     };
     signInClickableGraphicsShape.onClick = function() {
       signInClickableGraphicsShape.getStage().canvas.style.cursor = '';
-      Werld.switchState(Werld.States.CHOOSING_NAME, {
+      Werld.switchState(Werld.STATES.CHOOSING_NAME, {
         callback: function() {
           signInClickableGraphicsShape.onMouseOver = null;
           signInClickableGraphicsShape.onMouseOut = null;

@@ -1,9 +1,8 @@
 /*
-* UID by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* UID
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -26,14 +25,6 @@
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
-
 
 (function(window) {
 
@@ -66,11 +57,10 @@ var UID = function() {
 
 window.UID = UID;
 }(window));/*
-* Ticker by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* Ticker
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -93,14 +83,6 @@ window.UID = UID;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
-
 
 (function(window) {
 
@@ -127,6 +109,14 @@ var Ticker = function() {
 	 * @type Boolean
 	 **/
 	Ticker.useRAF = null;
+	
+	/**
+	 * Specifies the animation target to use with requestAnimationFrame if useRAF is true.
+	 * @property animationTarget
+	 * @static
+	 * @type Object
+	 **/
+	Ticker.animationTarget = null;
 	
 	/**
 	 * Event broadcast  once each tick / interval. The interval is specified via the 
@@ -241,18 +231,19 @@ var Ticker = function() {
 	
 // public static methods:
 	/**
-	 * Adds a listener for the tick event. The listener object must expose a .tick() method, 
-	 * which will be called once each tick / interval. The interval is specified via the 
+	 * Adds a listener for the tick event. The listener must be either an object exposing a .tick() method,
+	 * or a function. The listener will be called once each tick / interval. The interval is specified via the 
 	 * .setInterval(ms) method.
-	 * The exposed tick method is passed two parameters: the elapsed time between the 
+	 * The tick method or function is passed two parameters: the elapsed time between the 
 	 * previous tick and the current one, and a boolean indicating whether Ticker is paused.
 	 * @method addListener
 	 * @static
-	 * @param {Object} o The object to add as a listener.
+	 * @param {Object} o The object or function to add as a listener.
 	 * @param {Boolean} pauseable If false, the listener will continue to have tick called 
 	 * even when Ticker is paused via Ticker.pause(). Default is true.
 	 **/
 	Ticker.addListener = function(o, pauseable) {
+		if (o == null) { return; }
 		if (!Ticker._inited) { Ticker.init(); }
 		Ticker.removeListener(o);
 		Ticker._pauseable[Ticker._listeners.length] = (pauseable == null) ? true : pauseable;
@@ -271,7 +262,7 @@ var Ticker = function() {
 		Ticker._tickTimes = [];
 		Ticker._pauseable = [];
 		Ticker._listeners = [];
-		Ticker._times.push(Ticker._startTime = Ticker._getTime());
+		Ticker._times.push(Ticker._lastTime = Ticker._startTime = Ticker._getTime());
 		Ticker.setInterval(Ticker._interval);
 	}
 	
@@ -279,7 +270,7 @@ var Ticker = function() {
 	 * Removes the specified listener.
 	 * @method removeListener
 	 * @static
-	 * @param {Object} o The object to remove from listening from the tick event.
+	 * @param {Object} o The object or function to remove from listening from the tick event.
 	 **/
 	Ticker.removeListener = function(o) {
 		if (Ticker._listeners == null) { return; }
@@ -308,20 +299,9 @@ var Ticker = function() {
 	 * @param {Number} interval Time in milliseconds between ticks. Default value is 50.
 	 **/
 	Ticker.setInterval = function(interval) {
-		Ticker._lastTime = Ticker._getTime();
 		Ticker._interval = interval;
-		if (Ticker.timeoutID != null) { clearTimeout(Ticker.timeoutID); }
-		if (Ticker.useRAF) {
-			if (Ticker._rafActive) { return; }
-			Ticker._rafActive = true;
-			var f = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame ||
-					  window.oRequestAnimationFrame || window.msRequestAnimationFrame;
-			if (f) {
-				f(Ticker._handleAF);
-				return;
-			}
-		}
-		if (Ticker._inited) { Ticker.timeoutID = setTimeout(Ticker._handleTimeout, interval); }
+		if (!Ticker._inited) { return; }
+		Ticker._setupTick();
 	}
 	
 	/**
@@ -361,15 +341,15 @@ var Ticker = function() {
 	 * @method getMeasuredFPS
 	 * @static
 	 * @param {Number} ticks Optional. The number of previous ticks over which to measure the actual 
-	 * frames / ticks per second.
+	 * frames / ticks per second. Defaults to the number of ticks per second.
 	 * @return {Number} The actual frames / ticks per second. Depending on performance, this may differ
 	 * from the target frames per second.
 	 **/
 	Ticker.getMeasuredFPS = function(ticks) {
 		if (Ticker._times.length < 2) { return -1; }
 		
-		// by default, calculate fps for the past 1/2 second:
-		if (ticks == null) { ticks = Ticker.getFPS()>>1; }
+		// by default, calculate fps for the past 1 second:
+		if (ticks == null) { ticks = Ticker.getFPS()|0; }
 		ticks = Math.min(Ticker._times.length-1, ticks);
 		return 1000/((Ticker._times[0]-Ticker._times[ticks])/ticks);
 	}
@@ -429,15 +409,10 @@ var Ticker = function() {
 	 * @protected
 	 **/
 	Ticker._handleAF = function(timeStamp) {
+		Ticker._rafActive = false;
+		Ticker._setupTick();
 		if (timeStamp - Ticker._lastTime >= Ticker._interval-1) {
 			Ticker._tick();
-		}
-		if (Ticker.useRAF) {
-			var f = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame ||
-						  window.oRequestAnimationFrame || window.msRequestAnimationFrame;
-			f(Ticker._handleAF, Ticker.animationTarget);
-		} else {
-			Ticker._rafActive = false;
 		}
 	}
 	
@@ -446,8 +421,26 @@ var Ticker = function() {
 	 * @protected
 	 **/
 	Ticker._handleTimeout = function() {
+		Ticker.timeoutID = null;
+		Ticker._setupTick();
 		Ticker._tick();
-		if (!Ticker.useRAF) { Ticker.timeoutID = setTimeout(Ticker._handleTimeout, Ticker._interval); }
+	}
+	
+	/**
+	 * @method _setupTick
+	 * @protected
+	 **/
+	Ticker._setupTick = function() {
+		if (Ticker._rafActive || Ticker.timeoutID != null) { return; } // avoid duplicates
+		if (Ticker.useRAF) {
+			var f = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame;
+			if (f) {
+				f(Ticker._handleAF, Ticker.animationTarget);
+				Ticker._rafActive = true;
+				return;
+			}
+		}
+		Ticker.timeoutID = setTimeout(Ticker._handleTimeout, Ticker._interval);
 	}
 	
 	/**
@@ -471,10 +464,10 @@ var Ticker = function() {
 		var listeners = Ticker._listeners.slice();
 		var l = listeners ? listeners.length : 0;
 		for (var i=0; i<l; i++) {
-			var p = pauseable[i];
 			var listener = listeners[i];
-			if (listener == null || (paused && p) || listener.tick == null) { continue; }
-			listener.tick(elapsedTime,paused);
+			if (listener == null || (paused && pauseable[i])) { continue; }
+			if (listener.tick) { listener.tick(elapsedTime, paused); }
+			else if (listener instanceof Function) { listener(elapsedTime, paused); }
 		}
 		
 		Ticker._tickTimes.unshift(Ticker._getTime()-time);
@@ -495,12 +488,11 @@ var Ticker = function() {
 window.Ticker = Ticker;
 }(window));
 /*
-* MouseEvent by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* MouseEvent
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
-*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
 * files (the "Software"), to deal in the Software without
@@ -509,10 +501,10 @@ window.Ticker = Ticker;
 * copies of the Software, and to permit persons to whom the
 * Software is furnished to do so, subject to the following
 * conditions:
-*
+* 
 * The above copyright notice and this permission notice shall be
 * included in all copies or substantial portions of the Software.
-*
+* 
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -522,13 +514,6 @@ window.Ticker = Ticker;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas
-* including a full, hierarchical display list, a core interaction model, and
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 
@@ -645,12 +630,11 @@ var p = MouseEvent.prototype;
 
 window.MouseEvent = MouseEvent;
 }(window));/*
-* Matrix2D by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* Matrix2D
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
-*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
 * files (the "Software"), to deal in the Software without
@@ -659,10 +643,10 @@ window.MouseEvent = MouseEvent;
 * copies of the Software, and to permit persons to whom the
 * Software is furnished to do so, subject to the following
 * conditions:
-*
+* 
 * The above copyright notice and this permission notice shall be
 * included in all copies or substantial portions of the Software.
-*
+* 
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -672,13 +656,6 @@ window.MouseEvent = MouseEvent;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas
-* including a full, hierarchical display list, a core interaction model, and
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 
@@ -1156,11 +1133,10 @@ var p = Matrix2D.prototype;
 
 window.Matrix2D = Matrix2D;
 }(window));/*
-* Point by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* Point
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -1183,13 +1159,6 @@ window.Matrix2D = Matrix2D;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 
@@ -1253,11 +1222,10 @@ var p = Point.prototype;
 	
 window.Point = Point;
 }(window));/*
-* Rectangle by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* Rectangle
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -1280,13 +1248,6 @@ window.Point = Point;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 
@@ -1367,11 +1328,10 @@ var p = Rectangle.prototype;
 	
 window.Rectangle = Rectangle;
 }(window));/*
-* Shadow by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* Shadow
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -1394,13 +1354,6 @@ window.Rectangle = Rectangle;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 
@@ -1499,12 +1452,11 @@ var p = Shadow.prototype;
 	
 window.Shadow = Shadow;
 }(window));/*
-* SpriteSheet by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* SpriteSheet
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
-*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
 * files (the "Software"), to deal in the Software without
@@ -1513,10 +1465,10 @@ window.Shadow = Shadow;
 * copies of the Software, and to permit persons to whom the
 * Software is furnished to do so, subject to the following
 * conditions:
-*
+* 
 * The above copyright notice and this permission notice shall be
 * included in all copies or substantial portions of the Software.
-*
+* 
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -1526,13 +1478,6 @@ window.Shadow = Shadow;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
- * The Easel Javascript library provides a retained graphics mode for canvas
- * including a full, hierarchical display list, a core interaction model, and
- * helper classes to make working with Canvas much easier.
- * @module EaselJS
- **/
 
 (function(window) {
 /**
@@ -1609,7 +1554,7 @@ window.Shadow = Shadow;
  * with two animations, "run" looping from frame 0-4 inclusive, and "jump" playing from frame 5-8 and sequencing back to run:
  * <pre><code>data = {
 &#9;images: ["sprites.jpg"],
-&#9;frames: {frameWidth:50, frameHeight:50},
+&#9;frames: {width:50, height:50},
 &#9;animations: {run:[0,4], jump:[5,8,"run"]}
 }</code></pre>
  
@@ -1629,6 +1574,21 @@ var p = SpriteSheet.prototype;
 	 * @type Boolean
 	 **/
 	p.complete = true;
+	
+	
+	/**
+	 * The onComplete callback is called when all images are loaded. Note that this only fires if the images
+	 * were not fully loaded when the sprite sheet was initialized. You should check the complete property 
+	 * to prior to adding an onComplete handler. Ex.
+	 * <pre><code>var sheet = new SpriteSheet(data);
+	 * if (!sheet.complete) {
+	 *  &nbsp; // not preloaded, listen for onComplete:
+	 *  &nbsp; sheet.onComplete = handler;
+	 * }</code></pre>
+	 * 
+	 * @event onComplete
+	 **/
+	p.onComplete = null;
 	
 // private properties:
 	/**
@@ -1715,7 +1675,7 @@ var p = SpriteSheet.prototype;
 				if (!img.getContext && !img.complete) {
 					this._loadCount++;
 					this.complete = false;
-					img.onload = this._handleImageLoad();
+					(function(o) { img.onload = function() { o._handleImageLoad(); } })(this);
 				}
 			}
 		}
@@ -1761,7 +1721,7 @@ var p = SpriteSheet.prototype;
 					anim.next = obj.next;
 					a = anim.frames = obj.frames.slice(0);
 				}
-				anim.next = (a.length < 2 || anim.next == false) ? null : (anim.next == true) ? name : anim.next;
+				anim.next = (a.length < 2 || anim.next == false) ? null : (anim.next == null || anim.next == true) ? name : anim.next;
 				if (!anim.frequency) { anim.frequency = 1; }
 				this._animations.push(name);
 				this._data[name] = anim;
@@ -1861,6 +1821,7 @@ var p = SpriteSheet.prototype;
 		if (--this._loadCount == 0) {
 			this._calculateFrames();
 			this.complete = true;
+			this.onComplete&&this.onComplete();
 		}
 	}
 	
@@ -1888,12 +1849,12 @@ var p = SpriteSheet.prototype;
 	}
 
 window.SpriteSheet = SpriteSheet;
-}(window));/*
-* Graphics by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+}(window));
+/*
+* Graphics
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -1916,13 +1877,6 @@ window.SpriteSheet = SpriteSheet;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 
@@ -1977,6 +1931,7 @@ var p = Graphics.prototype;
 
 // static public methods:
 	
+	
 	/**
 	 * Returns a CSS compatible color string based on the specified RGB numeric color values in the format 
 	 * "rgba(255,255,255,1.0)", or if alpha is null then in the format "rgb(255,255,255)". For example,
@@ -2027,6 +1982,16 @@ var p = Graphics.prototype;
 			return "hsla("+(hue%360)+","+saturation+"%,"+lightness+"%,"+alpha+")";
 		}
 	}
+	
+	/**
+	 * Map of Base64 characters to values. Used by decodePath().
+	 * @property BASE_64
+	 * @static
+	 * @final
+	 * @type Object
+	 **/
+	Graphics.BASE_64 = {"A":0,"B":1,"C":2,"D":3,"E":4,"F":5,"G":6,"H":7,"I":8,"J":9,"K":10,"L":11,"M":12,"N":13,"O":14,"P":15,"Q":16,"R":17,"S":18,"T":19,"U":20,"V":21,"W":22,"X":23,"Y":24,"Z":25,"a":26,"b":27,"c":28,"d":29,"e":30,"f":31,"g":32,"h":33,"i":34,"j":35,"k":36,"l":37,"m":38,"n":39,"o":40,"p":41,"q":42,"r":43,"s":44,"t":45,"u":46,"v":47,"w":48,"x":49,"y":50,"z":51,"0":52,"1":53,"2":54,"3":55,"4":56,"5":57,"6":58,"7":59,"8":60,"9":61,"+":62,"/":63};
+		
 	
 	/**
 	 * Maps numeric values for the caps parameter of setStrokeStyle to corresponding string values.
@@ -2409,7 +2374,7 @@ var p = Graphics.prototype;
 	 * @return {Graphics} The Graphics instance the method is called on (useful for chaining calls.)
 	 **/
 	p.endFill = function() {
-		this.beginFill(null);
+		this.beginFill();
 		return this;
 	}
 	
@@ -2511,7 +2476,7 @@ var p = Graphics.prototype;
 	 * @return {Graphics} The Graphics instance the method is called on (useful for chaining calls.)
 	 **/
 	p.endStroke = function() {
-		this.beginStroke(null);
+		this.beginStroke();
 		return this;
 	}
 	
@@ -2559,16 +2524,26 @@ var p = Graphics.prototype;
 	 **/
 	p.drawRoundRectComplex = function(x, y, w, h, radiusTL, radiusTR, radiusBR, radiusBL) {
 		this._dirty = this._active = true;
+		var pi = Math.PI, arc=this._ctx.arc, lineTo=this._ctx.lineTo;
+		
 		this._activeInstructions.push(
 			new Command(this._ctx.moveTo, [x+radiusTL, y]),
-			new Command(this._ctx.lineTo, [x+w-radiusTR, y]),
-			new Command(this._ctx.arc, [x+w-radiusTR, y+radiusTR, radiusTR, (-Math.PI/2), 0, false]),
-			new Command(this._ctx.lineTo, [x+w, y+h-radiusBR]),
-			new Command(this._ctx.arc, [x+w-radiusBR, y+h-radiusBR, radiusBR, 0, Math.PI/2, false]),
-			new Command(this._ctx.lineTo, [x+radiusBL, y+h]),
-			new Command(this._ctx.arc, [x+radiusBL, y+h-radiusBL, radiusBL, Math.PI/2, Math.PI, false]),
-			new Command(this._ctx.lineTo, [x, y+radiusTL]),
-			new Command(this._ctx.arc, [x+radiusTL, y+radiusTL, radiusTL, Math.PI, Math.PI*3/2, false])
+			new Command(lineTo, [x+w-radiusTR, y]),
+			(radiusTR>=0) ?
+				new Command(arc, [x+w-radiusTR, y+radiusTR, radiusTR, -pi/2, 0]) :
+				new Command(arc, [x+w, y, -radiusTR, pi, pi/2, true]) ,
+			new Command(lineTo, [x+w, y+h-radiusBR]),
+			(radiusBL>=0) ?
+				new Command(arc, [x+w-radiusBR, y+h-radiusBR, radiusBR, 0, pi/2]) :
+				new Command(arc, [x+w, y+h, -radiusBR, -pi/2, pi, true]) ,
+			new Command(lineTo, [x+radiusBL, y+h]),
+			(radiusBL>=0) ?
+				new Command(arc, [x+radiusBL, y+h-radiusBL, radiusBL, pi/2, pi]) :
+				new Command(arc, [x, y+h, -radiusBL, 0, -pi/2, true]) ,
+			new Command(lineTo, [x, y+radiusTL]),
+			(radiusTL>=0) ?
+				new Command(arc, [x+radiusTL, y+radiusTL, radiusTL, pi, -pi/2]) :
+				new Command(arc, [x, y, -radiusTL, pi/2, 0, true])
 		);
 		return this;
 	} 
@@ -2659,6 +2634,69 @@ var p = Graphics.prototype;
 			}
 			angle += a;
 			this._activeInstructions.push(new Command(this._ctx.lineTo, [x+Math.cos(angle)*radius, y+Math.sin(angle)*radius]));
+		}
+		return this;
+	}
+	
+	/**
+	 * Decodes a compact encoded path string into a series of draw instructions.
+	 * This format is not intended to be human readable, and is meant for use by authoring tools.
+	 * The format uses a base64 character set, with each character representing 6 bits, to define a series of draw commands.
+	 * <br/><br/>
+	 * Each command is comprised of a single "header" character followed by a variable number of alternating x and y position values.
+	 * Reading the header bits from left to right (most to least significant): bits 1 to 3 specify the type of operation
+	 * (0-moveTo, 1-lineTo, 2-quadraticCurveTo, 3-bezierCurveTo, 4-7 unused). Bit 4 indicates whether position values use 12 bits (2 characters) 
+	 * or 18 bits (3 characters), with a one indicating the latter. Bits 5 and 6 are currently unused.
+	 * <br/><br/>
+	 * Following the header is a series of 2 (moveTo, lineTo), 4 (quadraticCurveTo), or 6 (bezierCurveTo) parameters.
+	 * These parameters are alternating x/y positions represented by 2 or 3 characters (as indicated by the 4th bit in the command char).
+	 * These characters consist of a 1 bit sign (1 is negative, 0 is positive), followed by an 11 (2 char) or 17 (3 char) bit integer value.
+	 * All position values are in tenths of a pixel.
+	 * Except in the case of move operations, this value is a delta from the previous x or y position (as appropriate).
+	 * <br/><br/>
+	 * For example, the string "A3cAAMAu4AAA" represents a line starting at -150,0 and ending at 150,0.
+	 * A - bits 000000. First 3 bits (000) indicate a moveTo operation. 4th bit (0) indicates 2 chars per parameter.
+	 * n0 - 110111011100. Absolute x position of -150.0px. First bit indicates a negative value, remaining bits indicate 1500 tenths of a pixel. 
+	 * AA - 000000000000. Absolute y position of 0.
+	 * I - 001100. First 3 bits (001) indicate a lineTo operation. 4th bit (1) indicates 3 chars per parameter.
+	 * Au4 - 000000101110111000. An x delta of 300.0px, which is added to the previous x value of -150.0px to provide an absolute position of +150.0px.
+	 * AAA - 000000000000000000. A y delta value of 0.
+	 * 
+	 * @method decodePath
+	 * @param {String} str The path string to decode.
+	 * @return {Graphics} The Graphics instance the method is called on (useful for chaining calls.)
+	 **/
+	p.p = p.decodePath = function(str) {
+		var instructions = [this.moveTo, this.lineTo, this.quadraticCurveTo, this.bezierCurveTo];
+		var paramCount = [2, 2, 4, 6];
+		var i=0, l=str.length;
+		var params = [];
+		var x=0, y=0;
+		var base64 = Graphics.BASE_64;
+		
+		while (i<l) {
+			var n = base64[str.charAt(i)];
+			var fi = n>>3; // highest order bits 1-3 code for operation.
+			var f = instructions[fi];
+			// check that we have a valid instruction & that the unused bits are empty:
+			if (!f || (n&3)) { throw("bad path data"); }
+			var pl = paramCount[fi];
+			if (!fi) { x=y=0; }
+			params.length = 0;
+			i++;
+			var charCount = (n>>2&1)+2;  // 4th header bit indicates number size for this operation.
+			for (var p=0; p<pl; p++) {
+				var num = base64[str.charAt(i)];
+				var sign = (num>>5) ? -1 : 1;
+				num = ((num&31)<<6)|(base64[str.charAt(i+1)]);
+				if (charCount == 3) { num = (num<<6)|(base64[str.charAt(i+2)]); }
+				num = sign*num/10;
+				if (p%2) { x = (num += x); }
+				else { y = (num += y); }
+				params[p] = num;
+				i += charCount;
+			}
+			f.apply(this,params);
 		}
 		return this;
 	}
@@ -2874,6 +2912,13 @@ var p = Graphics.prototype;
 	 **/
 	p.dp = p.drawPolyStar;
 	
+	/** Shortcut to decodePath.
+	 * @property p
+	 * @protected
+	 * type Function
+	 **/
+	p.p
+	
 	
 // private methods:
 	/**
@@ -2922,13 +2967,13 @@ var p = Graphics.prototype;
 	}
 
 window.Graphics = Graphics;
-}(window));/*
-* DisplayObject by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+}(window));
+/*
+* DisplayObject
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
-*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
 * files (the "Software"), to deal in the Software without
@@ -2937,10 +2982,10 @@ window.Graphics = Graphics;
 * copies of the Software, and to permit persons to whom the
 * Software is furnished to do so, subject to the following
 * conditions:
-*
+* 
 * The above copyright notice and this permission notice shall be
 * included in all copies or substantial portions of the Software.
-*
+* 
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -2952,9 +2997,9 @@ window.Graphics = Graphics;
 */
 
 /**
-* The Easel Javascript library provides a retained graphics mode for canvas
+* The EaselJS Javascript library provides a retained graphics mode for canvas
 * including a full, hierarchical display list, a core interaction model, and
-* helper classes to make working with Canvas much easier.
+* helper classes to make working with 2D graphics in Canvas much easier.
 * @module EaselJS
 **/
 
@@ -2999,6 +3044,13 @@ var p = DisplayObject.prototype;
 	 **/
 	DisplayObject._hitTestContext = DisplayObject._hitTestCanvas.getContext("2d");
 
+	/**
+	 * @property _nextCacheID
+	 * @type Number
+	 * @static
+	 * @protected
+	 **/
+	DisplayObject._nextCacheID = 1;
 
 	/**
 	 * The alpha (transparency) for this display object. 0 is fully transparent, 1 is fully opaque.
@@ -3213,11 +3265,11 @@ var p = DisplayObject.prototype;
 	p.onMouseOut = null;
 
 	/**
-	 * The tick callback is called on each display object on stage whenever the stage updates.
+	 * The onTick callback is called on each display object on a stage whenever the stage updates.
 	 * This occurs immediately before the rendering (draw) pass.
-	 * @event tick
+	 * @event onTick
 	 **/
-	p.tick = null;
+	p.onTick = null;
 
 	/**
 	 * An array of Filter objects to apply to this display object. Filters are only applied / updated when cache() or
@@ -3337,17 +3389,18 @@ var p = DisplayObject.prototype;
 	 **/
 	p.cache = function(x, y, width, height) {
 		// draw to canvas.
-		if (this.cacheCanvas == null) { this.cacheCanvas = document.createElement("canvas"); }
-		var ctx = this.cacheCanvas.getContext("2d");
-		this.cacheCanvas.width = width;
-		this.cacheCanvas.height = height;
-		ctx.clearRect(0, 0, width+1, height+1); // because some browsers don't properly clear if the width/height remain the same.
+		var cacheCanvas = this.cacheCanvas;
+		if (cacheCanvas == null) { cacheCanvas = this.cacheCanvas = document.createElement("canvas"); }
+		var ctx = cacheCanvas.getContext("2d");
+		cacheCanvas.width = width;
+		cacheCanvas.height = height;
 		ctx.setTransform(1, 0, 0, 1, -x, -y);
+		ctx.clearRect(x, y, cacheCanvas.width, cacheCanvas.height); // some browsers don't clear correctly.
 		this.draw(ctx, true, this._matrix.reinitialize(1,0,0,1,-x,-y)); // containers require the matrix to work from
 		this._cacheOffsetX = x;
 		this._cacheOffsetY = y;
 		this._applyFilters();
-		this.cacheID++;
+		this.cacheID = DisplayObject._nextCacheID++;
 	}
 
 	/**
@@ -3360,15 +3413,17 @@ var p = DisplayObject.prototype;
 	 * whatwg spec on compositing</a>.
 	 **/
 	p.updateCache = function(compositeOperation) {
-		if (this.cacheCanvas == null) { throw "cache() must be called before updateCache()"; }
-		var ctx = this.cacheCanvas.getContext("2d");
-		ctx.setTransform(1, 0, 0, 1, -this._cacheOffsetX, -this._cacheOffsetY);
-		if (!compositeOperation) { ctx.clearRect(0, 0, this.cacheCanvas.width+1, this.cacheCanvas.height+1); }
-		else { ctx.globalCompositeOperation = compositeOperation; }
+		var cacheCanvas = this.cacheCanvas, offX = this._cacheOffsetX, offY = this._cacheOffsetY;
+		if (cacheCanvas == null) { throw "cache() must be called before updateCache()"; }
+		var ctx = cacheCanvas.getContext("2d");
+		ctx.setTransform(1, 0, 0, 1, -offX, -offY);
+		if (!compositeOperation) {
+			ctx.clearRect(offX, offY, cacheCanvas.width, cacheCanvas.height);
+		} else { ctx.globalCompositeOperation = compositeOperation; }
 		this.draw(ctx, true);
 		if (compositeOperation) { ctx.globalCompositeOperation = "source-over"; }
 		this._applyFilters();
-		this.cacheID++;
+		this.cacheID = DisplayObject._nextCacheID++;
 	}
 
 	/**
@@ -3377,7 +3432,7 @@ var p = DisplayObject.prototype;
 	 **/
 	p.uncache = function() {
 		this._cacheDataURL = this.cacheCanvas = null;
-		this._cacheOffsetX = this._cacheOffsetY = 0;
+		this.cacheID = this._cacheOffsetX = this._cacheOffsetY = 0;
 	}
 	
 	/**
@@ -3599,6 +3654,15 @@ var p = DisplayObject.prototype;
 		ctx.shadowOffsetY = shadow.offsetY;
 		ctx.shadowBlur = shadow.blur;
 	}
+	
+	
+	/**
+	 * @method _tick
+	 * @protected
+	 **/
+	p._tick = function(data) {
+		if (this.onTick) { this.onTick(data); }
+	}
 
 	/**
 	 * @method _testHit
@@ -3635,12 +3699,11 @@ var p = DisplayObject.prototype;
 
 window.DisplayObject = DisplayObject;
 }(window));/*
-* Container by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* Container
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
-*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
 * files (the "Software"), to deal in the Software without
@@ -3649,10 +3712,10 @@ window.DisplayObject = DisplayObject;
 * copies of the Software, and to permit persons to whom the
 * Software is furnished to do so, subject to the following
 * conditions:
-*
+* 
 * The above copyright notice and this permission notice shall be
 * included in all copies or substantial portions of the Software.
-*
+* 
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -3662,13 +3725,6 @@ window.DisplayObject = DisplayObject;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas
-* including a full, hierarchical display list, a core interaction model, and
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 
@@ -3789,6 +3845,7 @@ var p = Container.prototype = new DisplayObject();
 	 * @return {DisplayObject} The child that was added, or the last child if multiple children were added.
 	 **/
 	p.addChild = function(child) {
+		if (child == null) { return child; }
 		var l = arguments.length;
 		if (l > 1) {
 			for (var i=0; i<l; i++) { this.addChild(arguments[i]); }
@@ -3871,7 +3928,8 @@ var p = Container.prototype = new DisplayObject();
 	 * @method removeAllChildren
 	 **/
 	p.removeAllChildren = function() {
-		while (this.children.length) { this.removeChildAt(0); }
+		var kids = this.children;
+		while (kids.length) { kids.pop().parent = null; }
 	}
 
 	/**
@@ -3911,6 +3969,57 @@ var p = Container.prototype = new DisplayObject();
 	 **/
 	p.getNumChildren = function() {
 		return this.children.length;
+	}
+	
+	/**
+	 * Swaps the children at the specified indexes. Fails silently if either index is out of range.
+	 * @param index1
+	 * @param index2
+	 * @method swapChildrenAt
+	 **/
+	p.swapChildrenAt = function(index1, index2) {
+		var kids = this.children;
+		var o1 = kids[index1];
+		var o2 = kids[index2];
+		if (!o1 || !o2) { return; } // TODO: throw error?
+		kids[index1] = o2;
+		kids[index2] = o1;
+	}
+	
+	/**
+	 * Swaps the specified children's depth in the display list. Fails silently if either child is not a child of this Container.
+	 * @param child1
+	 * @param child2
+	 * @method swapChildren
+	 **/
+	p.swapChildren = function(child1, child2) {
+		var kids = this.children;
+		var index1,index2;
+		for (var i=0,l=kids.length;i<l;i++) {
+			if (kids[i] == child1) { index1 = i; }
+			if (kids[i] == child2) { index2 = i; }
+			if (index1 != null && index2 != null) { break; }
+		}
+		if (i==l) { return; } // TODO: throw error?
+		kids[index1] = child2;
+		kids[index2] = child1;
+	}
+	
+	/**
+	 * Changes the depth of the specified child. Fails silently if the child is not a child of this container, or the index is out of range.
+	 * @param child
+	 * @param index
+	 * @method setChildIndex
+	 **/
+	p.setChildIndex = function(child, index) {
+		var kids = this.children;
+		for (var i=0,l=kids.length;i<l;i++) {
+			if (kids[i] == child) { break; }
+		}
+		if (i==l || index < 0 || index > l || i == index) { return; }
+		kids.splice(index,1);
+		if (index<i) { i--; }
+		kids.splice(child,i,0); // TODO: test.
 	}
 
 	/**
@@ -4009,12 +4118,12 @@ var p = Container.prototype = new DisplayObject();
 	 * @method _tick
 	 * @protected
 	 **/
-	p._tick = function() {
+	p._tick = function(data) {
 		for (var i=this.children.length-1; i>=0; i--) {
 			var child = this.children[i];
-			if (child._tick) { child._tick(); }
-			if (child.tick) { child.tick(); }
+			if (child._tick) { child._tick(data); }
 		}
+		if (this.onTick) { this.onTick(data); }
 	}
 
 	/**
@@ -4084,12 +4193,11 @@ var p = Container.prototype = new DisplayObject();
 
 window.Container = Container;
 }(window));/*
-* Stage by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* Stage
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
-*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
 * files (the "Software"), to deal in the Software without
@@ -4098,10 +4206,10 @@ window.Container = Container;
 * copies of the Software, and to permit persons to whom the
 * Software is furnished to do so, subject to the following
 * conditions:
-*
+* 
 * The above copyright notice and this permission notice shall be
 * included in all copies or substantial portions of the Software.
-*
+* 
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -4111,13 +4219,6 @@ window.Container = Container;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas
-* including a full, hierarchical display list, a core interaction model, and
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 
@@ -4138,6 +4239,7 @@ var p = Stage.prototype = new Container();
 	/**
 	 * @property _snapToPixelEnabled
 	 * @protected
+	 * @static
 	 * @type Boolean
 	 * @default false
 	 **/
@@ -4277,12 +4379,12 @@ var p = Stage.prototype = new Container();
 	/**
 	 * Initialization method.
 	 * @method initialize
-	 * param {HTMLCanvasElement} canvas
+	 * param {HTMLCanvasElement} canvas A canvas object, or the string id of a canvas object in the current document.
 	 * @protected
 	 **/
 	p.initialize = function(canvas) {
 		this.Container_initialize();
-		this.canvas = canvas;
+		this.canvas = (canvas instanceof HTMLCanvasElement) ? canvas : document.getElementById(canvas);
 		this._enableMouseEvents(true);
 	}
 
@@ -4298,11 +4400,13 @@ var p = Stage.prototype = new Container();
 	 * and render its entire display list to the canvas.
 	 * @method update
 	 **/
-	p.update = function() {
+	p.update = function(data) {
 		if (!this.canvas) { return; }
 		if (this.autoClear) { this.clear(); }
 		Stage._snapToPixelEnabled = this.snapToPixelEnabled;
-		if (this.tickOnUpdate) { this._tick(); }
+		if (this.tickOnUpdate) {
+			this._tick(data);
+		}
 		this.draw(this.canvas.getContext("2d"), false, this.getConcatenatedMatrix(this._matrix));
 	}
 
@@ -4384,17 +4488,18 @@ var p = Stage.prototype = new Container();
 	/**
 	 * Enables or disables (by passing a frequency of 0) mouse over handlers (onMouseOver and onMouseOut) for this stage's display
 	 * list. These events can be expensive to generate, so they are disabled by default, and the frequency of the events
-	 * can be controlled independently of mouse move events via the frequency parameter.
+	 * can be controlled independently of mouse move events via the optional frequency parameter.
 	 * @method enableMouseOver
-	 * @param {Number} frequency The maximum number of times per second to broadcast mouse over/out events. Set to 0 to disable mouse
-	 * over events completely. Maximum is 50. A lower frequency is less responsive, but uses less CPU.
+	 * @param {Number} frequency Optional param specifying the maximum number of times per second to broadcast mouse over/out events. Set to 0 to disable mouse
+	 * over events completely. Maximum is 50. A lower frequency is less responsive, but uses less CPU. Default is 20.
 	 **/
 	p.enableMouseOver = function(frequency) {
 		if (this._mouseOverIntervalID) {
 			clearInterval(this._mouseOverIntervalID);
 			this._mouseOverIntervalID = null;
 		}
-		if (frequency <= 0) { return; }
+		if (frequency == null) { frequency = 20; }
+		else if (frequency <= 0) { return; }
 		var o = this;
 		this._mouseOverIntervalID = setInterval(function(){ o._testMouseOver(); }, 1000/Math.min(50,frequency));
 		this._mouseOverX = NaN;
@@ -4562,11 +4667,10 @@ var p = Stage.prototype = new Container();
 
 window.Stage = Stage;
 }(window));/*
-* Bitmap by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* Bitmap
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -4589,13 +4693,6 @@ window.Stage = Stage;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 
@@ -4626,6 +4723,14 @@ var p = Bitmap.prototype = new DisplayObject();
 	 * @default true
 	 **/
 	p.snapToPixel = true;
+
+	/**
+	 * Specifies an area of the source image to draw. If omitted, the whole image will be drawn.
+	 * @property sourceRect
+	 * @type Rectangle
+	 * @default null
+	 */
+	p.sourceRect = null;
 	
 	// constructor:
 
@@ -4661,7 +4766,7 @@ var p = Bitmap.prototype = new DisplayObject();
 	 * @return {Boolean} Boolean indicating whether the display object would be visible if drawn to a canvas
 	 **/
 	p.isVisible = function() {
-		return this.visible && this.alpha > 0 && this.scaleX != 0 && this.scaleY != 0 && this.image && (this.image.complete || this.image.getContext || this.image.readyState == 2);
+		return this.visible && this.alpha > 0 && this.scaleX != 0 && this.scaleY != 0 && this.image && (this.image.complete || this.image.getContext || this.image.readyState >= 2);
 	}
 
 	/**
@@ -4683,7 +4788,12 @@ var p = Bitmap.prototype = new DisplayObject();
 	 **/
 	p.draw = function(ctx, ignoreCache) {
 		if (this.DisplayObject_draw(ctx, ignoreCache)) { return true; }
-		ctx.drawImage(this.image, 0, 0);
+		var rect = this.sourceRect;
+		if (rect) {
+			ctx.drawImage(this.image, rect.x, rect.y, rect.width, rect.height, 0, 0, rect.width, rect.height);
+		} else {
+			ctx.drawImage(this.image, 0, 0);
+		}
 		return true;
 	}
 	
@@ -4732,12 +4842,11 @@ var p = Bitmap.prototype = new DisplayObject();
 
 window.Bitmap = Bitmap;
 }(window));/*
-* BitmapAnimation by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* BitmapAnimation
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
-*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
 * files (the "Software"), to deal in the Software without
@@ -4746,10 +4855,10 @@ window.Bitmap = Bitmap;
 * copies of the Software, and to permit persons to whom the
 * Software is furnished to do so, subject to the following
 * conditions:
-*
+* 
 * The above copyright notice and this permission notice shall be
 * included in all copies or substantial portions of the Software.
-*
+* 
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -4759,13 +4868,6 @@ window.Bitmap = Bitmap;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas
-* including a full, hierarchical display list, a core interaction model, and
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 	
@@ -4954,6 +5056,22 @@ var p = BitmapAnimation.prototype = new DisplayObject();
 	 * You should not cache Bitmap instances as it can degrade performance.
 	 * @method uncache
 	 **/
+	
+	/**
+	 * TODO: Doc.
+	 * @method play
+	 **/
+	p.play = function() {
+		this.paused = false;
+	}
+	
+	/**
+	 * TODO: Doc.
+	 * @method stop
+	 **/
+	p.stop = function() {
+		this.paused = true;
+	}
 
 	/**
 	 * Sets paused to false and plays the specified animation name, named frame, or frame number.
@@ -5013,11 +5131,12 @@ var p = BitmapAnimation.prototype = new DisplayObject();
 	 * @protected
 	 * @method _tick
 	 **/
-	p._tick = function() {
+	p._tick = function(data) {
 		var f = this._animation ? this._animation.frequency : 1;
 		if (!this.paused && ((++this._advanceCount)+this.offset)%f == 0) {
 			this.advance();
 		}
+		if (this.onTick) { this.onTick(data); }
 	}
 	
 	
@@ -5094,12 +5213,12 @@ var p = BitmapAnimation.prototype = new DisplayObject();
 	}
 
 window.BitmapAnimation = BitmapAnimation;
-}(window));/*
-* Shape by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+}(window));
+/*
+* Shape
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -5122,13 +5241,6 @@ window.BitmapAnimation = BitmapAnimation;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 
@@ -5230,11 +5342,10 @@ var p = Shape.prototype = new DisplayObject();
 
 window.Shape = Shape;
 }(window));/*
-* Text by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* Text
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -5257,13 +5368,6 @@ window.Shape = Shape;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 	
@@ -5537,17 +5641,18 @@ var p = Text.prototype = new DisplayObject();
 	 * @protected 
 	 **/
 	p._drawTextLine = function(ctx, text, y) {
-		if (this.outline) { ctx.strokeText(text, 0, y, this.maxWidth); }
-		else { ctx.fillText(text, 0, y, this.maxWidth); }
+		// Chrome 17 will fail to draw the text if the last param is included but null, so we feed it a large value instead:
+			if (this.outline) { ctx.strokeText(text, 0, y, this.maxWidth)||0xFFFF; }
+			else { ctx.fillText(text, 0, y, this.maxWidth||0xFFFF); }
+		
 	}
 
 window.Text = Text;
 }(window));/*
-* SpriteSheetUtils by Grant Skinner. Dec 5, 2010
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* SpriteSheetUtils
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -5570,14 +5675,6 @@ window.Text = Text;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 // constructor:
@@ -5677,6 +5774,9 @@ var SpriteSheetUtils = function() {
 			ctx.drawImage(src,0,0);
 			var img = new Image();
 			img.src = canvas.toDataURL("image/png");
+			// work around a strange bug in Safari:
+			img.width = src.width;
+			img.height = src.height;
 			imgs.push(img);
 		}
 		
@@ -5719,12 +5819,11 @@ var SpriteSheetUtils = function() {
 
 window.SpriteSheetUtils = SpriteSheetUtils;
 }(window));/*
-* DOMElement by Grant Skinner. Jul 8, 2011
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* DOMElement
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
-*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
 * files (the "Software"), to deal in the Software without
@@ -5733,10 +5832,10 @@ window.SpriteSheetUtils = SpriteSheetUtils;
 * copies of the Software, and to permit persons to whom the
 * Software is furnished to do so, subject to the following
 * conditions:
-*
+* 
 * The above copyright notice and this permission notice shall be
 * included in all copies or substantial portions of the Software.
-*
+* 
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -5747,12 +5846,6 @@ window.SpriteSheetUtils = SpriteSheetUtils;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas
-* including a full, hierarchical display list, a core interaction model, and
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 (function(window) {
 // TODO: fix problems with rotation.
 // TODO: exclude from getObjectsUnderPoint
@@ -5817,7 +5910,7 @@ var p = DOMElement.prototype = new DisplayObject();
 		if (htmlElement) {
 			this._style = htmlElement.style;
 			this._style.position = "absolute";
-			this._style.transformOrigin = this._style.webkitTransformOrigin = this._style.MozTransformOrigin = "0% 0%";
+			this._style.transformOrigin = this._style.webkitTransformOrigin = this._style.msTransformOrigin = this._style.MozTransformOrigin = "0% 0%";
 		}
 	}
 
@@ -5852,7 +5945,7 @@ var p = DOMElement.prototype = new DisplayObject();
 		o.style.opacity = ""+mtx.alpha;
 		// this relies on the _tick method because draw isn't called if a parent is not visible.
 		o.style.visibility = this.visible ? "visible" : "hidden";
-		o.style.transform = o.style.webkitTransform = o.style.oTransform = ["matrix("+mtx.a,mtx.b,mtx.c,mtx.d,mtx.tx,mtx.ty+")"].join(",");
+		o.style.transform = o.style.webkitTransform = o.style.oTransform =  o.style.msTransform = ["matrix("+mtx.a,mtx.b,mtx.c,mtx.d,mtx.tx,mtx.ty+")"].join(",");
 		o.style.MozTransform = ["matrix("+mtx.a,mtx.b,mtx.c,mtx.d,mtx.tx+"px",mtx.ty+"px)"].join(",");
 		return true;
 	}
@@ -5920,9 +6013,10 @@ var p = DOMElement.prototype = new DisplayObject();
 	}
 
 // private methods:
-	p._tick = function() {
+	p._tick = function(data) {
 		if (this.htmlElement == null) { return; }
 		this.htmlElement.style.visibility = "hidden";
+		if (this.onTick) { this.onTick(data); }
 	}
 
 	/* Not needed with current setup:
@@ -5937,11 +6031,10 @@ var p = DOMElement.prototype = new DisplayObject();
 	*/
 window.DOMElement = DOMElement;
 }(window));/*
-* Filter by Grant Skinner. Mar 7, 2011
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* Filter
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2010 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -5964,13 +6057,6 @@ window.DOMElement = DOMElement;
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
-
-/**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
-**/
 
 (function(window) {
 
@@ -6039,11 +6125,10 @@ var p = Filter.prototype;
 	
 window.Filter = Filter;
 }(window));/*
-* Touch by Grant Skinner. Jul 4, 2011
-* Visit http://easeljs.com/ for documentation, updates and examples.
+* BoxBlurFilter
+* Visit http://createjs.com/ for documentation, updates and examples.
 *
-*
-* Copyright (c) 2011 Grant Skinner
+* Copyright (c) 2010 gskinner.com, inc.
 * 
 * Permission is hereby granted, free of charge, to any person
 * obtaining a copy of this software and associated documentation
@@ -6067,12 +6152,563 @@ window.Filter = Filter;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
+(function(window) {
+
 /**
-* The Easel Javascript library provides a retained graphics mode for canvas 
-* including a full, hierarchical display list, a core interaction model, and 
-* helper classes to make working with Canvas much easier.
-* @module EaselJS
+* BoxBlurFilter applies a box blur to DisplayObjects
+* @class BoxBlurFilter
+* @augments Filter
+* @constructor
+* @param {Number} blurX
+* @param {Number} blurY
+* @param {Number} quality
 **/
+var BoxBlurFilter = function( blurX, blurY, quality ) {
+  this.initialize( blurX, blurY, quality );
+}
+var p = BoxBlurFilter.prototype = new Filter();
+
+// constructor:
+	/** @ignore */
+	p.initialize = function( blurX, blurY, quality ) {
+		if ( isNaN(blurX) || blurX < 0 ) blurX = 0;
+		this.blurX = blurX | 0;
+		if ( isNaN(blurY) || blurY < 0 ) blurY = 0;
+		this.blurY = blurY | 0;
+		if ( isNaN(quality) || quality < 1  ) quality = 1;
+		this.quality = quality | 0;
+	}
+
+// public properties:
+
+	/**
+	 * Horizontal blur radius
+	 * @property blurX
+	 * @type Number
+	 **/
+	p.blurX = 0;
+
+	/**
+	 * Vertical blur radius
+	 * @property blurY
+	 * @type Number
+	 **/
+	p.blurY = 0;
+
+	/**
+	 * Number of blur iterations. For example, a value of 1 will produce a rough blur.
+	 * A value of 2 will produce a smoother blur, but take twice as long to run.
+	 * @property quality
+	 * @type Number
+	 **/
+	p.quality = 1;
+
+// public methods:
+	/**
+	 * Returns a rectangle with values indicating the margins required to draw the filter.
+	 * For example, a filter that will extend the drawing area 4 pixels to the left, and 7 pixels to the right
+	 * (but no pixels up or down) would return a rectangle with (x=-4, y=0, width=11, height=0).
+	 * @method getBounds
+	 * @return {Rectangle} a rectangle object indicating the margins required to draw the filter.
+	 **/
+	p.getBounds = function() {
+		// TODO: this doesn't properly account for blur quality.
+		return new Rectangle(-this.blurX,-this.blurY,2*this.blurX,2*this.blurY);
+	}
+
+	/**
+	 * Applies the filter to the specified context.
+	 * @method applyFilter
+	 * @param ctx The 2D context to use as the source.
+	 * @param x The x position to use for the source rect.
+	 * @param y The y position to use for the source rect.
+	 * @param width The width to use for the source rect.
+	 * @param height The height to use for the source rect.
+	 * @param targetCtx Optional. The 2D context to draw the result to. Defaults to the context passed to ctx.
+	 * @param targetX Optional. The x position to draw the result to. Defaults to the value passed to x.
+	 * @param targetY Optional. The y position to draw the result to. Defaults to the value passed to y.
+	 **/
+	p.applyFilter = function(ctx, x, y, width, height, targetCtx, targetX, targetY) {
+		targetCtx = targetCtx || ctx;
+		if (targetX == null) { targetX = x; }
+		if (targetY == null) { targetY = y; }
+		try {
+			var imageData = ctx.getImageData(x, y, width, height);
+		} catch(e) {
+			//if (!this.suppressCrossDomainErrors) throw new Error("unable to access local image data: " + e);
+			return false;
+		}
+
+		var radiusX = this.blurX;
+		if ( isNaN(radiusX) || radiusX < 0 ) return false;
+		radiusX |= 0;
+
+		var radiusY = this.blurY;
+		if ( isNaN(radiusY) || radiusY < 0 ) return false;
+		radiusY |= 0;
+
+		if ( radiusX == 0 && radiusY == 0 ) return false;
+
+		var iterations = this.quality;
+		if ( isNaN(iterations) || iterations < 1  ) iterations = 1;
+		iterations |= 0;
+		if ( iterations > 3 ) iterations = 3;
+		if ( iterations < 1 ) iterations = 1;
+
+		var pixels = imageData.data;
+
+		var rsum,gsum,bsum,asum,x,y,i,p,p1,p2,yp,yi,yw;
+		var wm = width - 1;
+		var hm = height - 1;
+		var rad1x = radiusX + 1;
+		var divx = radiusX + rad1x;
+		var rad1y = radiusY + 1;
+		var divy = radiusY + rad1y;
+		var div2 = 1 / (divx * divy);
+
+		var r = [];
+		var g = [];
+		var b = [];
+		var a = [];
+
+		var vmin = [];
+		var vmax = [];
+
+		while ( iterations-- > 0 ) {
+			yw = yi = 0;
+
+			for ( y=0; y < height; y++ ){
+				rsum = pixels[yw]   * rad1x;
+				gsum = pixels[yw+1] * rad1x;
+				bsum = pixels[yw+2] * rad1x;
+				asum = pixels[yw+3] * rad1x;
+
+
+				for( i = 1; i <= radiusX; i++ ) {
+					p = yw + (((i > wm ? wm : i )) << 2 );
+					rsum += pixels[p++];
+					gsum += pixels[p++];
+					bsum += pixels[p++];
+					asum += pixels[p]
+				}
+
+				for ( x = 0; x < width; x++ ) {
+					r[yi] = rsum;
+					g[yi] = gsum;
+					b[yi] = bsum;
+					a[yi] = asum;
+
+					if(y==0){
+						vmin[x] = Math.min( x + rad1x, wm ) << 2;
+						vmax[x] = Math.max( x - radiusX, 0 ) << 2;
+					}
+
+					p1 = yw + vmin[x];
+					p2 = yw + vmax[x];
+
+					rsum += pixels[p1++] - pixels[p2++];
+					gsum += pixels[p1++] - pixels[p2++];
+					bsum += pixels[p1++] - pixels[p2++];
+					asum += pixels[p1]   - pixels[p2];
+
+					yi++;
+				}
+				yw += ( width << 2 );
+			}
+
+			for ( x = 0; x < width; x++ ) {
+				yp = x;
+				rsum = r[yp] * rad1y;
+				gsum = g[yp] * rad1y;
+				bsum = b[yp] * rad1y;
+				asum = a[yp] * rad1y;
+
+				for( i = 1; i <= radiusY; i++ ) {
+				  yp += ( i > hm ? 0 : width );
+				  rsum += r[yp];
+				  gsum += g[yp];
+				  bsum += b[yp];
+				  asum += a[yp];
+				}
+
+				yi = x << 2;
+				for ( y = 0; y < height; y++) {
+				  pixels[yi]   = (rsum * div2 + 0.5) | 0;
+				  pixels[yi+1] = (gsum * div2 + 0.5) | 0;
+				  pixels[yi+2] = (bsum * div2 + 0.5) | 0;
+				  pixels[yi+3] = (asum * div2 + 0.5) | 0;
+
+				  if( x == 0 ){
+					vmin[y] = Math.min( y + rad1y, hm ) * width;
+					vmax[y] = Math.max( y - radiusY,0 ) * width;
+				  }
+
+				  p1 = x + vmin[y];
+				  p2 = x + vmax[y];
+
+				  rsum += r[p1] - r[p2];
+				  gsum += g[p1] - g[p2];
+				  bsum += b[p1] - b[p2];
+				  asum += a[p1] - a[p2];
+
+				  yi += width << 2;
+				}
+			}
+		}
+
+		targetCtx.putImageData(imageData, targetX, targetY);
+		return true;
+	}
+
+	/**
+	 * Returns a clone of this DisplayObject. Some properties that are specific to this instance's current context are reverted to their defaults (for example .parent).
+	 **/
+	p.clone = function() {
+		return new BoxBlurFilter(this.blurX, this.blurY, this.quality);
+	}
+
+	/**
+	 * Returns a string representation of this object.
+	 **/
+	p.toString = function() {
+		return "[BoxBlurFilter (name="+  this.name +")]";
+	}
+
+// private methods:
+
+
+
+window.BoxBlurFilter = BoxBlurFilter;
+}(window));/*
+* ColorFilter
+* Visit http://createjs.com/ for documentation, updates and examples.
+*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
+* Permission is hereby granted, free of charge, to any person
+* obtaining a copy of this software and associated documentation
+* files (the "Software"), to deal in the Software without
+* restriction, including without limitation the rights to use,
+* copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the
+* Software is furnished to do so, subject to the following
+* conditions:
+* 
+* The above copyright notice and this permission notice shall be
+* included in all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+* OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+(function(window) {
+
+/**
+* Applies color transforms.
+* @class ColorFilter
+* @constructor
+* @augments Filter
+* @param {Number} redMultiplier
+* @param {Number} greenMultiplier
+* @param {Number} blueMultiplier
+* @param {Number} alphaMultiplier
+* @param {Number} redOffset
+* @param {Number} greenOffset
+* @param {Number} blueOffset
+* @param {Number} alphaOffset
+**/
+var ColorFilter = function(redMultiplier, greenMultiplier, blueMultiplier, alphaMultiplier, redOffset, greenOffset, blueOffset, alphaOffset) {
+  this.initialize(redMultiplier, greenMultiplier, blueMultiplier, alphaMultiplier, redOffset, greenOffset, blueOffset, alphaOffset);
+}
+var p = ColorFilter.prototype = new Filter();
+
+// public properties:
+	/**
+	 * Red channel multiplier.
+	 * @property redMultiplier
+	 * @type Number
+	 **/
+	p.redMultiplier = 1;
+	
+	/** 
+	 * Green channel multiplier.
+	 * @property greenMultiplier
+	 * @type Number
+	 **/
+	p.greenMultiplier = 1;
+	
+	/**
+	 * Blue channel multiplier.
+	 * @property blueMultiplier
+	 * @type Number
+	 **/
+	p.blueMultiplier = 1;
+	
+	/**
+	 * Alpha channel multiplier.
+	 * @property redMultiplier
+	 * @type Number
+	 **/
+	p.alphaMultiplier = 1;
+	
+	/**
+	 * Red channel offset (added to value).
+	 * @property redOffset
+	 * @type Number
+	 **/
+	p.redOffset = 0;
+	
+	/**
+	 * Green channel offset (added to value).
+	 * @property greenOffset
+	 * @type Number
+	 **/
+	p.greenOffset = 0;
+	
+	/**
+	 * Blue channel offset (added to value).
+	 * @property blueOffset
+	 * @type Number
+	 **/
+	p.blueOffset = 0;
+	
+	/**
+	 * Alpha channel offset (added to value).
+	 * @property alphaOffset
+	 * @type Number
+	 **/
+	p.alphaOffset = 0;
+
+// constructor:
+	/**
+	 * Initialization method.
+	 * @method initialize
+	 * @protected
+	 **/
+	p.initialize = function(redMultiplier, greenMultiplier, blueMultiplier, alphaMultiplier, redOffset, greenOffset, blueOffset, alphaOffset) {
+		this.redMultiplier = redMultiplier != null ? redMultiplier : 1;
+		this.greenMultiplier = greenMultiplier != null ? greenMultiplier : 1;
+		this.blueMultiplier = blueMultiplier != null ? blueMultiplier : 1;
+		this.alphaMultiplier = alphaMultiplier != null ? alphaMultiplier : 1;
+		this.redOffset = redOffset || 0;
+		this.greenOffset = greenOffset || 0;
+		this.blueOffset = blueOffset || 0;
+		this.alphaOffset = alphaOffset || 0;
+	}
+
+// public methods:
+	/**
+	 * Applies the filter to the specified context.
+	 * @method applyFilter
+	 * @param ctx The 2D context to use as the source.
+	 * @param x The x position to use for the source rect.
+	 * @param y The y position to use for the source rect.
+	 * @param width The width to use for the source rect.
+	 * @param height The height to use for the source rect.
+	 * @param targetCtx Optional. The 2D context to draw the result to. Defaults to the context passed to ctx.
+	 * @param targetX Optional. The x position to draw the result to. Defaults to the value passed to x.
+	 * @param targetY Optional. The y position to draw the result to. Defaults to the value passed to y.
+	 **/
+	p.applyFilter = function(ctx, x, y, width, height, targetCtx, targetX, targetY) {
+		targetCtx = targetCtx || ctx;
+		if (targetX == null) { targetX = x; }
+		if (targetY == null) { targetY = y; }
+		try {
+			var imageData = ctx.getImageData(x, y, width, height);
+		} catch(e) {
+			//if (!this.suppressCrossDomainErrors) throw new Error("unable to access local image data: " + e);
+			return false;
+		}
+		var data = imageData.data;
+		var l = data.length;
+		for (var i=0; i<l; i+=4) {
+			data[i] = data[i]*this.redMultiplier+this.redOffset;
+			data[i+1] = data[i+1]*this.greenMultiplier+this.greenOffset;
+			data[i+2] = data[i+2]*this.blueMultiplier+this.blueOffset;
+			data[i+3] = data[i+3]*this.alphaMultiplier+this.alphaOffset;
+		}
+		imageData.data = data;
+		targetCtx.putImageData(imageData, targetX, targetY);
+		return true;
+	}
+
+	/**
+	 * Returns a string representation of this object.
+	 * @method toString
+	 * @return {String} a string representation of the instance.
+	 **/
+	p.toString = function() {
+		return "[ColorFilter]";
+	}
+
+
+	/**
+	 * Returns a clone of this ColorFilter instance.
+	 * @method clone
+	 @return {ColorFilter} A clone of the current ColorFilter instance.
+	 **/
+	p.clone = function() {
+		return new ColorFilter(this.redMultiplier, this.greenMultiplier, this.blueMultiplier, this.alphaMultiplier, this.redOffset, this.greenOffset, this.blueOffset, this.alphaOffset);
+	}
+
+window.ColorFilter = ColorFilter;
+}(window));/*
+* ColorMatrixFilter
+* Visit http://createjs.com/ for documentation, updates and examples.
+*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
+* Permission is hereby granted, free of charge, to any person
+* obtaining a copy of this software and associated documentation
+* files (the "Software"), to deal in the Software without
+* restriction, including without limitation the rights to use,
+* copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the
+* Software is furnished to do so, subject to the following
+* conditions:
+* 
+* The above copyright notice and this permission notice shall be
+* included in all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+* OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+(function(window) {
+
+/**
+* Applies color transforms.
+* @class ColorMatrixFilter
+* @constructor
+* @augments Filter
+* @param {Number} blurX
+**/
+var ColorMatrixFilter = function(matrix) {
+  this.initialize(matrix);
+}
+var p = ColorMatrixFilter.prototype = new Filter();
+
+// public properties:
+	p.matrix = null;
+	
+// constructor:
+	// TODO: detailed docs.
+	/** 
+	 * Allows you to carry out complex color operations such as modifying saturation, brightness, or inverting.
+	 * @method initialize
+	 * @protected
+	 * @param matrix A 4x5 matrix describing the color operation to perform.
+	 **/
+	p.initialize = function(matrix) {
+		this.matrix = matrix;
+	}
+	
+// public methods:
+	/**
+	 * Applies the filter to the specified context.
+	 * @method applyFilter
+	 * @param ctx The 2D context to use as the source.
+	 * @param x The x position to use for the source rect.
+	 * @param y The y position to use for the source rect.
+	 * @param width The width to use for the source rect.
+	 * @param height The height to use for the source rect.
+	 * @param targetCtx Optional. The 2D context to draw the result to. Defaults to the context passed to ctx.
+	 * @param targetX Optional. The x position to draw the result to. Defaults to the value passed to x.
+	 * @param targetY Optional. The y position to draw the result to. Defaults to the value passed to y.
+	 **/
+	p.applyFilter = function(ctx, x, y, width, height, targetCtx, targetX, targetY) {
+		targetCtx = targetCtx || ctx;
+		if (targetX == null) { targetX = x; }
+		if (targetY == null) { targetY = y; }
+		try {
+			var imageData = ctx.getImageData(x, y, width, height);
+		} catch(e) {
+			//if (!this.suppressCrossDomainErrors) throw new Error("unable to access local image data: " + e);
+			return false;
+		}
+		var data = imageData.data;
+		var l = data.length;
+		var r,g,b,a;
+		var mtx = this.matrix;
+		var m0 =  mtx[0],  m1 =  mtx[1],  m2 =  mtx[2],  m3 =  mtx[3],  m4 =  mtx[4];
+		var m5 =  mtx[5],  m6 =  mtx[6],  m7 =  mtx[7],  m8 =  mtx[8],  m9 =  mtx[9];
+		var m10 = mtx[10], m11 = mtx[11], m12 = mtx[12], m13 = mtx[13], m14 = mtx[14];
+		var m15 = mtx[15], m16 = mtx[16], m17 = mtx[17], m18 = mtx[18], m19 = mtx[19];
+		
+		for (var i=0; i<l; i+=4) {
+			r = data[i];
+			g = data[i+1];
+			b = data[i+2];
+			a = data[i+3];
+			data[i] = r*m0+g*m1+b*m2+a*m3+m4; // red
+			data[i+1] = r*m5+g*m6+b*m7+a*m8+m9; // green
+			data[i+2] = r*m10+g*m11+b*m12+a*m13+m14; // blue
+			data[i+3] = r*m15+g*m16+b*m17+a*m18+m19; // alpha
+		}
+		imageData.data = data;
+		targetCtx.putImageData(imageData, targetX, targetY);
+		return true;
+	}
+
+	/**
+	 * Returns a string representation of this object.
+	 * @method toString
+	 * @return {String} a string representation of the instance.
+	 **/
+	p.toString = function() {
+		return "[ColorMatrixFilter]";
+	}
+	
+	
+	/**
+	 * Returns a clone of this ColorMatrixFilter instance.
+	 * @method clone
+	 @return {ColorMatrixFilter} A clone of the current ColorMatrixFilter instance.
+	 **/
+	p.clone = function() {
+		return new ColorMatrixFilter(this.matrix);
+	}
+	
+window.ColorMatrixFilter = ColorMatrixFilter;
+}(window));/*
+* Touch
+* Visit http://createjs.com/ for documentation, updates and examples.
+*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
+* Permission is hereby granted, free of charge, to any person
+* obtaining a copy of this software and associated documentation
+* files (the "Software"), to deal in the Software without
+* restriction, including without limitation the rights to use,
+* copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the
+* Software is furnished to do so, subject to the following
+* conditions:
+* 
+* The above copyright notice and this permission notice shall be
+* included in all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+* OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 
 (function(window) {

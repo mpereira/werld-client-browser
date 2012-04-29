@@ -1,11 +1,36 @@
-Werld.Views.Tile = Backbone.View.extend({
-  draw: function(coordinates, offset) {
-    Werld.canvas.context.drawImage(
-      Werld.canvas.textures.tiles[this.model.get('type')],
-      coordinates[0] - offset[0],
-      coordinates[1] - offset[1],
-      Werld.Config.PIXELS_PER_TILE,
-      Werld.Config.PIXELS_PER_TILE
-    );
+Werld.Views.Tile = Werld.Views.Base.Container.extend({
+  initialize: function() {
+    Werld.Views.Tile.__super__.initialize.call(this);
+
+    _.bindAll(this);
+
+    this.model.bind('change', this.onModelChange);
+
+    this.bitmap =
+      new Bitmap(Werld.canvas.textures.tiles[this.model.get('type')]);
+    this.bitmap.onPress = this.onBitmapPress;
+    this.container.addChild(this.bitmap);
+  },
+  onBitmapPress: function(event) {
+    Werld.character.move(_(this.model.get('coordinates')).map(Werld.Utils.Geometry.pixelsToTiles));
+  },
+  onModelChange: function(event) {
+    this.container.x = this.model.get('onScreenCoordinates')[0];
+    this.container.y = this.model.get('onScreenCoordinates')[1];
+  },
+  hide: function() {
+    this.container.visible = false;
+  },
+  unhide: function() {
+    this.container.visible = true;
+  },
+  handleItemDrop: function(item) {
+    if (Werld.character.tileDistance(this.model) <= 1) {
+      item.collection.remove(item);
+      this.model.items.add(item);
+      return(true);
+    } else {
+      return(false);
+    }
   }
 });

@@ -1,95 +1,131 @@
 Werld.Views.Base.Creature = Backbone.View.extend({
   initialize: function() {
+    _.bindAll(this);
+
     this.container = new Container();
+    this.container.view = this;
+
+    // TODO: find a better place to pass the main character to the view.
+    this.lootContainerView = new Werld.Views.LootContainer({
+      model: this.model.lootContainer,
+      character: Werld.character
+    });
+
+    // TODO: load images asynchronously when the game starts, not inside views.
+    var SPRITE = this.model.get('SPRITE');
     var image = new Image();
-    image.src = this.model.get('SPRITE').SRC;
+    image.src = SPRITE.SRC;
     image.onload = _.bind(function() {
-      var spriteSheet = new SpriteSheet({
+      this.spriteSheet = new SpriteSheet({
         images: [image],
-        frames: { width: 40, height: 40 },
+        frames: {
+          width: SPRITE.DIMENSIONS[0],
+          height: SPRITE.DIMENSIONS[1],
+          regX: (SPRITE.DIMENSIONS[0] - Werld.Config.PIXELS_PER_TILE) / 2,
+          regY: (1.7 * SPRITE.DIMENSIONS[1] - Werld.Config.PIXELS_PER_TILE) / 2
+        },
         animations: {
-          walkDown:  [0, 3],
-          walkLeft:  [4, 7],
-          walkRight: [8, 11],
-          walkUp:    [12, 15]
+          walkDown:  [0,  3,  true, 1 / SPRITE.FREQUENCY],
+          walkLeft:  [4,  7,  true, 1 / SPRITE.FREQUENCY],
+          walkRight: [8,  11, true, 1 / SPRITE.FREQUENCY],
+          walkUp:    [12, 15, true, 1 / SPRITE.FREQUENCY]
         }
       });
 
-      this.bitmapAnimation = new BitmapAnimation(spriteSheet);
+      this.bitmapAnimation = new BitmapAnimation(this.spriteSheet);
       this.bitmapAnimation.currentFrame = 0;
-      this.bitmapAnimation.mouseEnabled = true;
-      this.bitmapAnimation.paused = true;
-      this.bitmapAnimation.onMouseOver = function() {
-        this.parent.getStage().canvas.style.cursor = 'pointer';
-      };
-      this.bitmapAnimation.onMouseOut = function() {
-        this.parent.getStage().canvas.style.cursor = '';
-      };
-      var self = this;
-      this.bitmapAnimation.onPress = function(event) {
-        if (self.model.alive()) {
-          Werld.character.attack(self.model);
-        } else {
-          self.showLoot(self.model.loot());
-        }
-      };
-      this.bitmapAnimation.tick = _.bind(this.bitmapAnimationTick, this);
+      this.bitmapAnimation.onMouseOver = this.onBitmapAnimationMouseOver;
+      this.bitmapAnimation.onMouseOut = this.onBitmapAnimationMouseOut;
+      this.bitmapAnimation.onDoubleClick = this.onBitmapAnimationDoubleClick;
 
-      this.characterNameText = new Text();
-      this.characterNameText.tick = _.bind(this.characterNameTextTick, this);
+      this.nameText = new Text();
+      this.updateCreatureName();
 
       this.messagesContainer = new Container();
-      this.messagesContainer.tick = _.bind(this.messagesContainerTick, this);
-
-      this.container.tick = _.bind(this.tick, this);
+      // FIXME: only call the message updating callback on 'change:messages'.
+      this.messagesContainer.onTick = this.messagesContainerTick;
 
       this.container.addChild(this.bitmapAnimation);
-      this.container.addChild(this.characterNameText);
+      this.container.addChild(this.nameText);
       this.container.addChild(this.messagesContainer);
+
+      this.updateContainerOnScreenCoordinates();
+
+      this.model.on('destroy', this.onModelDestroy);
+      this.model.on('change:status', this.updateCreatureName);
+      this.model.on('death', this.pauseBitmapAnimation);
+      this.model.on('idle', this.pauseBitmapAnimation);
+      this.model.on('change:coordinates', this.updateBitmapAnimation);
+      this.model.on('change:coordinates', this.updateContainerOnScreenCoordinates);
     }, this);
   },
+  updateContainerOnScreenCoordinates: function() {
+    var onScreenCoordinates =
+      Werld.screen.objectCoordinates(this.model);
+
+    this.container.x = onScreenCoordinates[0];
+    this.container.y = onScreenCoordinates[1];
+  },
+  onBitmapAnimationMouseOver: function(event) {
+    Werld.canvas.el.style.cursor = 'pointer';
+  },
+  onBitmapAnimationMouseOut: function(event) {
+    Werld.canvas.el.style.cursor = '';
+  },
+  onBitmapAnimationDoubleClick: function(event) {
+    if (this.model.alive()) {
+      Werld.character.attack(this.model);
+    } else {
+      if (Werld.character.tileDistance(this.model) <= 1) {
+        this.showLoot();
+      }
+    }
+  },
   showLoot: function() {
+    this.lootContainerView.show();
   },
-  bitmapAnimationTick: function() {
-    var modelCoordinates = this.model.get('coordinates');
-    var modelDestinationCoordinates = this.model.get('destination');
-    var gotoThrottle = Ticker.getTicks() % 4;
-    var advanceThrottle = Ticker.getTicks() % 8;
-    var walking = [];
+  pauseBitmapAnimation: function(creature) {
+    this.bitmapAnimation.currentAnimationFrame = 0;
+    this.bitmapAnimation.paused = true;
+  },
+  updateBitmapAnimation: function(creature) {
+    this.bitmapAnimation.paused = false;
 
-    if (gotoThrottle === 0) {
-      if (modelCoordinates[0] > modelDestinationCoordinates[0]) {
-        this.bitmapAnimation.gotoAndStop('walkLeft');
-        walking[0] = true;
-      } else if (modelCoordinates[0] < modelDestinationCoordinates[0]) {
-        this.bitmapAnimation.gotoAndStop('walkRight');
-        walking[0] = true;
-      } else {
-        walking[0] = false;
+    // If the creature is moving diagonally give precedence to vertical
+    // animations (i.e. "walkDown" and "walkUp") because we don't have diagonal
+    // animations.
+    if (this.model.get('coordinates')[1] > this.model.previous('coordinates')[1]) {
+      if (this.bitmapAnimation.currentAnimation !== 'walkDown') {
+        this.bitmapAnimation.gotoAndPlay('walkDown');
       }
-
-      if (modelCoordinates[1] > modelDestinationCoordinates[1]) {
-        this.bitmapAnimation.gotoAndStop('walkUp');
-        walking[1] = true;
-      } else if (modelCoordinates[1] < modelDestinationCoordinates[1]) {
-        this.bitmapAnimation.gotoAndStop('walkDown');
-        walking[1] = true;
-      } else {
-        walking[1] = false;
+    } else if (this.model.get('coordinates')[1] < this.model.previous('coordinates')[1]) {
+      if (this.bitmapAnimation.currentAnimation !== 'walkUp') {
+        this.bitmapAnimation.gotoAndPlay('walkUp');
+      }
+    } else {
+      if (this.model.get('coordinates')[0] > this.model.previous('coordinates')[0]) {
+        if (this.bitmapAnimation.currentAnimation !== 'walkRight') {
+          this.bitmapAnimation.gotoAndPlay('walkRight');
+        }
+      } else if (this.model.get('coordinates')[0] < this.model.previous('coordinates')[0]) {
+        if (this.bitmapAnimation.currentAnimation !== 'walkLeft') {
+          this.bitmapAnimation.gotoAndPlay('walkLeft');
+        }
       }
     }
-
-    if ((walking[0] || walking[1]) && advanceThrottle === 0) {
-      this.bitmapAnimation.advance();
-    }
   },
-  characterNameTextTick: function() {
-    this.characterNameText.text = this._characterNameText();
+  updateCreatureName: function() {
+    this.nameText.text = this.nameTextText();
+    this.nameText.font = this.nameTextFont;
+    this.nameText.color = this.nameTextColor;
+    if (this.nameTextShadow) {
+      this.nameText.shadow = this.nameTextShadow;
+    }
 
-    this.characterNameText.textBaseline = 'top';
-    this.characterNameText.textAlign = 'center';
-    this.characterNameText.x = 20;
-    this.characterNameText.y = -30;
+    this.nameText.textBaseline = 'top';
+    this.nameText.textAlign = 'center';
+    this.nameText.x = 20;
+    this.nameText.y = - (this.spriteSheet._regY + 28);
   },
   messagesContainerTick: function() {
     var temporaryCreatureScreenCoordinates = [0, 0];
@@ -123,34 +159,9 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       }
     });
   },
-  tick: function() {
-    var modelCoordinates = this.model.get('coordinates');
-    var fixedModelCoordinates = this.model.get('fixedCoordinates');
-    var modelDestinationCoordinates = this.model.get('destination');
-    var screenCoordinates = Werld.screen.get('coordinates');
-    var mapDimensions = Werld.map.get('dimensions');
-    var creatureScreenCoordinates;
-
-    if (modelCoordinates[0] >= 0 &&
-          modelCoordinates[0] < Werld.util.tileToPixel(mapDimensions[0]) &&
-          modelCoordinates[1] >= 0 &&
-          modelCoordinates[1] < Werld.util.tileToPixel(mapDimensions[1])) {
-      if (this.model.get('fixed')) {
-        creatureScreenCoordinates = [
-          fixedModelCoordinates[0],
-          fixedModelCoordinates[1]
-        ];
-      } else {
-        creatureScreenCoordinates = [
-          modelCoordinates[0] - screenCoordinates[0],
-          modelCoordinates[1] - screenCoordinates[1]
-        ];
-      }
-    } else {
-      return;
-    }
-
-    this.container.x = creatureScreenCoordinates[0];
-    this.container.y = creatureScreenCoordinates[1];
+  onModelDestroy: function() {
+    this.container.parent.removeChild(this.container);
+    delete this.bitmapAnimation.onMouseOver;
+    delete this.bitmapAnimation.onMouseOut;
   }
 });

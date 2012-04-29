@@ -1,6 +1,8 @@
 Werld.Views.CharacterStatInputs = Backbone.View.extend({
   el: '#character-stat-inputs-wrapper',
   initialize: function() {
+    _.bindAll(this);
+
     $(this.el).css('width', this.options.width);
     $(this.el).css('height', this.options.height);
 
