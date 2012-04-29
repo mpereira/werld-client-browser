@@ -117,36 +117,36 @@ var Werld = {
 
         var silverBatSpawner = new Werld.Models.CreatureSpawner({
           creature: Werld.CREATURES.SILVER_BAT,
-          coordinates: [4, 4],
-          radius: 3,
+          tileCoordinates: [4, 4],
+          tileRadius: 3,
           numberOfCreatures: 3
         });
 
         var whiteWolfSpawner = new Werld.Models.CreatureSpawner({
           creature: Werld.CREATURES.WHITE_WOLF,
-          coordinates: [15, 10],
-          radius: 4,
+          tileCoordinates: [15, 10],
+          tileRadius: 4,
           numberOfCreatures: 2
         });
 
         var fireWolfSpawner = new Werld.Models.CreatureSpawner({
           creature: Werld.CREATURES.FIRE_WOLF,
-          coordinates: [15, 15],
-          radius: 4,
+          tileCoordinates: [15, 15],
+          tileRadius: 4,
           numberOfCreatures: 2
         });
 
         var leviathanSpawner = new Werld.Models.CreatureSpawner({
           creature: Werld.CREATURES.LEVIATHAN,
-          coordinates: [4, 15],
-          radius: 4,
+          tileCoordinates: [4, 15],
+          tileRadius: 4,
           numberOfCreatures: 1
         });
 
         var blueDragonSpawner = new Werld.Models.CreatureSpawner({
           creature: Werld.CREATURES.BLUE_DRAGON,
-          coordinates: [4, 10],
-          radius: 4,
+          tileCoordinates: [4, 10],
+          tileRadius: 4,
           numberOfCreatures: 1
         });
 

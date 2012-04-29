@@ -11,7 +11,7 @@ Werld.Utils.Geometry = {
     return(_(tilePoint).map(this.tilesToPixels));
   },
   pixelPointToTilePoint: function(pixelPoint) {
-    return(_(pixelPoint).map(this.tilesToPixels));
+    return(_(pixelPoint).map(this.pixelsToTiles));
   },
   pixelDistance: function(a, b) {
     return(Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2)));
@@ -66,19 +66,52 @@ Werld.Utils.Interval = {
 };
 
 Werld.Utils.Circle = function(params) {
-  this.center = params.center;
-  this.radius = params.radius;
+  if (!params.center || !params.radius) {
+    throw new Error('Circle must be initialized with a center point and a radius');
+  }
 
-  this.randomTile = function() {
+  params.measurement || (params.measurement = 'pixels');
+
+  if (params.measurement === 'pixels') {
+    this.center = params.center;
+    this.radius = params.radius;
+  } else if (params.measurement === 'tiles') {
+    this.center = Werld.Utils.Geometry.tilePointToPixelPoint(params.center);
+    this.radius = Werld.Utils.Geometry.tilesToPixels(params.radius);
+  } else {
+    throw new Error('Unknown measurement ' + this.measurement + ' for Circle');
+  }
+
+  this.pixelPointWithinArea = function(pixelPoint) {
+    return(
+      Werld.Utils.Geometry.pixelDistance(this.center, pixelPoint) <= this.radius);
+  };
+
+  this.tilePointWithinArea = function(tilePoint) {
+    return(
+      this.pixelPointWithinArea(
+        Werld.Utils.Geometry.tilePointToPixelPoint(tilePoint)
+      )
+    );
+  };
+
+  this.randomTilePoint = function() {
+    var randomPixelPoint = this.randomPixelPoint();
+
+    return(_(randomPixelPoint).map(function(pixels) {
+      return(Werld.Utils.Geometry.pixelsToTiles(
+        pixels - (pixels % Werld.Config.PIXELS_PER_TILE)
+      ));
+    }));
+  };
+
+  this.randomPixelPoint = function() {
     var randomAngle = Math.random() * 2 * Math.PI;
     var randomRadius = Math.random() * this.radius;
-    var rawCoordinates = [
+
+    return([
       this.center[0] + randomRadius * Math.cos(randomAngle),
       this.center[1] + randomRadius * Math.sin(randomAngle)
-    ];
-
-    return(_(rawCoordinates).map(function(coordinate) {
-      return(coordinate - (coordinate % Werld.Config.PIXELS_PER_TILE));
-    }));
+    ]);
   };
 };

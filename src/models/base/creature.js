@@ -69,6 +69,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     });
     this.set({ messages: messages });
   },
+  tileCoordinates: function() {
+    return(Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates')));
+  },
   move: function(destinationTile) {
     if (this.get('following')) {
       this.stopFollowing(this.get('following'));
@@ -96,7 +99,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
 
     this.set({
-      destination: _(destinationTile).map(Werld.Utils.Geometry.tilesToPixels)
+      destination: Werld.Utils.Geometry.tilePointToPixelPoint(destinationTile)
     });
   },
   movementHandler: function() {
@@ -404,5 +407,19 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       this.items.add(item);
       return(true);
     }
+  },
+  adjacentTilePoints: function() {
+    var tileCoordinates = this.tileCoordinates();
+
+    return(_([
+      [-1, -1], [-1, 0], [-1, 1],
+      [0, -1], [0, 1],
+      [1, -1], [1, 0], [1, 1]
+    ]).reduce(function(memo, adjacentTileCoordinateOffset) {
+      return(memo.concat([[
+        tileCoordinates[0] + adjacentTileCoordinateOffset[0],
+        tileCoordinates[1] + adjacentTileCoordinateOffset[1]
+      ]]));
+    }, []));
   }
 });

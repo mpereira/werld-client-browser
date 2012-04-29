@@ -87,7 +87,7 @@ Werld.CREATURES = {
   },
   LEVIATHAN: {
     name: 'a leviathan',
-    MOVEMENT_SPEED: 1.5,
+    MOVEMENT_SPEED: 1,
     stats: {
       strength: 100,
       dexterity: 100,
@@ -111,7 +111,7 @@ Werld.CREATURES = {
   },
   BLUE_DRAGON: {
     name: 'a blue dragon',
-    MOVEMENT_SPEED: 1.5,
+    MOVEMENT_SPEED: 1,
     stats: {
       strength: 200,
       dexterity: 200,
