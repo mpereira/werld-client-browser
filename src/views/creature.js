@@ -1,4 +1,7 @@
 Werld.Views.Creature = Werld.Views.Base.Creature.extend({
+  nameTextFont: '16px "PowellAntique" serif',
+  nameTextColor: '#cccccc',
+  nameTextShadow: new Shadow('black', 1, 1, 1),
   initialize: function() {
     Werld.Views.Creature.__super__.initialize.call(this);
 
@@ -25,12 +28,7 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
       this.updateContainerOnScreenCoordinates
     );
   },
-  characterNameTextTick: function() {
-    Werld.Views.Character.__super__.characterNameTextTick.call(this);
-    this.characterNameText.color = '#cccccc';
-    this.characterNameText.font = '16px "PowellAntique" serif';
-  },
-  _characterNameText: function() {
+  nameTextText: function() {
     if (this.model.alive()) {
       return(this.model.get('name'));
     } else {

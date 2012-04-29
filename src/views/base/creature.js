@@ -38,7 +38,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       this.bitmapAnimation.onMouseOut = this.onBitmapAnimationMouseOut;
       this.bitmapAnimation.onDoubleClick = this.onBitmapAnimationDoubleClick;
 
-      this.characterNameText = new Text();
+      this.nameText = new Text();
       this.updateCreatureName();
 
       this.messagesContainer = new Container();
@@ -46,7 +46,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       this.messagesContainer.onTick = this.messagesContainerTick;
 
       this.container.addChild(this.bitmapAnimation);
-      this.container.addChild(this.characterNameText);
+      this.container.addChild(this.nameText);
       this.container.addChild(this.messagesContainer);
 
       this.updateContainerOnScreenCoordinates();
@@ -115,13 +115,17 @@ Werld.Views.Base.Creature = Backbone.View.extend({
     }
   },
   updateCreatureName: function() {
-    this.characterNameText.text = this._characterNameText();
+    this.nameText.text = this.nameTextText();
+    this.nameText.font = this.nameTextFont;
+    this.nameText.color = this.nameTextColor;
+    if (this.nameTextShadow) {
+      this.nameText.shadow = this.nameTextShadow;
+    }
 
-    this.characterNameText.color = '#cccccc';
-    this.characterNameText.textBaseline = 'top';
-    this.characterNameText.textAlign = 'center';
-    this.characterNameText.x = 20;
-    this.characterNameText.y = - (this.spriteSheet._regY + 28);
+    this.nameText.textBaseline = 'top';
+    this.nameText.textAlign = 'center';
+    this.nameText.x = 20;
+    this.nameText.y = - (this.spriteSheet._regY + 28);
   },
   messagesContainerTick: function() {
     var temporaryCreatureScreenCoordinates = [0, 0];
