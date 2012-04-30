@@ -24,15 +24,20 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
     });
 
     this.creatures.on('add', function(creature) {
-      spawner.moveRandomlyWithinSpawnArea(creature);
+      spawner.spawnAreaMovementHandler(creature);
     });
   },
-  moveRandomlyWithinSpawnArea: function(creature) {
+  spawnAreaMovementHandler: function(creature) {
     var timeRange = this.get('randomMovementWithinSpawnAreaTimeRange');
     var time = Werld.Utils.Math.randomIntegerBetween(timeRange);
     var spawner = this;
 
     _(function() {
+      // Stop recursing if creature is dead.
+      if (creature.dead()) {
+        return;
+      }
+
       if (creature.state() === creature.states.idle) {
         var randomAdjacentTilePointWithinSpawnArea =
           spawner.randomAdjacentTilePointWithinSpawnArea(creature)
@@ -46,7 +51,7 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
         }
       }
 
-      spawner.moveRandomlyWithinSpawnArea(creature);
+      spawner.spawnAreaMovementHandler(creature);
     }).delay(time);
   },
   adjacentTilePointCloserToSpawnArea: function(creature) {
