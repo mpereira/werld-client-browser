@@ -85,6 +85,23 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       destination: Werld.Utils.Geometry.tilePointToPixelPoint(destinationTile)
     });
   },
+  states: {
+    attacking: 'attacking',
+    beingAttacked: 'beingAttacked',
+    following: 'following',
+    idle: 'idle'
+  },
+  state: function() {
+    if (this.has('attacking')) {
+      return(this.states.attacking);
+    } else if (this.has('attacker')) {
+      return(this.states.beingAttacked);
+    } else if (this.has('following')) {
+      return(this.states.following);
+    } else {
+      return(this.states.idle);
+    }
+  },
   movementHandler: function() {
     // If we're following something, update our "destination" with their
     // "coordinates" unless they're already equal.
@@ -255,7 +272,12 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
 
     return(
-      Werld.Utils.Geometry.tileDistance(this.coordinates(), thing.coordinates())
+      Werld.Utils.Geometry.pixelsToTiles(
+        Werld.Utils.Geometry.pixelDistance(
+          this.coordinates(),
+          thing.coordinates()
+        )
+      )
     );
   },
   // There's probably a way to accomplish this without polling. Maybe put the
