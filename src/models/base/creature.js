@@ -42,24 +42,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.lootContainer = new Werld.Models.LootContainer({ owner: this });
 
-    this.installIntervalFunctions();
-  },
-  installIntervalFunctions: function() {
-    var self = this;
-    _.chain(this.intervalFunctionNamesWithIntervals).keys().each(function(key) {
-      Werld.Utils.Interval.set(
-        self,
-        self[key + 'IntervalId'],
-        self[key],
-        self.intervalFunctionNamesWithIntervals[key]
-      );
-    });
-  },
-  uninstallIntervalFunctions: function() {
-    var self = this;
-    _.chain(this.intervalFunctionNamesWithIntervals).keys().each(function(key) {
-      Werld.Utils.Interval.clear(self, self[key + 'IntervalId']);
-    });
+    Werld.Utils.Interval.install(this.intervalFunctionNamesWithIntervals, this);
   },
   say: function(message) {
     var messages = this.get('messages');
@@ -392,7 +375,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   destroy: function() {
     this.trigger('destroy', this);
-    this.uninstallIntervalFunctions();
+    Werld.Utils.Interval.uninstall(this.intervalFunctionNamesWithIntervals, this);
   },
   getItem: function(item) {
     var creatureItem = this.items.find(function(collectionItem) {

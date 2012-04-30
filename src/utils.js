@@ -62,6 +62,21 @@ Werld.Utils.Interval = {
   clear: function(context, intervalIdName) {
     clearInterval(context[intervalIdName]);
     context[intervalIdName] = null;
+  },
+  install: function(intervalFunctionNamesWithIntervals, context) {
+    _.chain(intervalFunctionNamesWithIntervals).keys().each(function(key) {
+      Werld.Utils.Interval.set(
+        context,
+        context[key + 'IntervalId'],
+        context[key],
+        context.intervalFunctionNamesWithIntervals[key]
+      );
+    });
+  },
+  uninstall: function(intervalFunctionNamesWithIntervals, context) {
+    _.chain(intervalFunctionNamesWithIntervals).keys().each(function(key) {
+      Werld.Utils.Interval.clear(context, context[key + 'IntervalId']);
+    });
   }
 };
 
