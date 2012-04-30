@@ -54,13 +54,9 @@ module.exports = function(grunt) {
         files: '<config:lint.scripts>',
         tasks: 'lint:scripts'
       },
-      libs: {
-        files: '<config:meta.libs>',
-        tasks: 'min:libs'
-      },
       src: {
         files: '<config:meta.src>',
-        tasks: 'lint:src min:src'
+        tasks: 'lint:src'
       },
       ejs: {
         files: 'templates/**/*.ejs',
