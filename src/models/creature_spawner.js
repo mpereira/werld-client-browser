@@ -40,7 +40,7 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
 
       if (creature.state() === creature.states.idle) {
         var randomAdjacentTilePointWithinSpawnArea =
-          spawner.randomAdjacentTilePointWithinSpawnArea(creature)
+          spawner.randomAdjacentTilePointWithinSpawnArea(creature);
 
         // This means the creature either inside the spawn area or at least
         // tangential to the spawn area's bounds.
@@ -88,7 +88,8 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
       )
     }).extend(this.get('creature')));
 
-    creature.on('change:status', this.onCreatureStatusChange);
+    creature.on('death', this.scheduleCreatureDestroy);
+    creature.on('death', this.scheduleAddCreature);
     creature.on('destroy', this.onCreatureDestroy);
     this.creatures.add(creature);
   },
@@ -97,11 +98,11 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
       this.addCreature();
     }
   },
-  onCreatureStatusChange: function(creature) {
-    if (creature.dead()) {
-      _(creature.destroy).delay(this.get('corpseDecayTime'));
-      _(this.addCreature).delay(this.get('respawnTime'));
-    }
+  scheduleCreatureDestroy: function(creature) {
+    _(creature.destroy).delay(this.get('corpseDecayTime'));
+  },
+  scheduleAddCreature: function(creature) {
+    _(this.addCreature).delay(this.get('respawnTime'));
   },
   onCreatureDestroy: function(creature) {
     this.creatures.remove(creature);

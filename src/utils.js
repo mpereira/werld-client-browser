@@ -67,15 +67,15 @@ Werld.Utils.Interval = {
     _.chain(intervalFunctionNamesWithIntervals).keys().each(function(key) {
       Werld.Utils.Interval.set(
         context,
-        context[key + 'IntervalId'],
+        key + 'IntervalId',
         context[key],
-        context.intervalFunctionNamesWithIntervals[key]
+        intervalFunctionNamesWithIntervals[key]
       );
     });
   },
   uninstall: function(intervalFunctionNamesWithIntervals, context) {
     _.chain(intervalFunctionNamesWithIntervals).keys().each(function(key) {
-      Werld.Utils.Interval.clear(context, context[key + 'IntervalId']);
+      Werld.Utils.Interval.clear(context, key + 'IntervalId');
     });
   }
 };
@@ -110,16 +110,6 @@ Werld.Utils.Circle = function(params) {
     );
   };
 
-  this.randomTilePoint = function() {
-    var randomPixelPoint = this.randomPixelPoint();
-
-    return(_(randomPixelPoint).map(function(pixels) {
-      return(Werld.Utils.Geometry.pixelsToTiles(
-        pixels - (pixels % Werld.Config.PIXELS_PER_TILE)
-      ));
-    }));
-  };
-
   this.randomPixelPoint = function() {
     var randomAngle = Math.random() * 2 * Math.PI;
     var randomRadius = Math.random() * this.radius;
@@ -128,5 +118,15 @@ Werld.Utils.Circle = function(params) {
       this.center[0] + randomRadius * Math.cos(randomAngle),
       this.center[1] + randomRadius * Math.sin(randomAngle)
     ]);
+  };
+
+  this.randomTilePoint = function() {
+    var randomPixelPoint = this.randomPixelPoint();
+
+    return(_(randomPixelPoint).map(function(pixels) {
+      return(Werld.Utils.Geometry.pixelsToTiles(
+        pixels - (pixels % Werld.Config.PIXELS_PER_TILE)
+      ));
+    }));
   };
 };

@@ -17,7 +17,12 @@ module.exports = function(grunt) {
         'vendor/javascripts/backbone-*.js',
         'vendor/javascripts/easel-*.js'
       ],
-      src: ['src/**/*.js'],
+      src: [
+        'src/werld.js',
+        'src/collections/creatures.js',
+        'src/collections/threateners.js',
+        'src/**/*.js'
+      ],
       stylesheets: ['assets/stylesheets/**/*.less']
     },
     lint: {

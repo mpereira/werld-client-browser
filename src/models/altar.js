@@ -17,7 +17,8 @@ Werld.Models.Altar = Backbone.Model.extend({
   characterResurrectionObserver: function() {
     if (Werld.character.tileDistance(this) <= 1) {
       if (Werld.character.dead()) {
-        Werld.character.resurrect();
+        // TODO: Improve the external resurrection interface.
+        Werld.character.set('hitPoints', 1);
       }
     }
   }

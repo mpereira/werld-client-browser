@@ -1,10 +1,11 @@
 Werld.Models.Base.Creature = Backbone.Model.extend({
-  defaults: {
-    lastAttackAt: Number.NEGATIVE_INFINITY,
-    aggressivenessRadius: Werld.Config.AGGRESSIVENESS_RADIUS,
-    hitPointRenegerationRate: Werld.Config.REGENERATION_RATE,
-    manaRenegerationRate: Werld.Config.REGENERATION_RATE,
-    staminaRenegerationRate: Werld.Config.REGENERATION_RATE
+  defaults: function() {
+    return({
+      lastAttackAt: Number.NEGATIVE_INFINITY,
+      hitPointRenegerationRate: Werld.Config.REGENERATION_RATE,
+      manaRenegerationRate: Werld.Config.REGENERATION_RATE,
+      staminaRenegerationRate: Werld.Config.REGENERATION_RATE
+    });
   },
   initialize: function(attributes, options) {
     _.bindAll(this);
@@ -15,42 +16,65 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.items = (this.get('items') || new Werld.Collections.Items());
 
+    if (!this.has('threateners')) {
+      var self = this;
+      this.set(
+        'threateners', new Werld.Collections.Threateners(null, {
+          sortBy: function(creature) {
+            return(creature.tileDistance(self));
+          }
+        })
+      );
+    }
+
     var stats = this.get('stats');
-    var coordinates = _.clone(this.get('coordinates'));
 
     this.set({
-      status: 'alive',
       hitPoints: stats.strength,
       maxHitPoints: stats.strength,
       mana: stats.intelligence,
       maxMana: stats.intelligence,
       stamina: stats.dexterity,
       maxStamina: stats.dexterity,
-      destination: coordinates,
+      destination: _.clone(this.get('coordinates')),
       messages: []
     });
 
-    this.intervalFunctionNamesWithIntervals = {
-      messageSweeper: Werld.Config.MESSAGE_SWEEPER_POLLING_INTERVAL,
-      movementHandler: Werld.frameRate(),
-      statusObserver: Werld.frameRate(),
-      aggressivenessHandler: Werld.frameRate(),
-      hitPointObserver: this.get('hitPointRenegerationRate'),
-      manaObserver: this.get('manaRenegerationRate'),
-      staminaObserver: this.get('staminaRenegerationRate')
-    };
-
     this.lootContainer = new Werld.Models.LootContainer({ owner: this });
 
-    Werld.Utils.Interval.install(this.intervalFunctionNamesWithIntervals, this);
+    Werld.Utils.Interval.install(_({
+    }).extend(
+      this.intervalFunctionNamesWithIntervals(),
+      this.lifeIntervalFunctionNamesWithIntervals()
+    ), this);
+
+    this.on('change:hitPoints', this.resurrectIfHitPointsGreaterThanZero);
+    this.on('change:hitPoints', this.dieIfHitPointsLowerThanZero);
+    this.on('resurrection', this.installLifeIntervalFunctions);
+    this.on('death', this.uninstallLifeIntervalFunctions);
+    this.on('destroy', this.uninstallIntervalFunctions);
+  },
+  intervalFunctionNamesWithIntervals: function() {
+    return({
+      messageSweeper: Werld.Config.MESSAGE_SWEEPER_POLLING_INTERVAL,
+      movementHandler: Werld.frameRate()
+    });
+  },
+  lifeIntervalFunctionNamesWithIntervals: function() {
+    return({
+      hitPointRegenerator: this.get('hitPointRenegerationRate'),
+      manaRegenerator: this.get('manaRenegerationRate'),
+      staminaRegenerator: this.get('staminaRenegerationRate')
+    });
   },
   say: function(message) {
-    var messages = this.get('messages');
+    var messages = _.clone(this.get('messages'));
 
     messages.unshift({
       type: 'speech', content: message, created_at: Date.now()
     });
-    this.set({ messages: messages });
+
+    this.set('messages', messages);
   },
   tileCoordinates: function() {
     return(Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates')));
@@ -62,7 +86,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     /* Stop attacking if we move beyond the creature being attacked's
      * aggressiveness radius. */
-    var creatureBeingAttacked = this.get('attacking');
+    var creatureBeingAttacked = this.get('attackee');
     if (creatureBeingAttacked &&
           this.tileDistance(creatureBeingAttacked) >
           creatureBeingAttacked.get('aggressivenessRadius')) {
@@ -92,7 +116,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     idle: 'idle'
   },
   state: function() {
-    if (this.has('attacking')) {
+    if (this.has('attackee')) {
       return(this.states.attacking);
     } else if (this.has('attacker')) {
       return(this.states.beingAttacked);
@@ -137,7 +161,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.set('coordinates', coordinates);
   },
   follow: function(creature) {
-    this.set({ following: creature });
+    this.set('following', creature);
   },
   stopFollowing: function(creature) {
     this.follow(null);
@@ -155,93 +179,78 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   attackSpeed: function() {
     return(((-4 * this.get('stats').dexterity / 125) + 5) * 1000);
   },
+  attacking: function(creature) {
+    return(this.get('attackee') === creature);
+  },
   attack: function(creature) {
-    if (creature === this || this.dead()) {
-      return;
-    }
-
     Werld.Utils.Interval.set(
       this,
       'battleHandlerIntervalId',
       this.battleHandler,
       Werld.frameRate()
     );
+
     this.follow(creature);
-    this.set({ attacking: creature });
+    this.set('attackee', creature);
     creature.acknowledgeAttack(this);
   },
-  acknowledgeAttack: function(attacker) {
-    if (this.get('attacker') !== attacker) {
-      this.set({ attacker: attacker });
-      this.attack(attacker);
+  battleHandler: function() {
+    if (!this.has('attackee')) {
+      return;
+    }
+
+    if (this.get('attackee').alive()) {
+      if (this.tileDistance(this.get('attackee')) < 1) {
+        if ((Date.now() - this.get('lastAttackAt')) >= this.attackSpeed()) {
+          this.hit(this.get('attackee'));
+        }
+      }
+    } else {
+      this.stopAttacking(this.get('attackee'));
     }
   },
+  acknowledgeAttack: function(attacker) {
+    this.set('attacker', attacker);
+  },
   stopMoving: function() {
-    this.set({ destination: this.get('coordinates') });
+    this.set('destination', this.get('coordinates'));
   },
   stopAttacking: function(creature) {
     Werld.Utils.Interval.clear(this, 'battleHandlerIntervalId');
-    this.set({ attacking: null });
+    this.unset('attackee');
     this.stopFollowing(creature);
     creature.acknowledgeAttackStop(this);
   },
   acknowledgeAttackStop: function(attacker) {
-    this.set({ attacker: null });
+    this.unset('attacker');
   },
   hit: function(creature) {
-    this.set({ lastAttackAt: Date.now() });
+    this.set('lastAttackAt', Date.now());
     creature.receiveHit(this.damage());
   },
   receiveHit: function(damage) {
-    var messages = this.get('messages');
+    var messages = _.clone(this.get('messages'));
 
-    this.set({ hitPoints: this.get('hitPoints') - damage });
     messages.unshift({
       type: 'hit', content: damage, created_at: Date.now()
     });
-    this.set({ messages: messages });
-  },
-  aggressivenessHandler: function() {
-    var attackedCreature = this.get('attacking');
 
-    // Stop attacking if the creature we're attacking is no longer attacking us
-    // and out of our agressiveness radius.
-    if (attackedCreature && !this.get('attacker')) {
-      if (this.tileDistance(attackedCreature) > this.get('aggressivenessRadius')) {
-        this.stopAttacking(attackedCreature);
-      }
-    }
-  },
-  battleHandler: function() {
-    var attackedCreature = this.get('attacking');
+    this.set('messages', messages);
 
-    if (!attackedCreature) {
-      return;
-    }
-
-    if (attackedCreature.alive()) {
-      if (this.tileDistance(attackedCreature) < 1) {
-        if ((Date.now() - this.get('lastAttackAt')) >= this.attackSpeed()) {
-          this.hit(attackedCreature);
-        }
-      }
-    } else {
-      this.stopAttacking(attackedCreature);
-    }
+    this.decrease('hitPoints', damage);
   },
   alive: function() {
-    return(this.get('status') === 'alive');
+    return(this.get('hitPoints') > 0);
   },
   dead: function() {
-    return(this.get('status') === 'dead');
+    return(!this.alive());
   },
   die: function() {
-    if (this.get('attacking')) {
-      this.stopAttacking(this.get('attacking'));
+    if (this.has('attackee')) {
+      this.stopAttacking(this.get('attackee'));
     }
 
     this.set({
-      status: 'dead',
       hitPoints: 0,
       mana: 0,
       stamina: 0,
@@ -251,7 +260,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.trigger('death', this);
   },
   resurrect: function() {
-    var object = { status: 'alive' };
+    var object = {};
     var creature = this;
 
     _(['hitPoints', 'mana', 'stamina']).each(function(attributeName) {
@@ -262,6 +271,16 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.set(object);
     this.trigger('resurrection', this);
+  },
+  installLifeIntervalFunctions: function(creature) {
+    Werld.Utils.Interval.install(
+      this.lifeIntervalFunctionNamesWithIntervals(), this
+    );
+  },
+  uninstallLifeIntervalFunctions: function(creature) {
+    Werld.Utils.Interval.uninstall(
+      this.lifeIntervalFunctionNamesWithIntervals(), this
+    );
   },
   coordinates: function() {
     return(this.get('coordinates'));
@@ -280,124 +299,66 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       )
     );
   },
-  // There's probably a way to accomplish this without polling. Maybe put the
-  // death checking on the battle handler and have some kind of resurrector
-  // object (for ahnks, healers, or even mages with resurecting spells) for
-  // the resurrect checking.
-  statusObserver: function() {
-    if (this.dead()) {
-      if (this.get('hitPoints') > 0) {
-        this.resurrect();
-      }
-    } else {
-      if (this.get('hitPoints') <= 0) {
-        this.die();
-      }
+  resurrectIfHitPointsGreaterThanZero: function(creature, hitPoints, options) {
+    if (this.previous('hitPoints') <= 0 && this.get('hitPoints') > 0) {
+      this.resurrect();
     }
   },
-  increase: function(attributeName, quantity) {
-    var maxAttributeValue =
-      this.get('max' + _.upcaseFirstCharacter(attributeName));
-    var futureAttributeValue = this.get(attributeName) + quantity;
+  dieIfHitPointsLowerThanZero: function(creature, hitPoints, options) {
+    if (this.previous('hitPoints') > 0 && this.get('hitPoints') <= 0) {
+      this.die();
+    }
+  },
+  normalizedSet: function(attributeName, value, options) {
+    options || (options = {});
+
     var object = {};
 
-    if (futureAttributeValue > maxAttributeValue) {
-      object[attributeName] = maxAttributeValue;
+    if (_.isNumber(options.min) && value < options.min) {
+      object[attributeName] = options.min;
+    } else if (_.isNumber(options.max) && value > options.max) {
+      object[attributeName] = options.max;
     } else {
-      object[attributeName] = futureAttributeValue;
+      object[attributeName] = value;
     }
 
     this.set(object);
   },
-  hitPointObserver: function() {
-    if (this.alive()) {
-      if (this.get('hitPoints') < this.get('maxHitPoints')) {
-        if (!this.hitPointRegeneratorIntervalId) {
-          Werld.Utils.Interval.set(
-            this,
-            'hitPointRegeneratorIntervalId',
-            this.hitPointRegenerator,
-            Werld.Config.REGENERATION_RATE
-          );
-        }
-      } else {
-        if (this.hitPointRegeneratorIntervalId) {
-          Werld.Utils.Interval.clear(this, 'hitPointRegeneratorIntervalId');
-        }
-      }
-    } else {
-      if (this.hitPointRegeneratorIntervalId) {
-        Werld.Utils.Interval.clear(this, 'hitPointRegeneratorIntervalId');
-      }
-    }
+  decrease: function(attributeName, quantity) {
+    this.normalizedSet(attributeName, this.get(attributeName) - quantity, {
+      min: 0
+    });
+  },
+  increase: function(attributeName, quantity) {
+    this.normalizedSet(attributeName, this.get(attributeName) + quantity, {
+      max: this.get('max' + _.upcaseFirstCharacter(attributeName))
+    });
   },
   hitPointRegenerator: function() {
     var hitPointsPerSecondRegeneration = this.get('stats').strength / 100;
     this.increase('hitPoints', hitPointsPerSecondRegeneration);
   },
-  manaObserver: function() {
-    if (this.alive()) {
-      if (this.get('mana') < this.get('maxMana')) {
-        Werld.Utils.Interval.set(
-          this,
-          'manaRegeneratorIntervalId',
-          this.manaRegenerator,
-          Werld.Config.REGENERATION_RATE
-        );
-      } else {
-        if (this.manaRegeneratorIntervalId) {
-          Werld.Utils.Interval.clear(this, 'manaRegeneratorIntervalId');
-        }
-      }
-    } else {
-      if (this.manaRegeneratorIntervalId) {
-        Werld.Utils.Interval.clear(this, 'manaRegeneratorIntervalId');
-      }
-    }
-  },
   manaRegenerator: function() {
     var manaPerSecondRegeneration = this.get('stats').intelligence / 100;
     this.increase('mana', manaPerSecondRegeneration);
-  },
-  staminaObserver: function() {
-    if (this.alive()) {
-      if (this.get('stamina') < this.get('maxStamina')) {
-        if (!this.staminaRegeneratorIntervalId) {
-          Werld.Utils.Interval.set(
-            this,
-            'staminaRegeneratorIntervalId',
-            this.staminaRegenerator,
-            Werld.Config.REGENERATION_RATE
-          );
-        }
-      } else {
-        if (this.staminaRegeneratorIntervalId) {
-          Werld.Utils.Interval.clear(this, 'staminaRegeneratorIntervalId');
-        }
-      }
-    } else {
-      if (this.staminaRegeneratorIntervalId) {
-        Werld.Utils.Interval.clear(this, 'staminaRegeneratorIntervalId');
-      }
-    }
   },
   staminaRegenerator: function() {
     var staminaPerSecondRegeneration = this.get('stats').dexterity / 100;
     this.increase('stamina', staminaPerSecondRegeneration);
   },
   messageSweeper: function() {
-    var self = this;
-    _(this.get('messages')).each(function(message) {
-      if ((Date.now() - message.created_at) > Werld.Config.MESSAGE_LIFE_CYCLE) {
-        var messages = self.get('messages');
+    var messages = _.clone(this.get('messages'));
+    var lastMessage = messages[messages.length - 1];
+
+    if (lastMessage) {
+      if ((Date.now() - lastMessage.created_at) > Werld.Config.MESSAGE_LIFE_CYCLE) {
         messages.pop();
-        self.set({ messages: messages });
+        this.set('messages', messages);
       }
-    });
+    }
   },
   destroy: function() {
     this.trigger('destroy', this);
-    Werld.Utils.Interval.uninstall(this.intervalFunctionNamesWithIntervals, this);
   },
   getItem: function(item) {
     var creatureItem = this.items.find(function(collectionItem) {
@@ -426,5 +387,12 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
         tileCoordinates[1] + adjacentTileCoordinateOffset[1]
       ]]));
     }, []));
+  },
+  uninstallIntervalFunctions: function(creature) {
+    Werld.Utils.Interval.install(_({
+    }).extend(
+      this.intervalFunctionNamesWithIntervals(),
+      this.lifeIntervalFunctionNamesWithIntervals()
+    ), this);
   }
 });

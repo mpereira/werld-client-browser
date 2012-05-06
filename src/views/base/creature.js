@@ -42,8 +42,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       this.updateCreatureName();
 
       this.messagesContainer = new Container();
-      // FIXME: only call the message updating callback on 'change:messages'.
-      this.messagesContainer.onTick = this.messagesContainerTick;
+      this.messagesContainer.y = this.container.y - 20;
 
       this.container.addChild(this.bitmapAnimation);
       this.container.addChild(this.nameText);
@@ -52,11 +51,12 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       this.updateContainerOnScreenCoordinates();
 
       this.model.on('destroy', this.onModelDestroy);
-      this.model.on('change:status', this.updateCreatureName);
+      this.model.on('death resurrection', this.updateCreatureName);
       this.model.on('death', this.pauseBitmapAnimation);
       this.model.on('idle', this.pauseBitmapAnimation);
       this.model.on('change:coordinates', this.updateBitmapAnimation);
       this.model.on('change:coordinates', this.updateContainerOnScreenCoordinates);
+      this.model.on('change:messages', this.messagesContainerTick);
     }, this);
   },
   updateContainerOnScreenCoordinates: function() {
@@ -153,7 +153,8 @@ Werld.Views.Base.Creature = Backbone.View.extend({
           self.messageText.font = '16px "PowellAntique" serif';
         }
 
-        temporaryCreatureScreenCoordinates[1] -= 30;
+        temporaryCreatureScreenCoordinates[1] -=
+          self.messageText.getMeasuredLineHeight();
         self.messageText.x = 20;
         self.messageText.y = temporaryCreatureScreenCoordinates[1];
       }

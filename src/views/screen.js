@@ -5,7 +5,7 @@ Werld.Views.Screen = Backbone.View.extend({
     this.mapTileViews = [];
     this.container = new Container();
 
-    this.model.get('character').on('change:status', this.onCharacterChangeStatus);
+    this.model.get('character').on('death resurrection', this.onCharacterChangeStatus);
     this.model.get('character').on('change:coordinates', this.onCharacterChangeCoordinates);
 
     this.createMapTileViews();

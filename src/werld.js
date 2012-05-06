@@ -50,6 +50,7 @@ var Werld = {
   },
   Config: {
     AGGRESSIVENESS_RADIUS: 6,
+    AGGRESSIVENESS_HANDLER_RATE: 2000,
     ALTAR_CHARACTER_RESURRECTION_OBSERVER_INTERVAL: 1000,
     RESPAWN_TIME: 60 * 1000,
     CORPSE_DECAY_TIME: 80 * 1000,
@@ -57,8 +58,10 @@ var Werld = {
     MESSAGE_LIFE_CYCLE: 5000,
     MESSAGE_SWEEPER_POLLING_INTERVAL: 1000,
     PIXELS_PER_TILE: 40,
+    PROVOCABILITY: 0.3,
     REGENERATION_RATE: 1000,
     SCREEN_DIMENSIONS: [16, 12],
+    STOP_ATTACKING_HANDLER_RATE: 500,
     WORLD_MAP_DIMENSIONS: [50, 50]
   },
   frameRate: function() {
@@ -85,23 +88,25 @@ var Werld = {
           Werld.containers[name] = new Container();
         });
 
-        Werld.character = new Werld.Models.Character(
-          _.extend(Werld.CREATURES.CHARACTER, {
-            fixed: true,
-            name: params.data.character.name,
-            stats: {
-              strength: 20,
-              dexterity: 10,
-              intelligence: 10
-            },
-            coordinates: _([
-              Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
-              Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)
-            ]).map(function(coordinate) {
-              return(coordinate * Werld.Config.PIXELS_PER_TILE);
-            })
+        Werld.character = new Werld.Models.Character(_({
+          id: 1,
+          name: params.data.character.name,
+          stats: {
+            strength: 200,
+            dexterity: 10,
+            intelligence: 10
+          },
+          coordinates: _([
+            Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
+            Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)
+          ]).map(function(coordinate) {
+            return(coordinate * Werld.Config.PIXELS_PER_TILE);
           })
-        );
+        }).extend(Werld.CREATURES.CHARACTER));
+
+        Werld.game = new Werld.Models.Game({
+          characters: [Werld.character]
+        });
 
         Werld.canvas.characterView = new Werld.Views.Character({
           model: Werld.character
@@ -218,7 +223,7 @@ var Werld = {
     Werld.stage = new Stage(Werld.canvas.el);
     Werld.stage.enableMouseOver();
     Ticker.useRAF = true;
-    Ticker.setFPS(Werld.frameRate());
+    Ticker.setFPS(Werld.Config.FRAMES_PER_SECOND);
     Ticker.addListener(Werld.stage);
 
     var splashScreenView = new Werld.Views.SplashScreen();
