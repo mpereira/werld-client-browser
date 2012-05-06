@@ -73,6 +73,10 @@ Werld.Views.Base.Creature = Backbone.View.extend({
     Werld.canvas.el.style.cursor = '';
   },
   onBitmapAnimationDoubleClick: function(event) {
+    if (Werld.character.dead()) {
+      return;
+    }
+
     if (this.model.alive()) {
       Werld.character.attack(this.model);
     } else {
