@@ -17,14 +17,13 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.items = (this.get('items') || new Werld.Collections.Items());
 
     if (!this.has('threateners')) {
-      var self = this;
-      this.set(
-        'threateners', new Werld.Collections.Threateners(null, {
-          sortBy: function(creature) {
-            return(creature.tileDistance(self));
-          }
-        })
-      );
+      var sortBy = _(function(creature) {
+        return(creature.tileDistance(self));
+      }).bind(this);
+
+      this.set('threateners', new Werld.Collections.Threateners(null, {
+        sortBy: sortBy
+      }));
     }
 
     var stats = this.get('stats');
