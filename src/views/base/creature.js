@@ -77,11 +77,13 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       return;
     }
 
-    if (this.model.alive()) {
-      Werld.character.attack(this.model);
-    } else {
-      if (Werld.character.tileDistance(this.model) <= 1) {
-        this.showLoot();
+    if (this.model !== Werld.character) {
+      if (this.model.alive()) {
+        Werld.character.attack(this.model);
+      } else {
+        if (Werld.character.tileDistance(this.model) <= 1) {
+          this.showLoot();
+        }
       }
     }
   },
