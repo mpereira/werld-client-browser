@@ -92,7 +92,7 @@ var Werld = {
           id: 1,
           name: params.data.character.name,
           stats: {
-            strength: 200,
+            strength: 30,
             dexterity: 10,
             intelligence: 10
           },
