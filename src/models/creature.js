@@ -68,8 +68,13 @@ Werld.Models.Creature = Werld.Models.Base.Creature.extend({
     var charactersWithinAggressivenessArea =
       Werld.game.charactersWithinArea(this.aggressivenessAreaCircle());
 
+    var aliveCharactersWithinAggressivenessArea =
+      _(charactersWithinAggressivenessArea).filter(function(character) {
+        return(character.alive());
+      })
+
     if (charactersWithinAggressivenessArea.length > 0) {
-      this.get('threateners').update(charactersWithinAggressivenessArea);
+      this.get('threateners').update(aliveCharactersWithinAggressivenessArea);
     }
   },
   aggressivenessAreaCircle: function() {
