@@ -16,11 +16,9 @@ Werld.CREATURES = {
   SILVER_BAT: {
     name: 'a silver bat',
     MOVEMENT_SPEED: 1,
-    stats: {
-      strength: 15,
-      dexterity: 15,
-      intelligence: 10
-    },
+    strength: 15,
+    dexterity: 15,
+    intelligence: 10,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -40,11 +38,9 @@ Werld.CREATURES = {
   WHITE_WOLF: {
     name: 'a white wolf',
     MOVEMENT_SPEED: 1,
-    stats: {
-      strength: 30,
-      dexterity: 30,
-      intelligence: 10
-    },
+    strength: 30,
+    dexterity: 30,
+    intelligence: 10,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -64,11 +60,9 @@ Werld.CREATURES = {
   FIRE_WOLF: {
     name: 'a fire wolf',
     MOVEMENT_SPEED: 1,
-    stats: {
-      strength: 40,
-      dexterity: 50,
-      intelligence: 20
-    },
+    strength: 40,
+    dexterity: 50,
+    intelligence: 20,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -88,11 +82,9 @@ Werld.CREATURES = {
   LEVIATHAN: {
     name: 'a leviathan',
     MOVEMENT_SPEED: 1,
-    stats: {
-      strength: 100,
-      dexterity: 100,
-      intelligence: 200
-    },
+    strength: 100,
+    dexterity: 100,
+    intelligence: 200,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -112,11 +104,9 @@ Werld.CREATURES = {
   BLUE_DRAGON: {
     name: 'a blue dragon',
     MOVEMENT_SPEED: 1,
-    stats: {
-      strength: 200,
-      dexterity: 200,
-      intelligence: 200
-    },
+    strength: 200,
+    dexterity: 200,
+    intelligence: 200,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,

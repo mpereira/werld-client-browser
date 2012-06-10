@@ -40,7 +40,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.strengthTextKey.textAlign = 'center';
 
     this.strengthTextValue =
-      new Text(this.model.get('stats').strength, '16px "PowellAntique" serif', 'white');
+      new Text(this.model.get('strength'), '16px "PowellAntique" serif', 'white');
     this.strengthTextValue.textBaseline = 'top';
     this.strengthTextValue.textAlign = 'center';
     this.strengthTextValue.y = this.strengthTextKey.y;
@@ -51,15 +51,15 @@ Werld.Views.StatusBar = Backbone.View.extend({
 
     this.dexterityTextKey = new Text('DEX', '16px "PowellAntique" serif', 'white');
     this.dexterityTextKey.x = this.statsRectangle.x + 25;
-    var leftRectangleWidth = this.dexterityTextKey.x + this.dexterityTextKey.getMeasuredWidth();
-    var valueTextX = leftRectangleWidth;
+    leftRectangleWidth = this.dexterityTextKey.x + this.dexterityTextKey.getMeasuredWidth();
+    valueTextX = leftRectangleWidth;
 
     this.dexterityTextKey.y = this.strengthTextKey.y + this.strengthTextKey.getMeasuredLineHeight();
     this.dexterityTextKey.textBaseline = 'top';
     this.dexterityTextKey.textAlign = 'center';
 
     this.dexterityTextValue =
-      new Text(this.model.get('stats').dexterity, '16px "PowellAntique" serif', 'white');
+      new Text(this.model.get('dexterity'), '16px "PowellAntique" serif', 'white');
     this.dexterityTextValue.textBaseline = 'top';
     this.dexterityTextValue.textAlign = 'center';
     this.dexterityTextValue.y = this.dexterityTextKey.y;
@@ -70,15 +70,15 @@ Werld.Views.StatusBar = Backbone.View.extend({
 
     this.intelligenceTextKey = new Text('INT', '16px "PowellAntique" serif', 'white');
     this.intelligenceTextKey.x = this.statsRectangle.x + 25;
-    var leftRectangleWidth = this.intelligenceTextKey.x + this.intelligenceTextKey.getMeasuredWidth();
-    var valueTextX = leftRectangleWidth;
+    leftRectangleWidth = this.intelligenceTextKey.x + this.intelligenceTextKey.getMeasuredWidth();
+    valueTextX = leftRectangleWidth;
 
     this.intelligenceTextKey.y = this.dexterityTextKey.y + this.dexterityTextKey.getMeasuredLineHeight();
     this.intelligenceTextKey.textBaseline = 'top';
     this.intelligenceTextKey.textAlign = 'center';
 
     this.intelligenceTextValue =
-      new Text(this.model.get('stats').intelligence, '16px "PowellAntique" serif', 'white');
+      new Text(this.model.get('intelligence'), '16px "PowellAntique" serif', 'white');
     this.intelligenceTextValue.textBaseline = 'top';
     this.intelligenceTextValue.textAlign = 'center';
     this.intelligenceTextValue.y = this.intelligenceTextKey.y;
@@ -210,7 +210,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.container.addChild(this.manaTextKey);
     this.container.addChild(this.manaTextValue);
 
-    this.model.on('change:stats', this.updateStats);
+    this.model.on('change:strength change:dexterity change:intelligence', this.updateStats);
     this.model.on('change:hitPoints change:stamina change:mana', this.update);
   },
   onContainerPress: function(event) {
@@ -236,9 +236,9 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.container.scaleX = this.container.scaleY = 1.0;
   },
   updateStats: function() {
-    this.strengthTextValue.text = this.model.get('stats').strength;
-    this.dexterityTextValue.text = this.model.get('stats').dexterity;
-    this.intelligenceTextValue.text = this.model.get('stats').intelligence;
+    this.strengthTextValue.text = this.model.get('strength');
+    this.dexterityTextValue.text = this.model.get('dexterity');
+    this.intelligenceTextValue.text = this.model.get('intelligence');
   },
   update: function() {
     var barPadding = 5;

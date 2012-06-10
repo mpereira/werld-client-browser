@@ -91,11 +91,9 @@ var Werld = {
         Werld.character = new Werld.Models.Character(_({
           id: 1,
           name: params.data.character.name,
-          stats: {
-            strength: 30,
-            dexterity: 10,
-            intelligence: 10
-          },
+          strength: 20,
+          dexterity: 20,
+          intelligence: 10,
           coordinates: _([
             Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
             Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)

@@ -22,12 +22,10 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       }));
     }
 
-    var stats = this.get('stats');
-
     this.set({
-      hitPoints: stats.strength,
-      mana: stats.intelligence,
-      stamina: stats.dexterity,
+      hitPoints: this.get('strength'),
+      mana: this.get('intelligence'),
+      stamina: this.get('dexterity'),
       destination: _.clone(this.get('coordinates')),
       messages: []
     });
@@ -45,13 +43,13 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.on('hitMissed', this.addMissMessage);
   },
   maxHitPoints: function() {
-    return(this.get('stats').strength);
+    return(this.get('strength'));
   },
   maxMana: function() {
-    return(this.get('stats').intelligence);
+    return(this.get('intelligence'));
   },
   maxStamina: function() {
-    return(this.get('stats').dexterity);
+    return(this.get('dexterity'));
   },
   threatenersSortBy: function(creature) {
     return(creature.tileDistance(this));
@@ -188,7 +186,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.follow(null);
   },
   attackSpeed: function() {
-    return(((-4 * this.get('stats').dexterity / 125) + 5) * 1000);
+    return(((-4 * this.get('dexterity') / 125) + 5) * 1000);
   },
   attacking: function(creature) {
     return(this.get('attackee') === creature);
@@ -228,21 +226,20 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.unset('attacker');
   },
   hitChance: function(creature) {
-    var x = this.get('stats').dexterity;
-    var y = creature.get('stats').dexterity;
+    var x = this.get('dexterity');
+    var y = creature.get('dexterity');
 
     return(
       ((Math.sqrt(x) - Math.sqrt(y)) / 5) * ((10 + Math.sqrt(10)) / 40) + 0.55
     );
   },
   blow: function() {
-    var stats = this.get('stats');
     var boundaries = this.get('BOUNDARIES');
-    var criticalHitChance = (stats.dexterity *
+    var criticalHitChance = (this.get('dexterity') *
                                boundaries.MAX_CRITICAL_HIT_CHANCE /
                                boundaries.MAX_DEXTERITY) / 100;
     var critical = Math.random() < criticalHitChance;
-    var damage = stats.strength / 10;
+    var damage = this.get('strength') / 10;
 
     return({ damage: critical ? damage * 2 : damage, critical: critical });
   },
@@ -373,15 +370,15 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     });
   },
   hitPointRegenerator: function() {
-    var hitPointsPerSecondRegeneration = this.get('stats').strength / 100;
+    var hitPointsPerSecondRegeneration = this.get('strength') / 100;
     this.increase('hitPoints', hitPointsPerSecondRegeneration);
   },
   manaRegenerator: function() {
-    var manaPerSecondRegeneration = this.get('stats').intelligence / 100;
+    var manaPerSecondRegeneration = this.get('intelligence') / 100;
     this.increase('mana', manaPerSecondRegeneration);
   },
   staminaRegenerator: function() {
-    var staminaPerSecondRegeneration = this.get('stats').dexterity / 100;
+    var staminaPerSecondRegeneration = this.get('dexterity') / 100;
     this.increase('stamina', staminaPerSecondRegeneration);
   },
   messageSweeper: function() {
