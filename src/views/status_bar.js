@@ -97,7 +97,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.hitPointsTextKey.textBaseline = 'top';
     this.hitPointsTextKey.textAlign = 'center';
     this.hitPointsTextValue = new Text(
-      this.model.get('hitPoints') + '/' + this.model.get('maxHitPoints'),
+      this.model.get('hitPoints') + '/' + this.model.maxHitPoints(),
       '16px "PowellAntique" serif',
       'white'
     );
@@ -105,7 +105,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.hitPointsTextValue.textAlign = 'center';
     this.hitPointsTextValue.y = this.hitPointsTextKey.y;
     this.hitPointsTextValue.x = valueTextX;
-    var hitPointsPercentage = this.model.get('maxHitPoints') / this.model.get('hitPoints');
+    var hitPointsPercentage = this.model.maxHitPoints() / this.model.get('hitPoints');
     var barPadding = 5;
     this.hitPointsBarRectangle = new Rectangle(
       leftRectangleWidth + barPadding,
@@ -135,7 +135,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.staminaTextKey.textBaseline = 'top';
     this.staminaTextKey.textAlign = 'center';
     this.staminaTextValue = new Text(
-      this.model.get('stamina') + '/' + this.model.get('maxStamina'),
+      this.model.get('stamina') + '/' + this.model.maxStamina(),
       '16px "PowellAntique" serif',
       'white'
     );
@@ -170,7 +170,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.manaTextKey.textBaseline = 'top';
     this.manaTextKey.textAlign = 'center';
     this.manaTextValue = new Text(
-      this.model.get('mana') + '/' + this.model.get('maxMana'),
+      this.model.get('mana') + '/' + this.model.maxMana(),
       '16px "PowellAntique" serif',
       'white'
     );
@@ -244,7 +244,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     var barPadding = 5;
     var leftRectangleWidth = this.hitPointsTextKey.x + this.hitPointsTextKey.getMeasuredWidth();
 
-    var hitPointsPercentage = this.model.get('hitPoints') / this.model.get('maxHitPoints');
+    var hitPointsPercentage = this.model.get('hitPoints') / this.model.maxHitPoints();
     this.hitPointsBarRectangle.width = hitPointsPercentage * (this.statusBarRectangle.width - leftRectangleWidth - 2 * barPadding);
     this.hitPointsBarGraphics.
       clear().
@@ -259,9 +259,9 @@ Werld.Views.StatusBar = Backbone.View.extend({
       endStroke().
       endFill();
     this.hitPointsTextValue.text =
-      Math.floor(this.model.get('hitPoints')) + '/' + this.model.get('maxHitPoints');
+      Math.floor(this.model.get('hitPoints')) + '/' + this.model.maxHitPoints();
 
-    var manaPercentage = this.model.get('mana') / this.model.get('maxMana');
+    var manaPercentage = this.model.get('mana') / this.model.maxMana();
     this.manaBarRectangle.width = manaPercentage * (this.statusBarRectangle.width - leftRectangleWidth - 2 * barPadding);
     this.manaBarGraphics.
       clear().
@@ -276,9 +276,9 @@ Werld.Views.StatusBar = Backbone.View.extend({
       endStroke().
       endFill();
     this.manaTextValue.text =
-      Math.floor(this.model.get('mana')) + '/' + this.model.get('maxMana');
+      Math.floor(this.model.get('mana')) + '/' + this.model.maxMana();
 
-    var staminaPercentage = this.model.get('stamina') / this.model.get('maxStamina');
+    var staminaPercentage = this.model.get('stamina') / this.model.maxStamina();
     this.staminaBarRectangle.width = staminaPercentage * (this.statusBarRectangle.width - leftRectangleWidth - 2 * barPadding);
     this.staminaBarGraphics.
       clear().
@@ -293,6 +293,6 @@ Werld.Views.StatusBar = Backbone.View.extend({
       endStroke().
       endFill();
     this.staminaTextValue.text =
-      Math.floor(this.model.get('stamina')) + '/' + this.model.get('maxStamina');
+      Math.floor(this.model.get('stamina')) + '/' + this.model.maxStamina();
   }
 });

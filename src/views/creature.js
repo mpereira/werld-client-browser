@@ -37,7 +37,7 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
   },
   updateHitPointsBar: function(model) {
     var hitPointsPercentage =
-      this.model.get('hitPoints') / this.model.get('maxHitPoints');
+      this.model.get('hitPoints') / this.model.maxHitPoints();
     this.hitPointsBarRectangle.width =
       hitPointsPercentage * this.hitPointsBarRectangleWidth;
     this.hitPointsBarGraphics.clear();

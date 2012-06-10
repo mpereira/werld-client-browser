@@ -26,11 +26,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.set({
       hitPoints: stats.strength,
-      maxHitPoints: stats.strength,
       mana: stats.intelligence,
-      maxMana: stats.intelligence,
       stamina: stats.dexterity,
-      maxStamina: stats.dexterity,
       destination: _.clone(this.get('coordinates')),
       messages: []
     });
@@ -46,6 +43,15 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.on('destroy', this.uninstallIntervalFunctions);
     this.on('hitDelivered:critical', this.addCriticalHitMessage);
     this.on('hitMissed', this.addMissMessage);
+  },
+  maxHitPoints: function() {
+    return(this.get('stats').strength);
+  },
+  maxMana: function() {
+    return(this.get('stats').intelligence);
+  },
+  maxStamina: function() {
+    return(this.get('stats').dexterity);
   },
   threatenersSortBy: function(creature) {
     return(creature.tileDistance(this));
@@ -363,7 +369,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   increase: function(attributeName, quantity) {
     this.normalizedSet(attributeName, this.get(attributeName) + quantity, {
-      max: this.get('max' + _.upcaseFirstCharacter(attributeName))
+      max: this['max' + _.upcaseFirstCharacter(attributeName)]()
     });
   },
   hitPointRegenerator: function() {
