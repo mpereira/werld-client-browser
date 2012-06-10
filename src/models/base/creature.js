@@ -37,11 +37,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.lootContainer = new Werld.Models.LootContainer({ owner: this });
 
-    Werld.Utils.Interval.install(_({
-    }).extend(
-      this.intervalFunctionNamesWithIntervals(),
-      this.lifeIntervalFunctionNamesWithIntervals()
-    ), this);
+    this.installIntervalFunctions();
 
     this.on('change:hitPoints', this.resurrectIfHitPointsGreaterThanZero);
     this.on('change:hitPoints', this.dieIfHitPointsLowerThanZero);
@@ -62,7 +58,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     return({
       hitPointRegenerator: this.get('hitPointRenegerationRate'),
       manaRegenerator: this.get('manaRenegerationRate'),
-      staminaRegenerator: this.get('staminaRenegerationRate')
+      staminaRegenerator: this.get('staminaRenegerationRate'),
+      battleHandler: Werld.frameRate()
     });
   },
   say: function(message) {
@@ -171,13 +168,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     return(this.get('attackee') === creature);
   },
   attack: function(creature) {
-    Werld.Utils.Interval.set(
-      this,
-      'battleHandlerIntervalId',
-      this.battleHandler,
-      Werld.frameRate()
-    );
-
     this.follow(creature);
     this.set('attackee', creature);
     creature.acknowledgeAttack(this);
@@ -204,7 +194,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.set('destination', this.get('coordinates'));
   },
   stopAttacking: function(creature) {
-    Werld.Utils.Interval.clear(this, 'battleHandlerIntervalId');
     this.unset('attackee');
     this.stopFollowing(creature);
     creature.acknowledgeAttackStop(this);
@@ -413,9 +402,14 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       ]]));
     }, []));
   },
+  installIntervalFunctions: function(creature) {
+    Werld.Utils.Interval.install(_({}).extend(
+      this.intervalFunctionNamesWithIntervals(),
+      this.lifeIntervalFunctionNamesWithIntervals()
+    ), this);
+  },
   uninstallIntervalFunctions: function(creature) {
-    Werld.Utils.Interval.install(_({
-    }).extend(
+    Werld.Utils.Interval.uninstall(_({}).extend(
       this.intervalFunctionNamesWithIntervals(),
       this.lifeIntervalFunctionNamesWithIntervals()
     ), this);
