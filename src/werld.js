@@ -99,9 +99,7 @@ var Werld = {
           coordinates: _([
             Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
             Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)
-          ]).map(function(coordinate) {
-            return(coordinate * Werld.Config.PIXELS_PER_TILE);
-          })
+          ]).map(Werld.Utils.Geometry.tilesToPixels)
         }).extend(Werld.CREATURES.CHARACTER));
 
         Werld.game = new Werld.Models.Game({
