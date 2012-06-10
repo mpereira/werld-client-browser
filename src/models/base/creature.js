@@ -245,6 +245,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   attemptHit: function(creature) {
     this.set('lastHitAttemptedAt', Date.now());
+    this.trigger('hitAttempted', this, creature);
 
     if (this.hitChance(creature) > Math.random()) {
       this.hit(creature);
@@ -368,6 +369,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.normalizedSet(attributeName, this.get(attributeName) + quantity, {
       max: this['max' + _.upcaseFirstCharacter(attributeName)]()
     });
+  },
+  incrementStat: function(statName) {
+    this.set(statName, this.get(statName) + 1);
   },
   hitPointRegenerator: function() {
     var hitPointsPerSecondRegeneration = this.get('strength') / 100;
