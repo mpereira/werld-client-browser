@@ -17,12 +17,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.items = (this.get('items') || new Werld.Collections.Items());
 
     if (!this.has('threateners')) {
-      var sortBy = _(function(creature) {
-        return(creature.tileDistance(self));
-      }).bind(this);
-
       this.set('threateners', new Werld.Collections.Threateners(null, {
-        sortBy: sortBy
+        sortBy: this.threatenersSortBy
       }));
     }
 
@@ -52,6 +48,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.on('resurrection', this.installLifeIntervalFunctions);
     this.on('death', this.uninstallLifeIntervalFunctions);
     this.on('destroy', this.uninstallIntervalFunctions);
+  },
+  threatenersSortBy: function(creature) {
+    return(creature.tileDistance(this));
   },
   intervalFunctionNamesWithIntervals: function() {
     return({
