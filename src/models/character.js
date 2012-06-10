@@ -21,7 +21,7 @@ Werld.Models.Character = Werld.Models.Base.Creature.extend({
   statIncreaseChance: function(statName) {
     var x = this.get(statName);
 
-    return(0.5);
+    return(0.05);
   },
   maybeIncreaseStat: function(statName) {
     if (this.statIncreaseChance(statName) > Math.random()) {
