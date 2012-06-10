@@ -18,15 +18,29 @@ Werld.Models.Character = Werld.Models.Base.Creature.extend({
       console.error({ model: model, errors: errors });
     });
   },
+  statNames: ['strength', 'dexterity', 'intelligence'],
   statIncreaseChance: function(statName) {
     var x = this.get(statName);
 
     return(0.05);
   },
   maybeIncreaseStat: function(statName) {
+    if (this.get(statName) >= this.get('individualStatCap')) {
+      return;
+    }
+
+    if (this.cumulativeStatPoints() >= this.get('cumulativeStatCap')) {
+      return;
+    }
+
     if (this.statIncreaseChance(statName) > Math.random()) {
       this.incrementStat(statName);
     }
+  },
+  cumulativeStatPoints: function() {
+    return(_(this.statNames).reduce(_(function(memo, statName) {
+      return(memo + this.get(statName));
+    }).bind(this), 0));
   },
   maybeIncreaseStrength: function() {
     this.maybeIncreaseStat('strength');
@@ -35,19 +49,13 @@ Werld.Models.Character = Werld.Models.Base.Creature.extend({
     this.maybeIncreaseStat('dexterity');
   },
   validateStats: function(attributes, errors) {
-    var statNames = ['strength', 'dexterity', 'intelligence'];
-
-    var cumulativeStatPoints = _(statNames).reduce(function(memo, statName) {
-      return(memo + attributes[statName]);
-    }, 0);
-
-    if (cumulativeStatPoints > this.get('cumulativeStatCap')) {
+    if (this.cumulativeStatPoints() > this.get('cumulativeStatCap')) {
       errors.base = 'can\'t exceed cumulative stat cap';
     }
 
-    var individualStatPoints =_(statNames).each(_(function(statName) {
+    var individualStatPoints =_(this.statNames).each(_(function(statName) {
       if (attributes[statName] > this.get('individualStatCap')) {
-        errors[statName] = 'can\'t exceed individual stat cap'
+        errors[statName] = 'can\'t exceed individual stat cap';
       }
     }).bind(this));
   },
