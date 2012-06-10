@@ -71,7 +71,7 @@ Werld.Models.Creature = Werld.Models.Base.Creature.extend({
     var aliveCharactersWithinAggressivenessArea =
       _(charactersWithinAggressivenessArea).filter(function(character) {
         return(character.alive());
-      })
+      });
 
     if (charactersWithinAggressivenessArea.length > 0) {
       this.get('threateners').update(aliveCharactersWithinAggressivenessArea);
