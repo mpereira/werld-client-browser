@@ -44,9 +44,29 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.on('resurrection', this.installLifeIntervalFunctions);
     this.on('death', this.uninstallLifeIntervalFunctions);
     this.on('destroy', this.uninstallIntervalFunctions);
+    this.on('hit:critical', this.addCriticalHitMessage);
+    this.on('miss', this.addMissMessage);
   },
   threatenersSortBy: function(creature) {
     return(creature.tileDistance(this));
+  },
+  addCriticalHitMessage: function(attacker, attackee, options) {
+    var messages = _.clone(this.get('messages'));
+
+    messages.unshift({
+      type: 'message', content: 'critical!', created_at: Date.now()
+    });
+
+    this.set('messages', messages);
+  },
+  addMissMessage: function(attacker, attackee, options) {
+    var messages = _.clone(this.get('messages'));
+
+    messages.unshift({
+      type: 'message', content: 'miss', created_at: Date.now()
+    });
+
+    this.set('messages', messages);
   },
   intervalFunctionNamesWithIntervals: function() {
     return({
