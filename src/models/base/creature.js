@@ -1,7 +1,7 @@
 Werld.Models.Base.Creature = Backbone.Model.extend({
   defaults: function() {
     return({
-      lastAttackAt: Number.NEGATIVE_INFINITY,
+      lastHitAttemptedAt: Number.NEGATIVE_INFINITY,
       hitPointRenegerationRate: Werld.Config.REGENERATION_RATE,
       manaRenegerationRate: Werld.Config.REGENERATION_RATE,
       staminaRenegerationRate: Werld.Config.REGENERATION_RATE
@@ -165,16 +165,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   stopFollowing: function(creature) {
     this.follow(null);
   },
-  damage: function() {
-    var stats = this.get('stats');
-    var boundaries = this.get('BOUNDARIES');
-    var criticalHitChance = (stats.dexterity *
-                               boundaries.MAX_CRITICAL_HIT_CHANCE /
-                               boundaries.MAX_DEXTERITY) / 100;
-    var critical = Math.random() < criticalHitChance;
-    var damage = stats.strength / 10;
-    return(critical ? damage * 2 : damage);
-  },
   attackSpeed: function() {
     return(((-4 * this.get('stats').dexterity / 125) + 5) * 1000);
   },
@@ -200,8 +190,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     if (this.get('attackee').alive()) {
       if (this.tileDistance(this.get('attackee')) < 1) {
-        if ((Date.now() - this.get('lastAttackAt')) >= this.attackSpeed()) {
-          this.hit(this.get('attackee'));
+        if ((Date.now() - this.get('lastHitAttemptedAt')) >= this.attackSpeed()) {
+          this.attemptHit(this.get('attackee'));
         }
       }
     } else {
@@ -223,9 +213,46 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   acknowledgeAttackStop: function(attacker) {
     this.unset('attacker');
   },
+  hitChance: function(creature) {
+    var x = this.get('stats').dexterity;
+    var y = creature.get('stats').dexterity;
+
+    return(
+      ((Math.sqrt(x) - Math.sqrt(y)) / 5) * ((10 + Math.sqrt(10)) / 40) + 0.55
+    );
+  },
+  blow: function() {
+    var stats = this.get('stats');
+    var boundaries = this.get('BOUNDARIES');
+    var criticalHitChance = (stats.dexterity *
+                               boundaries.MAX_CRITICAL_HIT_CHANCE /
+                               boundaries.MAX_DEXTERITY) / 100;
+    var critical = Math.random() < criticalHitChance;
+    var damage = stats.strength / 10;
+
+    return({ damage: critical ? damage * 2 : damage, critical: critical });
+  },
+  attemptHit: function(creature) {
+    this.set('lastHitAttemptedAt', Date.now());
+
+    if (this.hitChance(creature) > Math.random()) {
+      this.hit(creature);
+    } else {
+      this.miss(creature);
+    }
+  },
   hit: function(creature) {
-    this.set('lastAttackAt', Date.now());
-    creature.receiveHit(this.damage());
+    var blow = this.blow();
+
+    creature.receiveHit(blow.damage);
+    this.trigger('hit', this, creature);
+
+    if (blow.critical) {
+      this.trigger('hit:critical', this, creature);
+    }
+  },
+  miss: function(creature) {
+    this.trigger('miss', this, creature);
   },
   receiveHit: function(damage) {
     var messages = _.clone(this.get('messages'));
