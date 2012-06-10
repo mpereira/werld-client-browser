@@ -44,8 +44,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.on('resurrection', this.installLifeIntervalFunctions);
     this.on('death', this.uninstallLifeIntervalFunctions);
     this.on('destroy', this.uninstallIntervalFunctions);
-    this.on('hit:critical', this.addCriticalHitMessage);
-    this.on('miss', this.addMissMessage);
+    this.on('hitDelivered:critical', this.addCriticalHitMessage);
+    this.on('hitMissed', this.addMissMessage);
   },
   threatenersSortBy: function(creature) {
     return(creature.tileDistance(this));
@@ -252,23 +252,21 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   hit: function(creature) {
     var blow = this.blow();
 
-    creature.receiveHit(blow.damage);
-    this.trigger('hit', this, creature);
+    creature.receiveHit(this, blow.damage);
+    this.trigger('hitDelivered', this, creature, blow.damage);
 
     if (blow.critical) {
-      this.trigger('hit:critical', this, creature);
+      this.trigger('hitDelivered:critical', this, creature, blow.damage);
     }
   },
   miss: function(creature) {
-    this.trigger('miss', this, creature);
+    this.trigger('hitMissed', this, creature);
   },
-  receiveHit: function(damage) {
+  receiveHit: function(creature, damage) {
+    this.trigger('hitReceived', this, creature, damage);
+
     var messages = _.clone(this.get('messages'));
-
-    messages.unshift({
-      type: 'hit', content: damage, created_at: Date.now()
-    });
-
+    messages.unshift({ type: 'hit', content: damage, created_at: Date.now() });
     this.set('messages', messages);
 
     this.decrease('hitPoints', damage);
