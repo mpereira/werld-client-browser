@@ -21,6 +21,8 @@ module.exports = function(grunt) {
         'src/werld.js',
         'src/collections/creatures.js',
         'src/collections/threateners.js',
+        'src/collections/messages.js',
+        'src/collections/ephemeral_messages.js',
         'src/**/*.js'
       ],
       stylesheets: ['assets/stylesheets/**/*.less']
