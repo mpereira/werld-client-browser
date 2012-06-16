@@ -68,7 +68,7 @@ Werld.Utils.Interval = {
       Werld.Utils.Interval.set(
         context,
         key + 'IntervalId',
-        context[key],
+        _(context[key]).bind(context),
         intervalFunctionNamesWithIntervals[key]
       );
     });
