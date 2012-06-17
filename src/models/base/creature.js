@@ -367,7 +367,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   increase: function(attributeName, quantity) {
     this.normalizedSet(attributeName, this.get(attributeName) + quantity, {
-      max: this['max' + _.upcaseFirstCharacter(attributeName)]()
+      max: this['max' + _.capitalize(attributeName)]()
     });
   },
   incrementStat: function(statName) {
