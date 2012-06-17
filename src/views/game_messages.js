@@ -65,7 +65,8 @@ Werld.Views.GameMessages = Backbone.View.extend({
     }
 
     var message = new Backbone.Model({
-      type: Werld.MESSAGES[(options.type || attributeName).toUpperCase() + typeSuffix].NAME,
+      type: Werld.MESSAGES[(options.type ||
+                              attributeName).toUpperCase() + typeSuffix].NAME,
       body: options.message,
       created_at: Date.now()
     });
