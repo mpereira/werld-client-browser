@@ -12,6 +12,9 @@ var Werld = {
     'itemTransfer',
     'gameMessages'
   ],
+  MESSAGE_TYPES: {
+    STAT_INCREASE: 1
+  },
   STATES: {
     INIT: 1,
     SPLASH_SCREEN: 2,
@@ -185,6 +188,14 @@ var Werld = {
         });
 
         new Werld.Views.MessageInputFormHandler();
+
+        new Werld.Views.GameMessages({
+          model: Werld.character,
+          collection: new Werld.Collections.EphemeralMessages(null, {
+            lifetime: 7000
+          }),
+          container: Werld.containers.gameMessages
+        });
 
         Werld.containers.terrain.addChild(Werld.canvas.screenView.container);
         Werld.containers.objects.addChild(Werld.canvas.altarView.container);
