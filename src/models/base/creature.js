@@ -228,9 +228,12 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   hitChance: function(creature) {
     var x = this.get('dexterity');
     var y = creature.get('dexterity');
+    var z = this.get(this.currentCombatSkill());
+    var w = creature.get(creature.currentCombatSkill());
 
     return(
-      ((Math.sqrt(x) - Math.sqrt(y)) / 5) * ((10 + Math.sqrt(10)) / 40) + 0.55
+      (((Math.sqrt(x) - Math.sqrt(y)) / 5) * ((10 + Math.sqrt(10)) / 40) + 0.55) * 0.3 +
+      (((Math.sqrt(z) - Math.sqrt(w)) / 5) * ((10 + Math.sqrt(10)) / 40) + 0.6582) * 0.76 * 0.5
     );
   },
   blow: function() {

@@ -103,4 +103,7 @@ Werld.Models.Creature = Werld.Models.Base.Creature.extend({
       }
     }
   },
+  currentCombatSkill: function() {
+    return('wrestling');
+  }
 });

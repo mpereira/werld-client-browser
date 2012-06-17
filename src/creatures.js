@@ -19,6 +19,7 @@ Werld.CREATURES = {
     strength: 15,
     dexterity: 15,
     intelligence: 10,
+    wrestling: 40,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -41,6 +42,7 @@ Werld.CREATURES = {
     strength: 30,
     dexterity: 30,
     intelligence: 10,
+    wrestling: 50,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -63,6 +65,7 @@ Werld.CREATURES = {
     strength: 40,
     dexterity: 50,
     intelligence: 20,
+    wrestling: 60,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -85,6 +88,7 @@ Werld.CREATURES = {
     strength: 100,
     dexterity: 100,
     intelligence: 200,
+    wrestling: 90,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -107,6 +111,7 @@ Werld.CREATURES = {
     strength: 200,
     dexterity: 200,
     intelligence: 200,
+    wrestling: 100,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
