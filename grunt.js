@@ -14,6 +14,7 @@ module.exports = function(grunt) {
       libs: [
         'vendor/javascripts/jquery-*.js',
         'vendor/javascripts/underscore-*.js',
+        'vendor/javascripts/underscore.string-*.js',
         'vendor/javascripts/backbone-*.js',
         'vendor/javascripts/easel-*.js'
       ],

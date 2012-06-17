@@ -1,5 +1,3 @@
-_.mixin({
-  capitalize: function(string) {
-    return(string.charAt(0).toUpperCase() + string.slice(1));
-  }
-});
+_.mixin(_.string.exports());
+
+_.string.include('Underscore.string', 'string');
