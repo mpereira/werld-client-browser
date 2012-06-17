@@ -355,7 +355,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     } else if (_.isNumber(options.max) && value > options.max) {
       object[attributeName] = options.max;
     } else {
-      object[attributeName] = value;
+      object[attributeName] = Werld.Utils.Math.toDecimal(value, 1);
     }
 
     this.set(object);

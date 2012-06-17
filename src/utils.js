@@ -41,6 +41,9 @@ Werld.Utils.Math = {
   },
   randomIntegerBetween: function(range) {
     return(Math.floor(this.randomBetween(range)));
+  },
+  toDecimal: function(number, digits) {
+    return(Number(number.toFixed(digits)));
   }
 };
 

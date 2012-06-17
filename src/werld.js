@@ -12,8 +12,27 @@ var Werld = {
     'itemTransfer',
     'gameMessages'
   ],
-  MESSAGE_TYPES: {
-    STAT_INCREASE: 1
+  MESSAGES: {
+    STAT_INCREASE: {
+      NAME: 'STAT_INCREASE',
+      FONT: '18px "PowellAntique" serif',
+      COLOR: '#66cc00'
+    },
+    STAT_DECREASE: {
+      NAME: 'STAT_DECREASE',
+      FONT: '18px "PowellAntique" serif',
+      COLOR: '#66cc00'
+    },
+    SKILL_INCREASE: {
+      NAME: 'SKILL_INCREASE',
+      FONT: '18px "PowellAntique" serif',
+      COLOR: '#05b8cc'
+    },
+    SKILL_DECREASE: {
+      NAME: 'SKILL_DECREASE',
+      FONT: '18px "PowellAntique" serif',
+      COLOR: '#05b8cc'
+    },
   },
   STATES: {
     INIT: 1,
@@ -97,6 +116,7 @@ var Werld = {
           strength: 20,
           dexterity: 20,
           intelligence: 10,
+          swordsmanship: 50,
           coordinates: _([
             Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
             Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)

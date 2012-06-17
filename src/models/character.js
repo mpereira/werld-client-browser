@@ -88,8 +88,18 @@ Werld.Models.Character = Werld.Models.Base.Creature.extend({
       return(memo + this.get(cappedAttributeName));
     }).bind(this), 0));
   },
+  statIncrement: function(statName) {
+    return(1);
+  },
+  skillIncrement: function(skillName) {
+    return(0.1);
+  },
   incrementCappedAttribute: function(cappedAttributeName) {
-    this.set(cappedAttributeName, this.get(cappedAttributeName) + 1);
+    var incrementMethodName =
+      this.cappedAttributeType(cappedAttributeName) + 'Increment';
+    var increment = this[incrementMethodName](cappedAttributeName);
+
+    this.normalizedSet(cappedAttributeName, this.get(cappedAttributeName) + increment);
   },
   maybeIncreaseCappedAttribute: function(cappedAttributeName) {
     if (this.get(cappedAttributeName) >=
