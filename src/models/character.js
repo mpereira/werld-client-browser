@@ -1,8 +1,10 @@
 Werld.Models.Character = Werld.Models.Base.Creature.extend({
   defaults: function() {
     return(_({
-      cumulativeStatCap: '200',
-      individualStatCap: '100'
+      cumulativeStatCap: 200,
+      individualStatCap: 100,
+      cumulativeSkillCap: 300,
+      individualSkillCap: 100
     }).extend(Werld.Models.Character.__super__.defaults()));
   },
   initialize: function() {
@@ -12,58 +14,122 @@ Werld.Models.Character = Werld.Models.Base.Creature.extend({
       owner: this
     });
 
-    this.on('hitAttempted', this.maybeIncreaseStrength);
-    this.on('hitAttempted', this.maybeIncreaseDexterity);
+    this.on('hitAttempted', function() {
+      this.maybeIncreaseCappedAttribute('strength');
+    }, this);
+    this.on('hitAttempted', function() {
+      this.maybeIncreaseCappedAttribute('dexterity');
+    }, this);
+    this.on('hitAttempted', function() {
+      this.maybeIncreaseCappedAttribute('swordsmanship');
+    }, this);
     this.on('error', function(model, errors) {
       console.error({ model: model, errors: errors });
     });
   },
   statNames: ['strength', 'dexterity', 'intelligence'],
+  skillNames: ['swordsmanship'],
+  cappedAttributeTypes: function() {
+    return(['stat', 'skill']);
+  },
+  cappedAttributeNames: function(options) {
+    options || (options = {});
+
+    return(this[options.type + 'Names']);
+  },
+  cappedAttributeType: function(cappedAttributeName) {
+    var type;
+
+    if (_(this.statNames).include(cappedAttributeName)) {
+      type = 'stat';
+    } else if (_(this.skillNames).include(cappedAttributeName)) {
+      type = 'skill';
+    } else {
+      throw new Error('Capped attribute must be a stat or a skill');
+    }
+
+    return(type);
+  },
+  individualCappedAttributeCap: function(cappedAttributeName) {
+    return(this.get('individual' +
+                      _.capitalize(this.cappedAttributeType(cappedAttributeName)) +
+                      'Cap'));
+  },
+  cumulativeCappedAttributeCap: function(options) {
+    options || (options = {});
+
+    if (!options.type) {
+      throw new Error('Must be passed a type');
+    }
+
+    return(this.get('cumulative' + _.capitalize(options.type) + 'Cap'));
+  },
   statIncreaseChance: function(statName) {
     var x = this.get(statName);
 
+    return(0.03);
+  },
+  skillIncreaseChance: function(skillName) {
+    var x = this.get(skillName);
+
     return(0.05);
   },
-  maybeIncreaseStat: function(statName) {
-    if (this.get(statName) >= this.get('individualStatCap')) {
-      return;
-    }
-
-    if (this.cumulativeStatPoints() >= this.get('cumulativeStatCap')) {
-      return;
-    }
-
-    if (this.statIncreaseChance(statName) > Math.random()) {
-      this.incrementStat(statName);
-    }
+  cappedAttributeIncreaseChance: function(cappedAttributeName) {
+    return(this[this.cappedAttributeType(cappedAttributeName) + 'IncreaseChance'](cappedAttributeName));
   },
-  cumulativeStatPoints: function() {
-    return(_(this.statNames).reduce(_(function(memo, statName) {
-      return(memo + this.get(statName));
+  cumulativeCappedAttributePoints: function(options) {
+    options || (options = {});
+
+    if (!options.type) {
+      throw new Error('Must be passed a type');
+    }
+
+    return(_(this[options.type + 'Names']).reduce(_(function(memo, cappedAttributeName) {
+      return(memo + this.get(cappedAttributeName));
     }).bind(this), 0));
   },
-  maybeIncreaseStrength: function() {
-    this.maybeIncreaseStat('strength');
+  incrementCappedAttribute: function(cappedAttributeName) {
+    this.set(cappedAttributeName, this.get(cappedAttributeName) + 1);
   },
-  maybeIncreaseDexterity: function() {
-    this.maybeIncreaseStat('dexterity');
-  },
-  validateStats: function(attributes, errors) {
-    if (this.cumulativeStatPoints() > this.get('cumulativeStatCap')) {
-      errors.base = 'can\'t exceed cumulative stat cap';
+  maybeIncreaseCappedAttribute: function(cappedAttributeName) {
+    if (this.get(cappedAttributeName) >=
+          this.individualCappedAttributeCap(cappedAttributeName)) {
+      return;
     }
 
-    var individualStatPoints =_(this.statNames).each(_(function(statName) {
-      if (attributes[statName] > this.get('individualStatCap')) {
-        errors[statName] = 'can\'t exceed individual stat cap';
+    if (this.cumulativeCappedAttributePoints({
+          type: this.cappedAttributeType(cappedAttributeName)
+        }) >=
+          this.cumulativeCappedAttributeCap({
+            type: this.cappedAttributeType(cappedAttributeName)
+          })) {
+      return;
+    }
+
+    if (this.cappedAttributeIncreaseChance(cappedAttributeName) >
+          Math.random()) {
+      this.incrementCappedAttribute(cappedAttributeName);
+    }
+  },
+  validateCappedAttributes: function(attributes, errors) {
+    _(this.cappedAttributeTypes()).each(_(function(cappedAttributeType) {
+      if (this.cumulativeCappedAttributePoints({ type: cappedAttributeType }) >
+            this.cumulativeCappedAttributeCap({ type: cappedAttributeType })) {
+        errors.base = 'can\'t exceed cumulative ' + cappedAttributeType + ' cap';
       }
+
+      _(this.cappedAttributeNames({ type: cappedAttributeType })).each(_(function(cappedAttributeName) {
+        if (attributes[cappedAttributeName] > this.individualCappedAttributeCap(cappedAttributeName)) {
+          errors[cappedAttributeName] = 'can\'t exceed individual ' + cappedAttributeType + ' cap';
+        }
+      }).bind(this));
     }).bind(this));
   },
   validate: function(attributes) {
     var errors = {};
 
-    this.validateStats(attributes, errors);
+    this.validateCappedAttributes(attributes, errors);
 
     if (!_.isEmpty(errors)) { return(errors); }
-  },
+  }
 });

@@ -370,9 +370,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       max: this['max' + _.capitalize(attributeName)]()
     });
   },
-  incrementStat: function(statName) {
-    this.set(statName, this.get(statName) + 1);
-  },
   hitPointRegenerator: function() {
     var hitPointsPerSecondRegeneration = this.get('strength') / 100;
     this.increase('hitPoints', hitPointsPerSecondRegeneration);
