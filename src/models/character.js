@@ -144,8 +144,5 @@ Werld.Models.Character = Werld.Models.Base.Creature.extend({
     this.validateCappedAttributes(attributes, errors);
 
     if (!_.isEmpty(errors)) { return(errors); }
-  },
-  currentCombatSkill: function() {
-    return('swordsmanship');
   }
 });

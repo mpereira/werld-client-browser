@@ -102,8 +102,5 @@ Werld.Models.Creature = Werld.Models.Base.Creature.extend({
         this.stopAttacking(this.get('attackee'));
       }
     }
-  },
-  currentCombatSkill: function() {
-    return('wrestling');
   }
 });

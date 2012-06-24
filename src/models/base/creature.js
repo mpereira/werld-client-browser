@@ -237,11 +237,16 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   acknowledgeAttackStop: function(attacker) {
     this.unset('attacker');
   },
+  currentCombatSkillName: function() {
+    return(this.has('weapon') ?
+             this.get('weapon').get('skill') :
+             Werld.SKILLS.WRESTLING.NAME);
+  },
   hitChance: function(creature) {
     var x = this.get('dexterity');
     var y = creature.get('dexterity');
-    var z = this.get(this.currentCombatSkill());
-    var w = creature.get(creature.currentCombatSkill());
+    var z = this.get(this.currentCombatSkillName());
+    var w = creature.get(creature.currentCombatSkillName());
 
     return(_.min([
       100 * (z + x / 5) / ((w + y / 5) * 2),
@@ -266,12 +271,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
   },
   damageRange: function() {
-    var damageBonusPercentage =
-      0.35 * this.get('strength') +
-        0.15 * this.get('dexterity') +
-        0.6 * (this.has('weapon') ?
-                 this.get(this.get('weapon').get('skill')) :
-                 this.get(Werld.SKILLS.WRESTLING.NAME));
+    var damageBonusPercentage = 0.35 * this.get('strength') +
+                                  0.15 * this.get('dexterity') +
+                                  0.6 * this.get(this.currentCombatSkillName());
 
     var normalizedDamageBonusPercentage =
       _.min([damageBonusPercentage, Werld.Config.MAXIMUM_DAMAGE_BONUS_PERCENTAGE]);
