@@ -243,10 +243,10 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     var z = this.get(this.currentCombatSkill());
     var w = creature.get(creature.currentCombatSkill());
 
-    return(
-      (((Math.sqrt(x) - Math.sqrt(y)) / 5) * ((10 + Math.sqrt(10)) / 40) + 0.55) * 0.3 +
-      (((Math.sqrt(z) - Math.sqrt(w)) / 5) * ((10 + Math.sqrt(10)) / 40) + 0.6582) * 0.76 * 0.5
-    );
+    return(_.min([
+      100 * (z + x / 5) / ((w + y / 5) * 2),
+      Werld.Config.MAXIMUM_HIT_CHANCE_PERCENTAGE
+    ]));
   },
   equip: function(item) {
     if (!item.get('equipable')) { return(false); }
@@ -298,7 +298,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.set('lastHitAttemptedAt', Date.now());
     this.trigger('hitAttempted', this, creature);
 
-    if (this.hitChance(creature) > Math.random()) {
+    if (this.hitChance(creature) / 100 > Math.random()) {
       this.hit(creature);
     } else {
       this.miss(creature);
