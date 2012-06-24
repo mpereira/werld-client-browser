@@ -4,15 +4,17 @@ Werld.Views.Item = Backbone.View.extend({
 
     this.container = new Container();
     this.container.view = this;
-    this.bitmap = new Bitmap(Werld.IMAGES.GOLD.IMAGE.SRC);
+    this.bitmap = new Bitmap(Werld.IMAGES[this.model.get('name')].SRC);
     this.container.addChild(this.bitmap);
 
-    this.tooltipView = new Werld.Views.Tooltip({
-      model: this.model, observedProperties: ['quantity'], output: function() {
-        return(this.model.get('quantity'));
-      }
-    });
-    this.container.addChild(this.tooltipView.container);
+    if (this.model.get('stackable')) {
+      this.tooltipView = new Werld.Views.Tooltip({
+        model: this.model, observedProperties: ['quantity'], output: function() {
+          return(this.model.get('quantity'));
+        }
+      });
+      this.container.addChild(this.tooltipView.container);
+    }
 
     this.model.bind('destroy', this.onModelDestroy);
 

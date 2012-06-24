@@ -48,23 +48,6 @@ var Werld = {
       NAME: 'swordsmanship'
     }
   },
-  IMAGES: {
-    BACKPACK: {
-      IMAGE: {
-        SRC: 'images/backpack.png'
-      }
-    },
-    LOOT_CONTAINER: {
-      IMAGE: {
-        SRC: 'images/loot_container.png'
-      }
-    },
-    GOLD: {
-      IMAGE: {
-        SRC: 'images/gold.png'
-      }
-    }
-  },
   OBJECTS: {
     ALTAR: {
       IMAGE: {
@@ -144,7 +127,7 @@ var Werld = {
         });
 
         Werld.canvas.backpackView = new Werld.Views.Backpack({
-          model: Werld.character.backpack, image: Werld.IMAGES.BACKPACK.IMAGE
+          model: Werld.character.backpack
         });
 
         var silverBatSpawner = new Werld.Models.CreatureSpawner({

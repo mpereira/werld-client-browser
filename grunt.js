@@ -20,6 +20,9 @@ module.exports = function(grunt) {
       ],
       src: [
         'src/werld.js',
+        'src/gumps.js',
+        'src/items.js',
+        'src/images.js',
         'src/collections/creatures.js',
         'src/collections/threateners.js',
         'src/collections/messages.js',

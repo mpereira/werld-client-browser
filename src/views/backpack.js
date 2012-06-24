@@ -4,7 +4,7 @@ Werld.Views.Backpack = Werld.Views.Base.Container.extend({
 
     _.bindAll(this);
 
-    this.bitmap = new Bitmap(this.options.image.SRC);
+    this.bitmap = new Bitmap(Werld.IMAGES[this.model.get('name')].SRC);
     this.bitmap.onPress = this.onBitmapPress;
 
     this.container.x = 470;

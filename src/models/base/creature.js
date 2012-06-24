@@ -35,7 +35,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       messages: []
     });
 
-    this.lootContainer = new Werld.Models.LootContainer({ owner: this });
+    this.lootContainer = new Werld.Models.LootContainer(_({
+      owner: this
+    }).extend(Werld.GUMPS.LOOT_CONTAINER));
 
     this.installIntervalFunctions();
 
