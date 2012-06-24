@@ -193,7 +193,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   attackSpeed: function() {
     var baseAttackSpeed = this.has('weapon') ?
                             this.get('weapon').get('speed') :
-                            this.get('baseAttackSpeed')
+                            this.get('baseAttackSpeed');
 
     return(_.max([
       Math.floor(baseAttackSpeed - (this.get('stamina') / 30)),
