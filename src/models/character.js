@@ -75,7 +75,10 @@ Werld.Models.Character = Werld.Models.Base.Creature.extend({
     return(0.05);
   },
   cappedAttributeIncreaseChance: function(cappedAttributeName) {
-    return(this[this.cappedAttributeType(cappedAttributeName) + 'IncreaseChance'](cappedAttributeName));
+    var cappedAttributeTypeIncreaseChanceMethodName =
+      this.cappedAttributeType(cappedAttributeName) + 'IncreaseChance';
+
+    return(this[cappedAttributeTypeIncreaseChanceMethodName](cappedAttributeName));
   },
   cumulativeCappedAttributePoints: function(options) {
     options || (options = {});

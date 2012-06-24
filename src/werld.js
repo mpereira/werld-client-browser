@@ -40,10 +40,12 @@ var Werld = {
     CHOOSING_NAME: 3,
     GAME_STARTED: 4
   },
-  ITEMS: {
-    GOLD: {
-      name: 'Gold',
-      stackable: true
+  SKILLS: {
+    WRESTLING: {
+      NAME: 'wrestling'
+    },
+    SWORDSMANSHIP: {
+      NAME: 'swordsmanship'
     }
   },
   IMAGES: {
@@ -77,6 +79,7 @@ var Werld = {
     RESPAWN_TIME: 60 * 1000,
     CORPSE_DECAY_TIME: 80 * 1000,
     FRAMES_PER_SECOND: 30,
+    MAXIMUM_DAMAGE_BONUS_MULTIPLIER: 1,
     MESSAGE_LIFE_CYCLE: 5000,
     MESSAGE_SWEEPER_POLLING_INTERVAL: 1000,
     PIXELS_PER_TILE: 40,
@@ -110,6 +113,8 @@ var Werld = {
           Werld.containers[name] = new Container();
         });
 
+        var shortSword = new Werld.Models.Item(Werld.ITEMS.SHORT_SWORD);
+
         Werld.character = new Werld.Models.Character(_({
           id: 1,
           name: params.data.character.name,
@@ -117,15 +122,16 @@ var Werld = {
           dexterity: 20,
           intelligence: 10,
           swordsmanship: 50,
+          items: new Werld.Collections.Items([shortSword]),
           coordinates: _([
             Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
             Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)
           ]).map(Werld.Utils.Geometry.tilesToPixels)
         }).extend(Werld.CREATURES.CHARACTER));
 
-        Werld.game = new Werld.Models.Game({
-          characters: [Werld.character]
-        });
+        Werld.character.equip(shortSword);
+
+        Werld.game = new Werld.Models.Game({ characters: [Werld.character] });
 
         Werld.canvas.characterView = new Werld.Views.Character({
           model: Werld.character

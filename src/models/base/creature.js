@@ -1,11 +1,16 @@
 Werld.Models.Base.Creature = Backbone.Model.extend({
   defaults: function() {
-    return({
+    var defaultSkills = _(Werld.SKILLS).reduce(function(memo, value, key) {
+      memo[value.NAME] = 0;
+      return(memo);
+    }, {});
+
+    return(_({
       lastHitAttemptedAt: Number.NEGATIVE_INFINITY,
       hitPointRenegerationRate: Werld.Config.REGENERATION_RATE,
       manaRenegerationRate: Werld.Config.REGENERATION_RATE,
       staminaRenegerationRate: Werld.Config.REGENERATION_RATE
-    });
+    }).extend(defaultSkills));
   },
   initialize: function(attributes, options) {
     _.bindAll(this);
@@ -236,13 +241,49 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       (((Math.sqrt(z) - Math.sqrt(w)) / 5) * ((10 + Math.sqrt(10)) / 40) + 0.6582) * 0.76 * 0.5
     );
   },
+  equip: function(item) {
+    if (!item.get('equipable')) { return(false); }
+
+    if (this.has(item.get('type'))) {
+      return(false);
+    } else {
+      this.set(item.get('type'), item);
+      return(true);
+    }
+  },
+  unequip: function(item) {
+    if (!item.get('equipable')) { return(false); }
+
+    if (this.get(item.get('type')) === item) {
+      this.unset(item.get('type'));
+    }
+  },
+  damageRange: function() {
+    var damageBonusMultiplier =
+      (this.get('strength') / 10 +
+         this.get('dexterity') / 20 +
+         (this.has('weapon') ?
+            this.get(this.get('weapon').get('skill')) :
+            this.get(Werld.SKILLS.WRESTLING.NAME)) / 2) / 100;
+
+    var normalizedDamageBonusMultiplier =
+      _.min([damageBonusMultiplier, Werld.Config.MAXIMUM_DAMAGE_BONUS_MULTIPLIER]);
+
+    var damageRange = this.has('weapon') ?
+                        this.get('weapon').get('baseDamageRange') :
+                        this.get('baseDamageRange');
+
+    return(_(damageRange).map(function(baseDamage) {
+      return(Math.floor(baseDamage * (1 + normalizedDamageBonusMultiplier)));
+    }));
+  },
   blow: function() {
     var boundaries = this.get('BOUNDARIES');
     var criticalHitChance = (this.get('dexterity') *
                                boundaries.MAX_CRITICAL_HIT_CHANCE /
                                boundaries.MAX_DEXTERITY) / 100;
     var critical = Math.random() < criticalHitChance;
-    var damage = this.get('strength') / 10;
+    var damage = Werld.Utils.Math.randomIntegerBetween(this.damageRange());
 
     return({ damage: critical ? damage * 2 : damage, critical: critical });
   },
