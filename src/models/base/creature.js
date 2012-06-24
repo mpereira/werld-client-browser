@@ -259,22 +259,22 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
   },
   damageRange: function() {
-    var damageBonusMultiplier =
-      (this.get('strength') / 10 +
-         this.get('dexterity') / 20 +
-         (this.has('weapon') ?
-            this.get(this.get('weapon').get('skill')) :
-            this.get(Werld.SKILLS.WRESTLING.NAME)) / 2) / 100;
+    var damageBonusPercentage =
+      0.35 * this.get('strength') +
+        0.15 * this.get('dexterity') +
+        0.6 * (this.has('weapon') ?
+                 this.get(this.get('weapon').get('skill')) :
+                 this.get(Werld.SKILLS.WRESTLING.NAME));
 
-    var normalizedDamageBonusMultiplier =
-      _.min([damageBonusMultiplier, Werld.Config.MAXIMUM_DAMAGE_BONUS_MULTIPLIER]);
+    var normalizedDamageBonusPercentage =
+      _.min([damageBonusPercentage, Werld.Config.MAXIMUM_DAMAGE_BONUS_PERCENTAGE]);
 
-    var damageRange = this.has('weapon') ?
-                        this.get('weapon').get('baseDamageRange') :
-                        this.get('baseDamageRange');
+    var baseDamageRange = this.has('weapon') ?
+                            this.get('weapon').get('baseDamageRange') :
+                            this.get('baseDamageRange');
 
-    return(_(damageRange).map(function(baseDamage) {
-      return(Math.floor(baseDamage * (1 + normalizedDamageBonusMultiplier)));
+    return(_(baseDamageRange).map(function(baseDamage) {
+      return(Math.floor(baseDamage * (1 + normalizedDamageBonusPercentage / 100)));
     }));
   },
   blow: function() {
