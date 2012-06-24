@@ -1,6 +1,7 @@
 Werld.CREATURES = {
   CHARACTER: {
     baseDamageRange: [1, 4],
+    baseAttackSpeed: 5,
     MOVEMENT_SPEED: 2,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
@@ -22,6 +23,7 @@ Werld.CREATURES = {
     intelligence: 10,
     wrestling: 40,
     baseDamageRange: [2, 5],
+    baseAttackSpeed: 6,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -46,6 +48,7 @@ Werld.CREATURES = {
     intelligence: 10,
     wrestling: 50,
     baseDamageRange: [5, 10],
+    baseAttackSpeed: 5,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -70,6 +73,7 @@ Werld.CREATURES = {
     intelligence: 20,
     wrestling: 60,
     baseDamageRange: [8, 15],
+    baseAttackSpeed: 4,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -94,6 +98,7 @@ Werld.CREATURES = {
     intelligence: 200,
     wrestling: 90,
     baseDamageRange: [15, 25],
+    baseAttackSpeed: 3,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,
@@ -118,6 +123,7 @@ Werld.CREATURES = {
     intelligence: 200,
     wrestling: 100,
     baseDamageRange: [20, 30],
+    baseAttackSpeed: 2,
     BOUNDARIES: {
       MAX_CRITICAL_HIT_CHANCE: 20,
       MAX_DEXTERITY: 125,

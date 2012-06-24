@@ -191,7 +191,14 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.follow(null);
   },
   attackSpeed: function() {
-    return(((-4 * this.get('dexterity') / 125) + 5) * 1000);
+    var baseAttackSpeed = this.has('weapon') ?
+                            this.get('weapon').get('speed') :
+                            this.get('baseAttackSpeed')
+
+    return(_.max([
+      Math.floor(baseAttackSpeed - (this.get('stamina') / 30)),
+      Werld.Config.MAXIMUM_ATTACK_SPEED
+    ]));
   },
   attacking: function(creature) {
     return(this.get('attackee') === creature);
@@ -208,7 +215,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     if (this.get('attackee').alive()) {
       if (this.tileDistance(this.get('attackee')) < 1) {
-        if ((Date.now() - this.get('lastHitAttemptedAt')) >= this.attackSpeed()) {
+        if ((Date.now() - this.get('lastHitAttemptedAt')) >= this.attackSpeed() * 1000) {
           this.attemptHit(this.get('attackee'));
         }
       }

@@ -9,6 +9,7 @@ Werld.ITEMS = {
     name: 'Short Sword',
     skill: Werld.SKILLS.SWORDSMANSHIP.NAME,
     type: Werld.ITEM_TYPES.WEAPON.NAME,
+    speed: 5,
     baseDamageRange: [2, 5],
     equipable: true
   },
