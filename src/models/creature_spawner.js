@@ -42,7 +42,7 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
         var randomAdjacentTilePointWithinSpawnArea =
           spawner.randomAdjacentTilePointWithinSpawnArea(creature);
 
-        // This means the creature either inside the spawn area or at least
+        // This means the creature is either inside the spawn area or at least
         // tangential to the spawn area's bounds.
         if (randomAdjacentTilePointWithinSpawnArea) {
           creature.move(randomAdjacentTilePointWithinSpawnArea);
