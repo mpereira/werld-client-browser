@@ -14,7 +14,7 @@ Werld.Models.Character = Werld.Models.Base.Creature.extend({
       owner: this
     }).extend(Werld.GUMPS.BACKPACK));
 
-    this.items.each(function(item) { item.container = this.backpack }, this);
+    this.items.each(function(item) { item.container = this.backpack; }, this);
 
     this.on('hitAttempted', function() {
       this.maybeIncreaseCappedAttribute('strength');
