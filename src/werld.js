@@ -242,7 +242,23 @@ var Werld = {
     Werld.stage.enableMouseOver();
     Ticker.useRAF = true;
     Ticker.setFPS(Werld.Config.FRAMES_PER_SECOND);
-    Ticker.addListener(Werld.stage);
+
+    var stats = new Stats();
+    stats.setMode(0);
+
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.left = '0px';
+    stats.domElement.style.top = '0px';
+
+    document.body.appendChild(stats.domElement);
+
+    Ticker.addListener({
+      tick: function() {
+        stats.begin();
+        Werld.stage.tick();
+        stats.end();
+      }
+    });
 
     var splashScreenView = new Werld.Views.SplashScreen();
     Werld.stage.addChild(splashScreenView.container);

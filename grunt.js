@@ -16,7 +16,8 @@ module.exports = function(grunt) {
         'vendor/javascripts/underscore-*.js',
         'vendor/javascripts/underscore.string-*.js',
         'vendor/javascripts/backbone-*.js',
-        'vendor/javascripts/easel-*.js'
+        'vendor/javascripts/easel-*.js',
+        'vendor/javascripts/stats-*.js'
       ],
       src: [
         'src/werld.js',
@@ -119,6 +120,7 @@ module.exports = function(grunt) {
         Shape: true,
         SpriteSheet: true,
         Stage: true,
+        Stats: true,
         Text: true,
         Ticker: true
       }
