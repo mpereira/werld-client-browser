@@ -4,6 +4,12 @@ Werld.Canvas = Backbone.View.extend({
     this.context = this.el.getContext('2d');
     this.loadTextures();
   },
+  events: {
+    contextmenu: 'onContextMenu'
+  },
+  onContextMenu: function(event) {
+    event.preventDefault();
+  },
   /* TODO: better async resource loading. */
   loadTextures: function(callback) {
     this.textures = {};

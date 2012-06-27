@@ -232,9 +232,6 @@ var Werld = {
     Werld.Utils.Callback.run(params.callback);
   },
   init: function() {
-    // Disabling right click.
-    $(window).contextmenu(function(event) { return(false); });
-
     Werld.switchState(Werld.STATES.INIT);
 
     Werld.canvas = new Werld.Canvas();
