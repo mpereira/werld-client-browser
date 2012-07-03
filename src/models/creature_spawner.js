@@ -19,7 +19,10 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
 
     // FIXME: put this in a view?
     this.creatures.on('add', function(creature) {
-      var creatureView = new Werld.Views.Creature({ model: creature });
+      var creatureView = new Werld.Views.Creature({
+        model: creature,
+        image: Werld.IMAGES[creature.get('name')]
+      });
       Werld.containers.creatures.addChild(creatureView.container);
     });
 

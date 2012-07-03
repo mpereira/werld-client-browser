@@ -11,53 +11,55 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       character: Werld.character
     });
 
-    // TODO: load images asynchronously when the game starts, not inside views.
-    var SPRITE = this.model.get('SPRITE');
-    var image = new Image();
-    image.src = SPRITE.SRC;
-    image.onload = _.bind(function() {
-      this.spriteSheet = new SpriteSheet({
-        images: [image],
-        frames: {
-          width: SPRITE.DIMENSIONS[0],
-          height: SPRITE.DIMENSIONS[1],
-          regX: (SPRITE.DIMENSIONS[0] - Werld.Config.PIXELS_PER_TILE) / 2,
-          regY: (1.7 * SPRITE.DIMENSIONS[1] - Werld.Config.PIXELS_PER_TILE) / 2
-        },
-        animations: {
-          walkDown:  [0,  3,  true, 1 / SPRITE.FREQUENCY],
-          walkLeft:  [4,  7,  true, 1 / SPRITE.FREQUENCY],
-          walkRight: [8,  11, true, 1 / SPRITE.FREQUENCY],
-          walkUp:    [12, 15, true, 1 / SPRITE.FREQUENCY]
-        }
-      });
+    this.spriteSheet = new SpriteSheet({
+      images: [this.options.image.SRC],
+      frames: {
+        width: this.options.image.DIMENSIONS[0],
+        height: this.options.image.DIMENSIONS[1],
+        regX: (this.options.image.DIMENSIONS[0] - Werld.Config.PIXELS_PER_TILE) / 2,
+        regY: (1.7 * this.options.image.DIMENSIONS[1] - Werld.Config.PIXELS_PER_TILE) / 2
+      },
+      animations: {
+        walkDown:  [0,  3,  true, 1 / this.options.image.FREQUENCY],
+        walkLeft:  [4,  7,  true, 1 / this.options.image.FREQUENCY],
+        walkRight: [8,  11, true, 1 / this.options.image.FREQUENCY],
+        walkUp:    [12, 15, true, 1 / this.options.image.FREQUENCY]
+      }
+    });
 
-      this.bitmapAnimation = new BitmapAnimation(this.spriteSheet);
-      this.bitmapAnimation.currentFrame = 0;
-      this.bitmapAnimation.onMouseOver = this.onBitmapAnimationMouseOver;
-      this.bitmapAnimation.onMouseOut = this.onBitmapAnimationMouseOut;
-      this.bitmapAnimation.onDoubleClick = this.onBitmapAnimationDoubleClick;
+    this.bitmapAnimation = new BitmapAnimation(this.spriteSheet);
+    this.bitmapAnimation.currentFrame = 0;
+    this.bitmapAnimation.onMouseOver = this.onBitmapAnimationMouseOver;
+    this.bitmapAnimation.onMouseOut = this.onBitmapAnimationMouseOut;
+    this.bitmapAnimation.onDoubleClick = this.onBitmapAnimationDoubleClick;
 
-      this.nameText = new Text();
-      this.updateCreatureName();
+    this.messagesContainer = new Container();
+    this.messagesContainer.y = this.container.y - Werld.Config.PIXELS_PER_TILE / 2;
 
-      this.messagesContainer = new Container();
-      this.messagesContainer.y = this.container.y - 20;
+    this.container.addChild(this.bitmapAnimation);
+    this.container.addChild(this.messagesContainer);
 
-      this.container.addChild(this.bitmapAnimation);
-      this.container.addChild(this.nameText);
-      this.container.addChild(this.messagesContainer);
+    this.updateContainerOnScreenCoordinates();
 
-      this.updateContainerOnScreenCoordinates();
+    this.model.on('destroy', this.onModelDestroy);
+    this.model.on('death', this.pauseBitmapAnimation);
+    this.model.on('idle', this.pauseBitmapAnimation);
+    this.model.on('change:coordinates', this.updateBitmapAnimation);
+    this.model.on('change:coordinates', this.updateContainerOnScreenCoordinates);
+    this.model.on('change:messages', this.messagesContainerTick);
+    this.model.on('hitReceived', this.showHitReceivedMessage);
+    this.model.on('hitMissed', this.showHitMissedMessage);
+    this.model.on('hitDelivered:critical', this.showCriticalHitMessage);
+  },
+  showHitMissedMessage: function(attackee, attacker) {
+    var hitMissedText = new Werld.Text(Werld.TEXT.CREATURE_HIT_MISSED);
 
-      this.model.on('destroy', this.onModelDestroy);
-      this.model.on('death resurrection', this.updateCreatureName);
-      this.model.on('death', this.pauseBitmapAnimation);
-      this.model.on('idle', this.pauseBitmapAnimation);
-      this.model.on('change:coordinates', this.updateBitmapAnimation);
-      this.model.on('change:coordinates', this.updateContainerOnScreenCoordinates);
-      this.model.on('change:messages', this.messagesContainerTick);
-    }, this);
+    Werld.layers.battle.show(hitMissedText, { above: this.model });
+  },
+  showCriticalHitMessage: function(attackee, attacker, damage) {
+    var criticalHitText = new Werld.Text(Werld.TEXT.CREATURE_CRITICAL_HIT);
+
+    Werld.layers.battle.show(criticalHitText, { above: this.model });
   },
   updateContainerOnScreenCoordinates: function() {
     var onScreenCoordinates =
@@ -120,19 +122,6 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       }
     }
   },
-  updateCreatureName: function() {
-    this.nameText.text = this.nameTextText();
-    this.nameText.font = this.nameTextFont;
-    this.nameText.color = this.nameTextColor;
-    if (this.nameTextShadow) {
-      this.nameText.shadow = this.nameTextShadow;
-    }
-
-    this.nameText.textBaseline = 'top';
-    this.nameText.textAlign = 'center';
-    this.nameText.x = 20;
-    this.nameText.y = - (this.spriteSheet._regY + 28);
-  },
   messagesContainerTick: function() {
     var temporaryCreatureScreenCoordinates = [0, 0];
     var self = this;
@@ -149,15 +138,6 @@ Werld.Views.Base.Creature = Backbone.View.extend({
         if (message.type === 'speech') {
           self.messageText.color = '#cccccc';
           self.messageText.font = '16px "PowellAntique" serif';
-        } else if (message.type === 'critical') {
-          self.messageText.shadow = new Shadow('black', 1, 1, 1);
-          self.messageText.color = '#ff3300';
-          self.messageText.font = '14px "PowellAntique" serif';
-        } else if (message.type === 'hit') {
-          self.messageText.text = Math.ceil(self.messageText.text);
-          self.messageText.shadow = new Shadow('black', 1, 1, 1);
-          self.messageText.color = '#ff3300';
-          self.messageText.font = '14px "PowellAntique" serif';
         } else {
           self.messageText.color = '#cccccc';
           self.messageText.font = '16px "PowellAntique" serif';
@@ -165,7 +145,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
 
         temporaryCreatureScreenCoordinates[1] -=
           self.messageText.getMeasuredLineHeight();
-        self.messageText.x = 20;
+        self.messageText.x = Werld.Config.PIXELS_PER_TILE / 2;
         self.messageText.y = temporaryCreatureScreenCoordinates[1];
       }
     });

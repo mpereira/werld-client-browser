@@ -65,8 +65,7 @@ Werld.Views.GameMessages = Backbone.View.extend({
     }
 
     var message = new Backbone.Model({
-      type: Werld.MESSAGES[(options.type ||
-                              attributeName).toUpperCase() + typeSuffix].NAME,
+      type: (options.type || attributeName).toUpperCase() + typeSuffix,
       body: options.message,
       created_at: Date.now()
     });
@@ -80,15 +79,13 @@ Werld.Views.GameMessages = Backbone.View.extend({
     var y = 480;
 
     this.collection.each(function(message, index, collection) {
-      var text = new Text(
-                   message.get('body'),
-                   Werld.MESSAGES[message.get('type')].FONT,
-                   Werld.MESSAGES[message.get('type')].COLOR
-                 );
-      text.textAlign = 'left';
+      var text = new Werld.Text(_({
+        TEXT: message.get('body')
+      }).extend(Werld.TEXT[message.get('type')]));
+
       text.x = padding.left;
       text.y = y - (index * text.getMeasuredLineHeight() + padding.bottom);
-      text.shadow = new Shadow('#000000', 1, 1, 0);
+
       this.container.addChild(text);
     }, this);
 

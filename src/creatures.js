@@ -8,11 +8,6 @@ Werld.CREATURES = {
       MAX_DEXTERITY: 125,
       MAX_STRENGHT: 125,
       MAX_INTELLIGENCE: 125
-    },
-    SPRITE: {
-      SRC: 'images/sprite_sheets/characters/mage.png',
-      DIMENSIONS: [40, 40],
-      FREQUENCY: 0.25
     }
   },
   SILVER_BAT: {
@@ -32,12 +27,6 @@ Werld.CREATURES = {
     },
     ITEMS: {
       GOLD: [5, 10]
-    },
-    SPRITE: {
-      SRC: 'images/sprite_sheets/creatures/silver_bat.png',
-      DIMENSIONS: [40, 40],
-      FRAMES: 4,
-      FREQUENCY: 0.25
     }
   },
   WHITE_WOLF: {
@@ -57,12 +46,6 @@ Werld.CREATURES = {
     },
     ITEMS: {
       GOLD: [15, 20]
-    },
-    SPRITE: {
-      SRC: 'images/sprite_sheets/creatures/white_wolf.png',
-      DIMENSIONS: [48, 48],
-      FRAMES: 4,
-      FREQUENCY: 0.25
     }
   },
   FIRE_WOLF: {
@@ -82,12 +65,6 @@ Werld.CREATURES = {
     },
     ITEMS: {
       GOLD: [30, 50]
-    },
-    SPRITE: {
-      SRC: 'images/sprite_sheets/creatures/fire_wolf.png',
-      DIMENSIONS: [48, 53],
-      FRAMES: 4,
-      FREQUENCY: 0.25
     }
   },
   LEVIATHAN: {
@@ -107,12 +84,6 @@ Werld.CREATURES = {
     },
     ITEMS: {
       GOLD: [300, 400]
-    },
-    SPRITE: {
-      SRC: 'images/sprite_sheets/creatures/leviathan.png',
-      DIMENSIONS: [96, 96],
-      FRAMES: 4,
-      FREQUENCY: 0.5
     }
   },
   BLUE_DRAGON: {
@@ -132,12 +103,6 @@ Werld.CREATURES = {
     },
     ITEMS: {
       GOLD: [500, 600]
-    },
-    SPRITE: {
-      SRC: 'images/sprite_sheets/creatures/blue_dragon.png',
-      DIMENSIONS: [96, 96],
-      FRAMES: 4,
-      FREQUENCY: 0.5
     }
   }
 };

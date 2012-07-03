@@ -3,6 +3,7 @@ var Werld = {
   Models: { Base: {} },
   Collections: {},
   containers: {},
+  layers: {},
   CONTAINER_NAMES: [
     'terrain',
     'objects',
@@ -10,28 +11,73 @@ var Werld = {
     'character',
     'gumps',
     'itemTransfer',
-    'gameMessages'
+    'gameMessages',
+    'damage'
   ],
-  MESSAGES: {
-    STAT_INCREASE: {
-      NAME: 'STAT_INCREASE',
+  TEXT: {
+    CREATURE_NAME: {
+      FONT: '16px "PowellAntique" serif',
+      COLOR: '#cccccc',
+      SHADOW: new Shadow('black', 1, 1, 1),
+      TEXT_BASELINE: 'top',
+      TEXT_ALIGN: 'center'
+    },
+    CHARACTER_NAME: {
       FONT: '18px "PowellAntique" serif',
-      COLOR: '#66cc00'
+      COLOR: '#6495ed',
+      SHADOW: new Shadow('black', 1, 1, 1),
+      TEXT_BASELINE: 'top',
+      TEXT_ALIGN: 'center'
+    },
+    CREATURE_HIT_RECEIVED: {
+      FONT: '14px "PowellAntique" serif',
+      COLOR: '#ff3300',
+      TEXT_ALIGN: 'center',
+      SHADOW: new Shadow('black', 1, 1, 1)
+    },
+    CREATURE_CRITICAL_HIT: {
+      TEXT: 'critical!',
+      FONT: '14px "PowellAntique" serif',
+      COLOR: '#cccccc',
+      TEXT_ALIGN: 'center',
+      SHADOW: new Shadow('black', 1, 1, 1)
+    },
+    CREATURE_HIT_MISSED: {
+      TEXT: 'miss',
+      FONT: '14px "PowellAntique" serif',
+      COLOR: '#cccccc',
+      TEXT_ALIGN: 'center',
+      SHADOW: new Shadow('black', 1, 1, 1)
+    },
+    CHARACTER_HIT_RECEIVED: {
+      FONT: '14px "PowellAntique" serif',
+      COLOR: 'yellow',
+      TEXT_ALIGN: 'center',
+      SHADOW: new Shadow('black', 1, 1, 1)
+    },
+    STAT_INCREASE: {
+      FONT: '18px "PowellAntique" serif',
+      COLOR: '#66cc00',
+      TEXT_ALIGN: 'left',
+      SHADOW: new Shadow('black', 1, 1, 0)
     },
     STAT_DECREASE: {
-      NAME: 'STAT_DECREASE',
       FONT: '18px "PowellAntique" serif',
-      COLOR: '#66cc00'
+      COLOR: '#66cc00',
+      TEXT_ALIGN: 'left',
+      SHADOW: new Shadow('black', 1, 1, 0)
     },
     SKILL_INCREASE: {
-      NAME: 'SKILL_INCREASE',
       FONT: '18px "PowellAntique" serif',
-      COLOR: '#05b8cc'
+      COLOR: '#05b8cc',
+      TEXT_ALIGN: 'left',
+      SHADOW: new Shadow('black', 1, 1, 0)
     },
     SKILL_DECREASE: {
-      NAME: 'SKILL_DECREASE',
       FONT: '18px "PowellAntique" serif',
-      COLOR: '#05b8cc'
+      COLOR: '#05b8cc',
+      TEXT_ALIGN: 'left',
+      SHADOW: new Shadow('black', 1, 1, 0)
     },
   },
   STATES: {
@@ -116,10 +162,24 @@ var Werld = {
 
         Werld.character.equip(shortSword);
 
+        Werld.map = new Werld.Models.Map();
+
+        Werld.screen = new Werld.Models.Screen({
+          map: Werld.map,
+          character: Werld.character,
+          dimensions: Werld.Config.SCREEN_DIMENSIONS,
+          coordinates: [0, 0]
+        });
+
+        Werld.canvas.screenView = new Werld.Views.Screen({
+          model: Werld.screen
+        });
+
         Werld.game = new Werld.Models.Game({ characters: [Werld.character] });
 
         Werld.canvas.characterView = new Werld.Views.Character({
-          model: Werld.character
+          model: Werld.character,
+          image: Werld.IMAGES.MAGE
         });
 
         Werld.canvas.statusBarView = new Werld.Views.StatusBar({
@@ -173,17 +233,9 @@ var Werld = {
           blueDragonSpawner
         ]);
 
-        Werld.map = new Werld.Models.Map();
-
-        Werld.screen = new Werld.Models.Screen({
-          map: Werld.map,
-          character: Werld.character,
-          dimensions: Werld.Config.SCREEN_DIMENSIONS,
-          coordinates: [0, 0]
-        });
-
-        Werld.canvas.screenView = new Werld.Views.Screen({
-          model: Werld.screen
+        Werld.layers.battle = new Werld.Views.Layer({
+          model: Werld.containers.damage,
+          character: Werld.character
         });
 
         Werld.altar = new Werld.Models.Altar(

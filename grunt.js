@@ -17,17 +17,21 @@ module.exports = function(grunt) {
         'vendor/javascripts/underscore.string-*.js',
         'vendor/javascripts/backbone-*.js',
         'vendor/javascripts/easel-*.js',
+        'vendor/javascripts/tween-*.js',
+        'vendor/javascripts/preload-*.js',
         'vendor/javascripts/stats-*.js'
       ],
       src: [
         'src/werld.js',
         'src/gumps.js',
         'src/items.js',
+        'src/creatures.js',
         'src/images.js',
         'src/collections/creatures.js',
         'src/collections/threateners.js',
         'src/collections/messages.js',
         'src/collections/ephemeral_messages.js',
+        'src/**/base/*.js',
         'src/**/*.js'
       ],
       stylesheets: ['assets/stylesheets/**/*.less']
@@ -110,7 +114,15 @@ module.exports = function(grunt) {
         Backbone: true,
         FB: true,
         Werld: true,
-        // EaselJS's globals.
+        // PreloadJS.
+        AbtractLoader: true,
+        PreloadJS: true,
+        TagLoader: true,
+        XHRLoader: true,
+        // TweenJS.
+        Tween: true,
+        Ease: true,
+        // EaselJS.
         Bitmap: true,
         BitmapAnimation: true,
         Container: true,

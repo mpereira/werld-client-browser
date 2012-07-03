@@ -1,17 +1,13 @@
 Werld.Views.Creature = Werld.Views.Base.Creature.extend({
-  nameTextFont: '16px "PowellAntique" serif',
-  nameTextColor: '#cccccc',
-  nameTextShadow: new Shadow('black', 1, 1, 1),
   initialize: function() {
-    Werld.Views.Creature.__super__.initialize.call(this);
+    Werld.Views.Creature.__super__.initialize.apply(this, arguments);
 
-    this.hitPointsBarRectangleWidth = 50;
+    this.hitPointsBarRectangleWidth = 40;
     this.hitPointsBarRectangle = new Rectangle(
-      this.container.x -
-        ((this.hitPointsBarRectangleWidth - Werld.Config.PIXELS_PER_TILE) / 2),
-      -0.21 * Math.pow(this.model.get('SPRITE').DIMENSIONS[1], 5 / 4),
+      -((this.hitPointsBarRectangleWidth - Werld.Config.PIXELS_PER_TILE) / 2),
+      -((30 / 29) * this.options.image.DIMENSIONS[1] - 25),
       this.hitPointsBarRectangleWidth,
-      6
+      3
     );
     this.hitPointsBarGraphics = new Graphics();
     this.hitPointsBar = new Shape(this.hitPointsBarGraphics);
@@ -21,6 +17,21 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
 
     this.updateHitPointsBar(this.model);
 
+    this.nameText = new Werld.Text(_({
+      TEXT: this.model.get('name')
+    }).extend(Werld.TEXT.CREATURE_NAME));
+    this.nameText.x = Werld.Config.PIXELS_PER_TILE / 2;
+    this.nameText.y =
+      this.hitPointsBarRectangle.y - (this.nameText.getMeasuredLineHeight() + 3);
+
+    this.container.addChild(this.nameText);
+
+    this.model.on('death', function(creature, options) {
+      this.nameText = this.model.get('name') + ' corpse';
+    }, this);
+    this.model.on('resurrection', function(creature, options) {
+      this.nameText = this.model.get('name');
+    }, this);
     this.model.on('death', this.showLootIfCharacterIsClose);
     this.model.on('change:hitPoints', this.updateHitPointsBar);
     Werld.character.on(
@@ -28,12 +39,11 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
       this.updateContainerOnScreenCoordinates
     );
   },
-  nameTextText: function() {
-    if (this.model.alive()) {
-      return(this.model.get('name'));
-    } else {
-      return(this.model.get('name') + ' corpse');
-    }
+  showHitReceivedMessage: function(attackee, attacker, damage) {
+    var damageText = new Werld.Text(_({
+      TEXT: Math.abs(damage)
+    }).extend(Werld.TEXT.CREATURE_HIT_RECEIVED));
+    Werld.layers.battle.show(damageText, { above: this.model });
   },
   updateHitPointsBar: function(model) {
     var hitPointsPercentage =
