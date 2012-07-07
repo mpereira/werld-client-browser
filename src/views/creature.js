@@ -1,6 +1,6 @@
 Werld.Views.Creature = Werld.Views.Base.Creature.extend({
   initialize: function() {
-    Werld.Views.Creature.__super__.initialize.apply(this, arguments);
+    this.constructor.__super__.initialize.apply(this, arguments);
 
     this.hitPointsBarRectangleWidth = 40;
     this.hitPointsBarRectangle = new Rectangle(

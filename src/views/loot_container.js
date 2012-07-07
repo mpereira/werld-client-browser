@@ -1,6 +1,6 @@
 Werld.Views.LootContainer = Werld.Views.Base.Container.extend({
   initialize: function() {
-    Werld.Views.LootContainer.__super__.initialize.call(this);
+    this.constructor.__super__.initialize.call(this);
 
     _.bindAll(this);
 

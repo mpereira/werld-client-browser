@@ -1,6 +1,6 @@
 Werld.Views.Character = Werld.Views.Base.Creature.extend({
   initialize: function() {
-    Werld.Views.Character.__super__.initialize.apply(this, arguments);
+    this.constructor.__super__.initialize.apply(this, arguments);
 
     this.nameText = new Werld.Text(_({
       TEXT: this.model.get('name')

@@ -5,10 +5,10 @@ Werld.Models.Character = Werld.Models.Base.Creature.extend({
       individualStatCap: 100,
       cumulativeSkillCap: 300,
       individualSkillCap: 100
-    }).extend(Werld.Models.Character.__super__.defaults()));
+    }).extend(this.constructor.__super__.defaults()));
   },
   initialize: function() {
-    Werld.Models.Character.__super__.initialize.call(this);
+    this.constructor.__super__.initialize.apply(this, arguments);
 
     this.backpack = new Werld.Models.Backpack(_({
       owner: this

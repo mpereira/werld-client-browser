@@ -5,10 +5,10 @@ Werld.Models.Creature = Werld.Models.Base.Creature.extend({
       aggressivenessHandlerRate: Werld.Config.AGGRESSIVENESS_HANDLER_RATE,
       provocability: Werld.Config.PROVOCABILITY,
       stopAttackingHandlerRate: Werld.Config.STOP_ATTACKING_HANDLER_RATE
-    }).extend(Werld.Models.Creature.__super__.defaults.call(this)));
+    }).extend(this.constructor.__super__.defaults.call(this)));
   },
   initialize: function() {
-    Werld.Models.Creature.__super__.initialize.call(this);
+    this.constructor.__super__.initialize.apply(this, arguments);
 
     var goldQuantityRange = this.get('ITEMS').GOLD;
     var goldQuantity = Werld.Utils.Math.randomIntegerBetween(goldQuantityRange);
@@ -24,17 +24,15 @@ Werld.Models.Creature = Werld.Models.Base.Creature.extend({
       threatenersUpdater: this.get('aggressivenessHandlerRate'),
       stopAttackingHandler: this.get('stopAttackingHandlerRate')
     }).extend(
-      Werld.Models.Creature.__super__.lifeIntervalFunctionNamesWithIntervals.call(
-        this
-      )
+      this.constructor.__super__.lifeIntervalFunctionNamesWithIntervals.call(this)
     ));
   },
   stopAttacking: function(creature) {
-    Werld.Models.Creature.__super__.stopAttacking.call(this, creature);
+    this.constructor.__super__.stopAttacking.call(this, creature);
     this.stopMoving();
   },
   acknowledgeAttack: function(attacker) {
-    Werld.Models.Creature.__super__.acknowledgeAttack.call(this, attacker);
+    this.constructor.__super__.acknowledgeAttack.call(this, attacker);
 
     if (!this.attacking(attacker)) {
       this.attack(attacker);

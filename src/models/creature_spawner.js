@@ -102,7 +102,7 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
     }
   },
   scheduleCreatureDestroy: function(creature) {
-    _(creature.destroy).delay(this.get('corpseDecayTime'));
+    _(_(creature.destroy).bind(creature)).delay(this.get('corpseDecayTime'));
   },
   scheduleAddCreature: function(creature) {
     _(this.addCreature).delay(this.get('respawnTime'));

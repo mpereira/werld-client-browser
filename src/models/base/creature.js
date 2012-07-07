@@ -12,13 +12,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       staminaRenegerationRate: Werld.Config.REGENERATION_RATE
     }).extend(defaultSkills));
   },
-  initialize: function(attributes, options) {
-    _.bindAll(this);
-
-    attributes || (attributes = {});
-    this.set(attributes, { silent: true });
-    this.options = options || {};
-
+  initialize: function() {
     this.items = (this.get('items') || new Werld.Collections.Items());
 
     if (!this.has('threateners')) {
