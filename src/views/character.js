@@ -13,7 +13,7 @@ Werld.Views.Character = Werld.Views.Base.Creature.extend({
   showHitReceivedMessage: function(attackee, attacker, damage) {
     var damageText = new Werld.Text(_({
       TEXT: Math.abs(damage)
-    }).extend(Werld.TEXT.CREATURE_HIT_RECEIVED));
+    }).extend(Werld.TEXT.CHARACTER_HIT_RECEIVED));
     Werld.layers.battle.show(damageText, { above: this.model });
   }
 });
