@@ -27,10 +27,10 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
     this.container.addChild(this.nameText);
 
     this.model.on('death', function(creature, options) {
-      this.nameText = this.model.get('name') + ' corpse';
+      this.nameText.text = this.model.get('name') + ' corpse';
     }, this);
     this.model.on('resurrection', function(creature, options) {
-      this.nameText = this.model.get('name');
+      this.nameText.text = this.model.get('name');
     }, this);
     this.model.on('death', this.showLootIfCharacterIsClose);
     this.model.on('change:hitPoints', this.updateHitPointsBar);
