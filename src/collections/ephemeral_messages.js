@@ -16,7 +16,7 @@ Werld.Collections.EphemeralMessages = Werld.Collections.Messages.extend({
   },
   maybeUninstallSweeper: function(collection) {
     if (this.isEmpty()) {
-      Werld.Utils.Interval.uninstall({ sweeper: this.lifetime }, this);
+      Werld.Utils.Interval.uninstall('sweeper', this);
     }
   },
   sweeper: function() {

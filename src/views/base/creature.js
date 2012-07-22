@@ -43,7 +43,11 @@ Werld.Views.Base.Creature = Backbone.View.extend({
 
     this.model.on('destroy', this.onModelDestroy);
     this.model.on('death', this.pauseBitmapAnimation);
-    this.model.on('idle', this.pauseBitmapAnimation);
+    this.model.on('change:isMoving', function(creature, value, options) {
+      if (!creature.isMoving()) {
+        _.defer(this.pauseBitmapAnimation, creature);
+      }
+    }, this);
     this.model.on('change:coordinates', this.updateBitmapAnimation);
     this.model.on('change:coordinates', this.updateContainerOnScreenCoordinates);
     this.model.on('change:messages', this.messagesContainerTick);

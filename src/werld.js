@@ -164,6 +164,8 @@ var Werld = {
 
         Werld.map = new Werld.Models.Map();
 
+        Werld.path = new Werld.Path({ map: Werld.map });
+
         Werld.screen = new Werld.Models.Screen({
           map: Werld.map,
           character: Werld.character,

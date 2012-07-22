@@ -19,9 +19,11 @@ module.exports = function(grunt) {
         'vendor/javascripts/easel-*.js',
         'vendor/javascripts/tween-*.js',
         'vendor/javascripts/preload-*.js',
-        'vendor/javascripts/stats-*.js'
+        'vendor/javascripts/stats-*.js',
+        'vendor/javascripts/astar-*.js'
       ],
       src: [
+        'src/astar.heuristics.chebyshev.js',
         'src/werld.js',
         'src/gumps.js',
         'src/items.js',
@@ -114,6 +116,9 @@ module.exports = function(grunt) {
         Backbone: true,
         FB: true,
         Werld: true,
+        // astar
+        astar: true,
+        Graph: true,
         // PreloadJS.
         AbtractLoader: true,
         PreloadJS: true,

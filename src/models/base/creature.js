@@ -26,7 +26,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       mana: this.get('intelligence'),
       stamina: this.get('dexterity'),
       destination: _.clone(this.get('coordinates')),
-      messages: []
+      messages: [],
+      path: []
     });
 
     this.lootContainer = new Werld.Models.LootContainer(_({
@@ -35,6 +36,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.installIntervalFunctions();
 
+    this.on('change:path', this.onPathChange);
+    this.on('change:coordinates', this.onCoordinatesChange);
+    this.on('change:destination', this.onDestinationChange);
     this.on('change:hitPoints', this.resurrectIfHitPointsGreaterThanZero);
     this.on('change:hitPoints', this.dieIfHitPointsLowerThanZero);
     this.on('resurrection', this.installLifeIntervalFunctions);
@@ -55,8 +59,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   intervalFunctionNamesWithIntervals: function() {
     return({
-      messageSweeper: Werld.Config.MESSAGE_SWEEPER_POLLING_INTERVAL,
-      movementHandler: Werld.frameRate()
+      messageSweeper: Werld.Config.MESSAGE_SWEEPER_POLLING_INTERVAL
     });
   },
   lifeIntervalFunctionNamesWithIntervals: function() {
@@ -64,7 +67,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       hitPointRegenerator: this.get('hitPointRenegerationRate'),
       manaRegenerator: this.get('manaRenegerationRate'),
       staminaRegenerator: this.get('staminaRenegerationRate'),
-      battleHandler: Werld.frameRate()
+      battleHandler: Werld.Config.MAXIMUM_ATTACK_SPEED * 1000
     });
   },
   say: function(message) {
@@ -79,30 +82,67 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   tileCoordinates: function() {
     return(Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates')));
   },
-  move: function(destinationTile) {
-    if (this.get('following')) {
-      this.stopFollowing(this.get('following'));
+  isMoving: function() {
+    return(this.get('isMoving'));
+  },
+  onCoordinatesChange: function(creature, value, options) {
+    if (_(this.get('coordinates')).isEqual(this.get('destination'))) {
+      this.set('isMoving', false);
+      this.set('path', _.tail(this.get('path')));
+    } else {
+      this.set('isMoving', true);
+    }
+  },
+  onDestinationChange: function(creature, value, options) {
+    if (this.has('attackee')) {
+      if (this.tileDistance(this.get('attackee')) > this.get('attackee').get('aggressivenessRadius')) {
+        this.stopAttacking(this.get('attackee'));
+      }
     }
 
-    /* Stop attacking if we move beyond the creature being attacked's
-     * aggressiveness radius. */
-    var creatureBeingAttacked = this.get('attackee');
-    if (creatureBeingAttacked &&
-          this.tileDistance(creatureBeingAttacked) >
-          creatureBeingAttacked.get('aggressivenessRadius')) {
-      this.stopAttacking(creatureBeingAttacked);
+    if (Werld.Utils.Interval.isInstalled('movementHandler', this)) {
+      Werld.Utils.Interval.uninstall('movementHandler', this);
     }
 
-    if (destinationTile[0] < 0) {
-      destinationTile[0] = 0;
-    } else if (destinationTile[0] >= Werld.Config.WORLD_MAP_DIMENSIONS[0]) {
-      destinationTile[0] = Werld.Config.WORLD_MAP_DIMENSIONS[1] - 1;
+    Werld.Utils.Interval.install({ movementHandler: Werld.frameRate() }, this);
+  },
+  movementHandler: function() {
+    var coordinates = _.clone(this.get('coordinates'));
+
+    if (this.get('coordinates')[0] > this.get('destination')[0]) {
+      coordinates[0] -= this.get('MOVEMENT_SPEED');
+    } else if (this.get('coordinates')[0] < this.get('destination')[0]) {
+      coordinates[0] += this.get('MOVEMENT_SPEED');
     }
 
-    if (destinationTile[1] < 0) {
-      destinationTile[1] = 0;
-    } else if (destinationTile[1] >= Werld.Config.WORLD_MAP_DIMENSIONS[0]) {
-      destinationTile[1] = Werld.Config.WORLD_MAP_DIMENSIONS[1] - 1;
+    if (this.get('coordinates')[1] > this.get('destination')[1]) {
+      coordinates[1] -= this.get('MOVEMENT_SPEED');
+    } else if (this.get('coordinates')[1] < this.get('destination')[1]) {
+      coordinates[1] += this.get('MOVEMENT_SPEED');
+    }
+
+    this.set('coordinates', coordinates);
+  },
+  onPathChange: function(creature, value, options) {
+    if (!this.has('path')) { return; }
+    if (_.isEmpty(this.get('path'))) { return; }
+
+    this.moveTo([_.head(this.get('path')).x, _.head(this.get('path')).y]);
+  },
+  follow: function(pathOrCreature) {
+    if (pathOrCreature instanceof Werld.Models.Base.Creature) {
+      this.set('followee', pathOrCreature);
+      this.set('destination', this.get('followee').get('coordinates'));
+      this.follow(Werld.path.search(this, pathOrCreature));
+    } else if (pathOrCreature instanceof Array) {
+      this.set('path', pathOrCreature);
+    } else {
+      throw new Error('Creatures follow either other creatures or a path');
+    }
+  },
+  moveTo: function(destinationTile) {
+    if (this.has('followee')) {
+      this.stopFollowing(this.get('followee'));
     }
 
     this.set({
@@ -120,51 +160,14 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       return(this.states.attacking);
     } else if (this.has('attacker')) {
       return(this.states.beingAttacked);
-    } else if (this.has('following')) {
+    } else if (this.has('followee')) {
       return(this.states.following);
     } else {
       return(this.states.idle);
     }
   },
-  movementHandler: function() {
-    // If we're following something, update our "destination" with their
-    // "coordinates" unless they're already equal.
-    var followee = this.get('following');
-    if (followee) {
-      if (!_(followee.get('coordinates')).isEqual(this.get('coordinates'))) {
-        this.set('destination', followee.get('coordinates'));
-      }
-    }
-
-    // TODO: don't trigger on every `movementHandler()` call.
-    if (_(this.get('coordinates')).isEqual(this.get('destination'))) {
-      this.trigger('idle', this);
-      return;
-    }
-
-    var destination = this.get('destination');
-    var coordinates = _.clone(this.get('coordinates'));
-    var movementSpeed = this.get('MOVEMENT_SPEED');
-
-    if (coordinates[0] > destination[0]) {
-      coordinates[0] -= movementSpeed;
-    } else if (coordinates[0] < destination[0]) {
-      coordinates[0] += movementSpeed;
-    }
-
-    if (coordinates[1] > destination[1]) {
-      coordinates[1] -= movementSpeed;
-    } else if (coordinates[1] < destination[1]) {
-      coordinates[1] += movementSpeed;
-    }
-
-    this.set('coordinates', coordinates);
-  },
-  follow: function(creature) {
-    this.set('following', creature);
-  },
   stopFollowing: function(creature) {
-    this.follow(null);
+    this.set('followee', null);
   },
   attackSpeed: function() {
     var baseAttackSpeed = this.has('weapon') ?
@@ -174,7 +177,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     return(_.max([
       Math.floor(baseAttackSpeed - (this.get('stamina') / 30)),
       Werld.Config.MAXIMUM_ATTACK_SPEED
-    ]));
+    ]) * 1000);
   },
   attacking: function(creature) {
     return(this.get('attackee') === creature);
@@ -190,8 +193,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
 
     if (this.get('attackee').alive()) {
-      if (this.tileDistance(this.get('attackee')) < 1) {
-        if ((Date.now() - this.get('lastHitAttemptedAt')) >= this.attackSpeed() * 1000) {
+      if (this.tileDistance(this.get('attackee')) <= 1) {
+        if ((Date.now() - this.get('lastHitAttemptedAt')) >= this.attackSpeed()) {
           this.attemptHit(this.get('attackee'));
         }
       }
@@ -339,7 +342,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   uninstallLifeIntervalFunctions: function(creature) {
     Werld.Utils.Interval.uninstall(
-      this.lifeIntervalFunctionNamesWithIntervals(), this
+      _.keys(this.lifeIntervalFunctionNamesWithIntervals()), this
     );
   },
   coordinates: function() {
@@ -456,8 +459,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   uninstallIntervalFunctions: function(creature) {
     Werld.Utils.Interval.uninstall(_({}).extend(
-      this.intervalFunctionNamesWithIntervals(),
-      this.lifeIntervalFunctionNamesWithIntervals()
+      _.keys(this.intervalFunctionNamesWithIntervals()),
+      _.keys(this.lifeIntervalFunctionNamesWithIntervals())
     ), this);
   }
 });

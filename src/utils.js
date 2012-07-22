@@ -59,8 +59,14 @@ Werld.Utils.Callback = {
 };
 
 Werld.Utils.Interval = {
+  _intervalIdName: function(callbackName) {
+    return(callbackName + 'IntervalId');
+  },
+  isInstalled: function(callbackName, context) {
+    return(!!context[this._intervalIdName(callbackName)]);
+  },
   set: function(context, intervalIdName, callback, interval) {
-    context[intervalIdName] = setInterval(callback, interval);
+    context[intervalIdName] = setInterval(_(callback).bind(context), interval);
   },
   clear: function(context, intervalIdName) {
     clearInterval(context[intervalIdName]);
@@ -70,15 +76,15 @@ Werld.Utils.Interval = {
     _.chain(intervalFunctionNamesWithIntervals).keys().each(function(key) {
       Werld.Utils.Interval.set(
         context,
-        key + 'IntervalId',
+        Werld.Utils.Interval._intervalIdName(key),
         _(context[key]).bind(context),
         intervalFunctionNamesWithIntervals[key]
       );
     });
   },
-  uninstall: function(intervalFunctionNamesWithIntervals, context) {
-    _.chain(intervalFunctionNamesWithIntervals).keys().each(function(key) {
-      Werld.Utils.Interval.clear(context, key + 'IntervalId');
+  uninstall: function(intervalFunctionNames, context) {
+    _(_.flatten([intervalFunctionNames])).each(function(key) {
+      Werld.Utils.Interval.clear(context, Werld.Utils.Interval._intervalIdName(key));
     });
   }
 };
