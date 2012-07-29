@@ -152,9 +152,11 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.pathfind(creature);
     creature.on('change:coordinates', this.onFolloweeCoordinatesChange, this);
   },
-  moveTo: function(destination) {
-    if (this.has('followee')) {
-      this.stopFollowing(this.get('followee'));
+  moveTo: function(destination, options) {
+    if (options && options.stopFollowing) {
+      if (this.has('followee')) {
+        this.stopFollowing(this.get('followee'));
+      }
     }
 
     this.pathfind(Werld.Utils.Geometry.pixelPointToTilePoint(destination));
