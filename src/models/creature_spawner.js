@@ -42,25 +42,25 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
       }
 
       if (creature.state() === creature.states.idle) {
-        var randomAdjacentTilePointWithinSpawnArea =
-          spawner.randomAdjacentTilePointWithinSpawnArea(creature);
+        var randomAdjacentTileCoordinatePointWithinSpawnArea =
+          spawner.randomAdjacentTileCoordinatePointWithinSpawnArea(creature);
 
         // This means the creature is either inside the spawn area or at least
         // tangential to the spawn area's bounds.
-        if (randomAdjacentTilePointWithinSpawnArea) {
-          creature.moveTo(randomAdjacentTilePointWithinSpawnArea);
+        if (randomAdjacentTileCoordinatePointWithinSpawnArea) {
+          creature.moveTo(randomAdjacentTileCoordinatePointWithinSpawnArea);
         } else {
-          creature.moveTo(spawner.adjacentTilePointCloserToSpawnArea(creature));
+          creature.moveTo(spawner.adjacentTileCoordinatePointCloserToSpawnArea(creature));
         }
       }
 
       spawner.spawnAreaMovementHandler(creature);
     }).delay(time);
   },
-  adjacentTilePointCloserToSpawnArea: function(creature) {
+  adjacentTileCoordinatePointCloserToSpawnArea: function(creature) {
     var spawner = this;
 
-    return(_(creature.adjacentTilePoints()).sortBy(function(tilePoint) {
+    return(_(creature.adjacentTileCoordinatePoints()).sortBy(function(tilePoint) {
       return(Werld.Utils.Geometry.tileDistance(
         Werld.Utils.Geometry.pixelPointToTilePoint(
           spawner.spawnAreaCircle.center
@@ -69,10 +69,10 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
       ));
     })[0]);
   },
-  randomAdjacentTilePointWithinSpawnArea: function(creature) {
+  randomAdjacentTileCoordinatePointWithinSpawnArea: function(creature) {
     var spawner = this;
     var adjacentTilePointsWithinSpawnArea =
-      _(creature.adjacentTilePoints()).filter(function(tilePoint) {
+      _(creature.adjacentTileCoordinatePoints()).filter(function(tilePoint) {
         return(spawner.tilePointWithinSpawnArea(tilePoint));
       });
 

@@ -87,8 +87,11 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   onCoordinatesChange: function(creature, value, options) {
     if (_(this.get('coordinates')).isEqual(this.get('destination'))) {
-      this.set('isMoving', false);
       this.set('path', _.tail(this.get('path')));
+
+      if (_.isEmpty(this.get('path'))) {
+        this.set('isMoving', false);
+      }
     } else {
       this.set('isMoving', true);
     }
@@ -105,6 +108,10 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
 
     Werld.Utils.Interval.install({ movementHandler: Werld.frameRate() }, this);
+  },
+  onFolloweeCoordinatesChange: function(followee, coordinates, options) {
+    var thing = this.get('followee');
+    this.pathfind(this.get('followee'));
   },
   movementHandler: function() {
     var coordinates = _.clone(this.get('coordinates'));
@@ -127,27 +134,25 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     if (!this.has('path')) { return; }
     if (_.isEmpty(this.get('path'))) { return; }
 
-    this.moveTo([_.head(this.get('path')).x, _.head(this.get('path')).y]);
+    this.set('destination', Werld.Utils.Geometry.tilePointToPixelPoint([
+      _.head(this.get('path')).x,
+      _.head(this.get('path')).y
+    ]));
   },
-  follow: function(pathOrCreature) {
-    if (pathOrCreature instanceof Werld.Models.Base.Creature) {
-      this.set('followee', pathOrCreature);
-      this.set('destination', this.get('followee').get('coordinates'));
-      this.follow(Werld.path.search(this, pathOrCreature));
-    } else if (pathOrCreature instanceof Array) {
-      this.set('path', pathOrCreature);
-    } else {
-      throw new Error('Creatures follow either other creatures or a path');
-    }
+  pathfind: function(thing) {
+    this.set('path', Werld.path.search(this, thing));
   },
-  moveTo: function(destinationTile) {
+  follow: function(creature) {
+    this.set('followee', creature);
+    this.pathfind(creature);
+    creature.on('change:coordinates', this.onFolloweeCoordinatesChange, this);
+  },
+  moveTo: function(destination) {
     if (this.has('followee')) {
       this.stopFollowing(this.get('followee'));
     }
 
-    this.set({
-      destination: Werld.Utils.Geometry.tilePointToPixelPoint(destinationTile)
-    });
+    this.pathfind(Werld.Utils.Geometry.pixelPointToTilePoint(destination));
   },
   states: {
     attacking: 'attacking',
@@ -167,7 +172,8 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
   },
   stopFollowing: function(creature) {
-    this.set('followee', null);
+    this.unset('followee');
+    creature.off('change:coordinates', this.onFolloweeCoordinatesChange, this);
   },
   attackSpeed: function() {
     var baseAttackSpeed = this.has('weapon') ?
@@ -437,17 +443,19 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       return(true);
     }
   },
-  adjacentTilePoints: function() {
-    var tileCoordinates = this.tileCoordinates();
+  adjacentTileCoordinatePoints: function() {
+    var coordinates = this.get('coordinates');
 
     return(_([
       [-1, -1], [-1, 0], [-1, 1],
       [0, -1], [0, 1],
       [1, -1], [1, 0], [1, 1]
-    ]).reduce(function(memo, adjacentTileCoordinateOffset) {
+    ]).map(function(adjacentTileOffset) {
+      return(Werld.Utils.Geometry.tilePointToPixelPoint(adjacentTileOffset));
+    }).reduce(function(memo, adjacentTileCoordinateOffset) {
       return(memo.concat([[
-        tileCoordinates[0] + adjacentTileCoordinateOffset[0],
-        tileCoordinates[1] + adjacentTileCoordinateOffset[1]
+        coordinates[0] + adjacentTileCoordinateOffset[0],
+        coordinates[1] + adjacentTileCoordinateOffset[1]
       ]]));
     }, []));
   },
