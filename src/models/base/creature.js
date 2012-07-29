@@ -110,7 +110,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     Werld.Utils.Interval.install({ movementHandler: Werld.frameRate() }, this);
   },
   onFolloweeCoordinatesChange: function(followee, coordinates, options) {
-    var thing = this.get('followee');
     this.pathfind(this.get('followee'));
   },
   movementHandler: function() {
@@ -139,9 +138,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       _.head(this.get('path')).y
     ]));
   },
-  pathfind: function(thing) {
+  pathfind: _.throttle(function(thing) {
     this.set('path', Werld.path.search(this, thing));
-  },
+  }, 100),
   follow: function(creature) {
     this.set('followee', creature);
     this.pathfind(creature);
