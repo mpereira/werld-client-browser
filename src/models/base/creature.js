@@ -138,9 +138,15 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       _.head(this.get('path')).y
     ]));
   },
-  pathfind: _.throttle(function(thing) {
-    this.set('path', Werld.path.search(this, thing));
-  }, 100),
+  pathfind: function(thing) {
+    var self = this;
+
+    this._pathfind || (this._pathfind = _.throttle(function(thing) {
+      self.set('path', Werld.path.search(self, thing));
+    }, 100));
+
+    this._pathfind(thing);
+  },
   follow: function(creature) {
     this.set('followee', creature);
     this.pathfind(creature);
