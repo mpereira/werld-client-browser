@@ -36,8 +36,16 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.installIntervalFunctions();
 
-    this.on('change:path', this.onPathChange);
-    this.on('change:coordinates change:destination', this.updateIsMoving);
+    this.on('change:path', this.setDestinationWithThePathsHead);
+    this.on('change:path', this.setIsMovingToFalseIfOnDestinationAndNoPath);
+    this.on(
+      'change:coordinates change:destination',
+      this.setPathToItsTailIfOnIntermediateDestination
+    );
+    this.on(
+      'change:coordinates change:destination',
+      this.setIsMovingToTrueIfNotOnDestination
+    );
     this.on('change:destination', this.onDestinationChange);
     this.on('change:hitPoints', this.resurrectIfHitPointsGreaterThanZero);
     this.on('change:hitPoints', this.dieIfHitPointsLowerThanZero);
@@ -85,15 +93,21 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   isMoving: function() {
     return(this.get('isMoving'));
   },
-  updateIsMoving: function(creature, value, options) {
+  setPathToItsTailIfOnIntermediateDestination: function(creature, value, options) {
     if (_(this.get('coordinates')).isEqual(this.get('destination'))) {
       this.set('path', _.tail(this.get('path')));
-
+    }
+  },
+  setIsMovingToTrueIfNotOnDestination: function(creature, value, options) {
+    if (!_(this.get('coordinates')).isEqual(this.get('destination'))) {
+      this.set('isMoving', true);
+    }
+  },
+  setIsMovingToFalseIfOnDestinationAndNoPath: function(creature, value, options) {
+    if (_(this.get('coordinates')).isEqual(this.get('destination'))) {
       if (_.isEmpty(this.get('path'))) {
         this.set('isMoving', false);
       }
-    } else {
-      this.set('isMoving', true);
     }
   },
   onDestinationChange: function(creature, value, options) {
@@ -129,8 +143,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.set('coordinates', coordinates);
   },
-  onPathChange: function(creature, value, options) {
-    if (!this.has('path')) { return; }
+  setDestinationWithThePathsHead: function(creature, value, options) {
     if (_.isEmpty(this.get('path'))) { return; }
 
     this.set('destination', Werld.Utils.Geometry.tilePointToPixelPoint([
