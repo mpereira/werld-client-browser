@@ -37,7 +37,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.installIntervalFunctions();
 
     this.on('change:path', this.onPathChange);
-    this.on('change:coordinates', this.onCoordinatesChange);
+    this.on('change:coordinates change:destination', this.updateIsMoving);
     this.on('change:destination', this.onDestinationChange);
     this.on('change:hitPoints', this.resurrectIfHitPointsGreaterThanZero);
     this.on('change:hitPoints', this.dieIfHitPointsLowerThanZero);
@@ -85,7 +85,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   isMoving: function() {
     return(this.get('isMoving'));
   },
-  onCoordinatesChange: function(creature, value, options) {
+  updateIsMoving: function(creature, value, options) {
     if (_(this.get('coordinates')).isEqual(this.get('destination'))) {
       this.set('path', _.tail(this.get('path')));
 
