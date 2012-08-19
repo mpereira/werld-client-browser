@@ -6,6 +6,14 @@ Werld.Path = function(options) {
   }
 
   this.map = options.map;
+
+  this.mapTiles = this.map.get('tiles').map(function(row, index, map) {
+    return(row.map(function(tile) {
+      return(tile.walkable() ? 0 : 1);
+    }));
+  });
+
+  this.mapGraph = new Graph(this.mapTiles);
 };
 
 Werld.Path.prototype = {
@@ -27,18 +35,10 @@ Werld.Path.prototype = {
       destinationTile = destination;
     }
 
-    var mapTiles = this.map.get('tiles').map(function(row, index, map) {
-      return(row.map(function(tile) {
-        return(tile.walkable() ? 0 : 1);
-      }));
-    });
-
-    var mapGraph = new Graph(mapTiles);
-
     return(astar.search(
-      mapGraph.nodes,
-      mapGraph.nodes[originTile[0]][originTile[1]],
-      mapGraph.nodes[destinationTile[0]][destinationTile[1]],
+      this.mapGraph.nodes,
+      this.mapGraph.nodes[originTile[0]][originTile[1]],
+      this.mapGraph.nodes[destinationTile[0]][destinationTile[1]],
       true,
       astar.chebyshev
     ));
