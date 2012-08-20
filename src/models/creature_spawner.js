@@ -72,14 +72,14 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
   randomAdjacentTileCoordinatePointWithinSpawnArea: function(creature) {
     var spawner = this;
     var adjacentTilePointsWithinSpawnArea =
-      _(creature.adjacentTileCoordinatePoints()).filter(function(tilePoint) {
-        return(spawner.tilePointWithinSpawnArea(tilePoint));
+      _(creature.adjacentTileCoordinatePoints()).filter(function(tileCoordinatePoint) {
+        return(spawner.tileCoordinatePointWithinSpawnArea(tileCoordinatePoint));
       });
 
     return(_.shuffle(adjacentTilePointsWithinSpawnArea)[0]);
   },
-  tilePointWithinSpawnArea: function(tilePoint) {
-    return(this.spawnAreaCircle.tilePointWithinArea(tilePoint));
+  tileCoordinatePointWithinSpawnArea: function(tileCoordinatePoint) {
+    return(this.spawnAreaCircle.pixelPointWithinArea(tileCoordinatePoint));
   },
   randomTilePointWithinSpawnArea: function() {
     return(this.spawnAreaCircle.randomTilePoint());
