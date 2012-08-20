@@ -45,6 +45,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       'change:coordinates change:destination',
       this.setIsMovingToTrueIfNotOnDestination
     );
+    this.on('change:coordinates', this.updateTileCreatures);
     this.on('change:path', this.setIsMovingToFalseIfOnDestinationAndNoPath);
     this.on('change:destination', this.onDestinationChange);
     this.on('change:hitPoints', this.resurrectIfHitPointsGreaterThanZero);
@@ -52,6 +53,19 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.on('resurrection', this.installLifeIntervalFunctions);
     this.on('death', this.uninstallLifeIntervalFunctions);
     this.on('destroy', this.uninstallIntervalFunctions);
+  },
+  isSteppingOnTile: function(tile) {
+    var creatureTilePoint =
+      Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates'));
+    var tileTilePoint =
+      Werld.Utils.Geometry.pixelPointToTilePoint(tile.get('coordinates'));
+
+    return(_(creatureTilePoint).isEqual(tileTilePoint));
+  },
+  updateTileCreatures: function(creature, value, options) {
+    var tile = Werld.map.getTileByCoordinates(this.get('coordinates'));
+
+    tile.get('creatures').add(this);
   },
   maxHitPoints: function() {
     return(this.get('strength'));

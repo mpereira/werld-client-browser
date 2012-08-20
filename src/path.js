@@ -9,11 +9,27 @@ Werld.Path = function(options) {
 
   this.mapTiles = this.map.get('tiles').map(function(row, index, map) {
     return(row.map(function(tile) {
-      return(tile.walkable() ? 0 : 1);
+      return(tile.get('walkable') ? 0 : 1);
     }));
   });
 
   this.mapGraph = new Graph(this.mapTiles);
+
+  var path = this;
+
+  _(this.map.get('tiles')).each(function(row, index, map) {
+    _(row).each(function(tile) {
+      tile.get('creatures').on('add remove reset', function(creature, creatures) {
+        var tilePoint =
+          Werld.Utils.Geometry.pixelPointToTilePoint(tile.get('coordinates'));
+
+        path.mapTiles[tilePoint[0]][tilePoint[1]] =
+          tile.isCurrentlyWalkable() ? 0 : 1;
+
+        path.mapGraph = new Graph(path.mapTiles);
+      });
+    });
+  });
 };
 
 Werld.Path.prototype = {
