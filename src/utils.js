@@ -106,20 +106,21 @@ Werld.Utils.Circle = function(params) {
     throw new Error('Unknown measurement ' + this.measurement + ' for Circle');
   }
 
-  this.pixelPointWithinArea = function(pixelPoint) {
+  this.pixelPointWithinArea = _(function(pixelPoint) {
     return(
-      Werld.Utils.Geometry.pixelDistance(this.center, pixelPoint) <= this.radius);
-  };
+      Werld.Utils.Geometry.pixelDistance(this.center, pixelPoint) <= this.radius
+    );
+  }).bind(this);
 
-  this.tilePointWithinArea = function(tilePoint) {
+  this.tilePointWithinArea = _(function(tilePoint) {
     return(
       this.pixelPointWithinArea(
         Werld.Utils.Geometry.tilePointToPixelPoint(tilePoint)
       )
     );
-  };
+  }).bind(this);
 
-  this.randomPixelPoint = function() {
+  this.randomPixelPoint = _(function() {
     var randomAngle = Math.random() * 2 * Math.PI;
     var randomRadius = Math.random() * this.radius;
 
@@ -127,9 +128,9 @@ Werld.Utils.Circle = function(params) {
       this.center[0] + randomRadius * Math.cos(randomAngle),
       this.center[1] + randomRadius * Math.sin(randomAngle)
     ]);
-  };
+  }).bind(this);
 
-  this.randomTilePoint = function() {
+  this.randomTilePoint = _(function() {
     var randomPixelPoint = this.randomPixelPoint();
 
     return(_(randomPixelPoint).map(function(pixels) {
@@ -137,5 +138,5 @@ Werld.Utils.Circle = function(params) {
         pixels - (pixels % Werld.Config.PIXELS_PER_TILE)
       ));
     }));
-  };
+  }).bind(this);
 };
