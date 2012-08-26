@@ -23,6 +23,6 @@ Werld.Models.Tile = Werld.Models.Base.Container.extend({
     return(this.get('coordinates'));
   },
   isCurrentlyWalkable: function() {
-    return(this.get('walkable') && this.get('creatures').isEmpty());
+    return(this.get('walkable') && !this.get('creatures').anyAlive());
   }
 });

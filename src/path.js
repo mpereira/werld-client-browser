@@ -19,7 +19,7 @@ Werld.Path = function(options) {
 
   _(this.map.get('tiles')).each(function(row, index, map) {
     _(row).each(function(tile) {
-      tile.get('creatures').on('add remove reset', function(creature, creatures) {
+      tile.get('creatures').on('add remove reset death resurrection', function(creature, creatures) {
         var tilePoint =
           Werld.Utils.Geometry.pixelPointToTilePoint(tile.get('coordinates'));
 
