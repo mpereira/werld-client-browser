@@ -154,10 +154,7 @@ var Werld = {
           intelligence: 10,
           swordsmanship: 50,
           items: new Werld.Collections.Items([shortSword]),
-          coordinates: _([
-            Math.floor(Werld.Config.SCREEN_DIMENSIONS[0] / 2),
-            Math.floor(Werld.Config.SCREEN_DIMENSIONS[1] / 2)
-          ]).map(Werld.Utils.Geometry.tilesToPixels)
+          coordinates: [340, 220]
         }).extend(Werld.CREATURES.CHARACTER));
 
         Werld.character.equip(shortSword);
