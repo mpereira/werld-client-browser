@@ -33,18 +33,18 @@ Werld.Views.Screen = Backbone.View.extend({
       return(Werld.Utils.Geometry.pixelsToTiles(pixel));
     });
 
-    /* The offset has to be >= 0 and <= 40 or else the tiles will flicker when
-     * the offset tends to 40. */
+    // The offset has to be >= 0 and <= 40 or else the tiles will flicker when
+    // the offset tends to 40.
     var offset = _(screenCoordinates).map(function(pixel) {
       return(pixel -
                Math.floor(pixel / Werld.Config.PIXELS_PER_TILE) *
                Werld.Config.PIXELS_PER_TILE);
     });
 
-    /* FIXME: Find a more performant way to render tile views. Right now we
-     *        traverse all tiles hiding them, and then traverse them again
-     *        updating the screen position and unhiding the ones that appear
-     *        on the viewport. */
+    // FIXME: Find a more performant way to render tile views. Right now we
+    //        traverse all tiles hiding them, and then traverse them again
+    //        updating the screen position and unhiding the ones that appear
+    //        on the viewport.
     var i;
     var j;
     for (i = 0; i < this.mapTileViews.length; i++) {
