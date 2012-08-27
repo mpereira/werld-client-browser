@@ -8,17 +8,18 @@ Werld.Utils.Geometry = {
     return(Math.floor(pixels / Werld.Config.PIXELS_PER_TILE));
   },
   tilePointToPixelPoint: function(tilePoint) {
-    return(_(tilePoint).map(this.tilesToPixels));
+    return(_(tilePoint).map(Werld.Utils.Geometry.tilesToPixels));
   },
   pixelPointToTilePoint: function(pixelPoint) {
-    return(_(pixelPoint).map(this.pixelsToTiles));
+    return(_(pixelPoint).map(Werld.Utils.Geometry.pixelsToTiles));
   },
   pixelDistance: function(a, b) {
     return(Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2)));
   },
   tileDistance: function(a, b) {
-    return(this.pixelsToTiles(this.pixelDistance(
-      this.tilePointToPixelPoint(a), this.tilePointToPixelPoint(b)
+    return(Werld.Utils.Geometry.pixelsToTiles(Werld.Utils.Geometry.pixelDistance(
+      Werld.Utils.Geometry.tilePointToPixelPoint(a),
+      Werld.Utils.Geometry.tilePointToPixelPoint(b)
     )));
   }
 };
@@ -40,7 +41,7 @@ Werld.Utils.Math = {
     return(Math.random() * (range[1] - range[0] + 1) + range[0]);
   },
   randomIntegerBetween: function(range) {
-    return(Math.floor(this.randomBetween(range)));
+    return(Math.floor(Werld.Utils.Math.randomBetween(range)));
   },
   toDecimal: function(number, digits) {
     return(Number(number.toFixed(digits)));
@@ -63,7 +64,7 @@ Werld.Utils.Interval = {
     return(callbackName + 'IntervalId');
   },
   isInstalled: function(callbackName, context) {
-    return(!!context[this._intervalIdName(callbackName)]);
+    return(!!context[Werld.Utils.Interval._intervalIdName(callbackName)]);
   },
   set: function(context, intervalIdName, callback, interval) {
     context[intervalIdName] = setInterval(_(callback).bind(context), interval);
