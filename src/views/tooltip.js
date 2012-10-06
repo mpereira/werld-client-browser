@@ -3,7 +3,7 @@ Werld.Views.Tooltip = Backbone.View.extend({
     this.output = this.options.output;
     _.bindAll(this);
 
-    this.container = new Container();
+    this.container = new CreateJS.Container();
     this.container.view = this;
     this.container.x = Werld.Config.PIXELS_PER_TILE * 0.7;
     this.container.y = Werld.Config.PIXELS_PER_TILE * 0.6;
@@ -37,7 +37,7 @@ Werld.Views.Tooltip = Backbone.View.extend({
       endFill();
   },
   createDisplayObjects: function() {
-    this.text = new Text(
+    this.text = new CreateJS.Text(
       this.output(),
       'bold 8px sans serif',
       'white'
@@ -46,17 +46,17 @@ Werld.Views.Tooltip = Backbone.View.extend({
 
     this.padding = { top: 2, right: 4, bottom: 2, left: 4 };
 
-    this.rectangle = new Rectangle(
+    this.rectangle = new CreateJS.Rectangle(
       - (this.padding.right + this.padding.left) / 2,
       - (this.padding.top + this.padding.bottom) / 2,
       this.text.getMeasuredWidth() + this.padding.right + this.padding.left,
       this.text.getMeasuredLineHeight() + this.padding.top + this.padding.bottom
     );
 
-    this.rectangleGraphics = new Graphics();
+    this.rectangleGraphics = new CreateJS.Graphics();
     this.drawRectangle();
 
-    this.rectangleGraphicsShape = new Shape(this.rectangleGraphics);
+    this.rectangleGraphicsShape = new CreateJS.Shape(this.rectangleGraphics);
 
     this.container.addChild(this.rectangleGraphicsShape);
     this.container.addChild(this.text);

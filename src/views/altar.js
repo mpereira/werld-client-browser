@@ -2,10 +2,10 @@ Werld.Views.Altar = Backbone.View.extend({
   initialize: function() {
     _.bindAll(this);
 
-    this.container = new Container();
+    this.container = new CreateJS.Container();
     this.container.view = this;
 
-    var bitmap = new Bitmap(this.model.get('IMAGE').SRC);
+    var bitmap = new CreateJS.Bitmap(this.model.get('IMAGE').SRC);
     this.container.addChild(bitmap);
 
     this.updateContainerOnScreenCoordinates();

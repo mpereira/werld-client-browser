@@ -23,12 +23,12 @@ Werld.Views.Layer = Backbone.View.extend({
     text.y =
      options.above.get('coordinates')[1] - text.getMeasuredLineHeight();
 
-    Tween.get(text)
+    CreateJS.Tween.get(text)
       .to({
         alpha: 0.9,
         y: text.y - text.getMeasuredLineHeight()
-      }, 1000, Ease.getPowOut(5))
-      .to({ alpha: 0 }, 300, Ease.linear)
+      }, 1000, CreateJS.Ease.getPowOut(5))
+      .to({ alpha: 0 }, 300, CreateJS.Ease.linear)
       .call(function() {
         this.model.removeChild(text);
       }, null, this);

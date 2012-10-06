@@ -18,14 +18,14 @@ var Werld = {
     CREATURE_NAME: {
       FONT: '16px "PowellAntique" serif',
       COLOR: '#cccccc',
-      SHADOW: new Shadow('black', 1, 1, 1),
+      SHADOW: new CreateJS.Shadow('black', 1, 1, 1),
       TEXT_BASELINE: 'top',
       TEXT_ALIGN: 'center'
     },
     CHARACTER_NAME: {
       FONT: '18px "PowellAntique" serif',
       COLOR: '#6495ed',
-      SHADOW: new Shadow('black', 1, 1, 1),
+      SHADOW: new CreateJS.Shadow('black', 1, 1, 1),
       TEXT_BASELINE: 'top',
       TEXT_ALIGN: 'center'
     },
@@ -33,51 +33,51 @@ var Werld = {
       FONT: '14px "PowellAntique" serif',
       COLOR: '#ff3300',
       TEXT_ALIGN: 'center',
-      SHADOW: new Shadow('black', 1, 1, 1)
+      SHADOW: new CreateJS.Shadow('black', 1, 1, 1)
     },
     CREATURE_CRITICAL_HIT: {
       TEXT: 'critical!',
       FONT: '14px "PowellAntique" serif',
       COLOR: '#cccccc',
       TEXT_ALIGN: 'center',
-      SHADOW: new Shadow('black', 1, 1, 1)
+      SHADOW: new CreateJS.Shadow('black', 1, 1, 1)
     },
     CREATURE_HIT_MISSED: {
       TEXT: 'miss',
       FONT: '14px "PowellAntique" serif',
       COLOR: '#cccccc',
       TEXT_ALIGN: 'center',
-      SHADOW: new Shadow('black', 1, 1, 1)
+      SHADOW: new CreateJS.Shadow('black', 1, 1, 1)
     },
     CHARACTER_HIT_RECEIVED: {
       FONT: '14px "PowellAntique" serif',
       COLOR: 'yellow',
       TEXT_ALIGN: 'center',
-      SHADOW: new Shadow('black', 1, 1, 1)
+      SHADOW: new CreateJS.Shadow('black', 1, 1, 1)
     },
     STAT_INCREASE: {
       FONT: '18px "PowellAntique" serif',
       COLOR: '#66cc00',
       TEXT_ALIGN: 'left',
-      SHADOW: new Shadow('black', 1, 1, 0)
+      SHADOW: new CreateJS.Shadow('black', 1, 1, 0)
     },
     STAT_DECREASE: {
       FONT: '18px "PowellAntique" serif',
       COLOR: '#66cc00',
       TEXT_ALIGN: 'left',
-      SHADOW: new Shadow('black', 1, 1, 0)
+      SHADOW: new CreateJS.Shadow('black', 1, 1, 0)
     },
     SKILL_INCREASE: {
       FONT: '18px "PowellAntique" serif',
       COLOR: '#05b8cc',
       TEXT_ALIGN: 'left',
-      SHADOW: new Shadow('black', 1, 1, 0)
+      SHADOW: new CreateJS.Shadow('black', 1, 1, 0)
     },
     SKILL_DECREASE: {
       FONT: '18px "PowellAntique" serif',
       COLOR: '#05b8cc',
       TEXT_ALIGN: 'left',
-      SHADOW: new Shadow('black', 1, 1, 0)
+      SHADOW: new CreateJS.Shadow('black', 1, 1, 0)
     },
   },
   STATES: {
@@ -141,7 +141,7 @@ var Werld = {
         Werld.stage.removeAllChildren();
 
         _(Werld.CONTAINER_NAMES).each(function(name) {
-          Werld.containers[name] = new Container();
+          Werld.containers[name] = new CreateJS.Container();
         });
 
         var shortSword = new Werld.Models.Item(Werld.ITEMS.SHORT_SWORD);
@@ -286,10 +286,10 @@ var Werld = {
     Werld.switchState(Werld.STATES.INIT);
 
     Werld.canvas = new Werld.Canvas();
-    Werld.stage = new Stage(Werld.canvas.el);
+    Werld.stage = new CreateJS.Stage(Werld.canvas.el);
     Werld.stage.enableMouseOver();
-    Ticker.useRAF = true;
-    Ticker.setFPS(Werld.Config.FRAMES_PER_SECOND);
+    CreateJS.Ticker.useRAF = true;
+    CreateJS.Ticker.setFPS(Werld.Config.FRAMES_PER_SECOND);
 
     var stats = new Stats();
     stats.setMode(0);
@@ -300,7 +300,7 @@ var Werld = {
 
     document.body.appendChild(stats.domElement);
 
-    Ticker.addListener({
+    CreateJS.Ticker.addListener({
       tick: function() {
         stats.begin();
         Werld.stage.tick();

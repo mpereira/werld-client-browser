@@ -24,6 +24,7 @@ module.exports = function(grunt) {
       ],
       src: [
         'src/astar.heuristics.chebyshev.js',
+        'src/create.js',
         'src/werld.js',
         'src/gumps.js',
         'src/items.js',
@@ -114,32 +115,14 @@ module.exports = function(grunt) {
         '$': true,
         '_': true,
         Backbone: true,
+        CreateJS: true,
         FB: true,
+        Stats: true,
         Werld: true,
+        createjs: true,
         // astar
         astar: true,
-        Graph: true,
-        // PreloadJS.
-        AbtractLoader: true,
-        PreloadJS: true,
-        TagLoader: true,
-        XHRLoader: true,
-        // TweenJS.
-        Tween: true,
-        Ease: true,
-        // EaselJS.
-        Bitmap: true,
-        BitmapAnimation: true,
-        Container: true,
-        Graphics: true,
-        Rectangle: true,
-        Shadow: true,
-        Shape: true,
-        SpriteSheet: true,
-        Stage: true,
-        Stats: true,
-        Text: true,
-        Ticker: true
+        Graph: true
       }
     }
   });

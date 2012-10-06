@@ -3,7 +3,7 @@ Werld.Views.Screen = Backbone.View.extend({
     _.bindAll(this);
 
     this.mapTileViews = [];
-    this.container = new Container();
+    this.container = new CreateJS.Container();
 
     this.model.get('character').on('death resurrection', this.onCharacterChangeStatus);
     this.model.get('character').on('change:coordinates', this.onCharacterChangeCoordinates);
@@ -77,11 +77,11 @@ Werld.Views.Screen = Backbone.View.extend({
     var view = this;
 
     var statusChangeTextHandler = function(string) {
-      var text = new Text(string, '40px "PowellAntique" serif', '#dc9a44');
+      var text = new CreateJS.Text(string, '40px "PowellAntique" serif', '#dc9a44');
       text.textAlign = 'center';
       text.x = 320;
       text.y = 200;
-      text.shadow = new Shadow('#000000', 2, 2, 0);
+      text.shadow = new CreateJS.Shadow('#000000', 2, 2, 0);
       Werld.containers.gameMessages.addChild(text);
       _(function() {
         Werld.containers.gameMessages.removeChild(text);

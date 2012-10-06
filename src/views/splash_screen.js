@@ -1,27 +1,27 @@
 Werld.Views.SplashScreen = Backbone.View.extend({
   initialize: function() {
-    var splashImage = new Bitmap('images/splash.jpg');
+    var splashImage = new CreateJS.Bitmap('images/splash.jpg');
     splashImage.x = 0;
     splashImage.y = 0;
 
-    var titleText = new Text(
+    var titleText = new CreateJS.Text(
       'Werld Online',
       '90px "PowellAntique" serif',
       '#dc9a44'
     );
-    titleText.shadow = new Shadow('#000000', 4, 4, 0);
+    titleText.shadow = new CreateJS.Shadow('#000000', 4, 4, 0);
     titleText.textAlign = 'center';
     titleText.x = 320;
-    titleText.y = 120;
+    titleText.y = 20;
 
     var signInText =
-      new Text('Sign In', '40px "PowellAntique" serif', '#dc9a44');
+      new CreateJS.Text('Sign In', '40px "PowellAntique" serif', '#dc9a44');
     signInText.textBaseline = 'bottom';
     signInText.x = 400;
     signInText.y = 320;
-    signInText.shadow = new Shadow('#000000', 2, 2, 0);
+    signInText.shadow = new CreateJS.Shadow('#000000', 2, 2, 0);
 
-    var signInGraphics = new Graphics();
+    var signInGraphics = new CreateJS.Graphics();
     var signInGraphicsX = signInText.x + signInText.getMeasuredWidth() / 2;
     var signInGraphicsY = signInText.y - signInText.getMeasuredLineHeight() /2;
     var signInGraphicsInnerRadius = 10;
@@ -35,12 +35,12 @@ Werld.Views.SplashScreen = Backbone.View.extend({
       signInGraphicsX, signInGraphicsY, signInGraphicsOuterRadius
     );
 
-    var signInGraphicsShape = new Shape(signInGraphics);
+    var signInGraphicsShape = new CreateJS.Shape(signInGraphics);
     signInGraphicsShape.alpha = 0.3;
     signInGraphicsShape.compositeOperation = 'lighter';
     signInGraphicsShape.visible = false;
 
-    var signInClickableGraphics = new Graphics();
+    var signInClickableGraphics = new CreateJS.Graphics();
     var signInClickableGraphicsWidth = signInText.getMeasuredWidth() + 50;
     var signInClickableGraphicsHeight = signInText.getMeasuredLineHeight() + 50;
     /* HACK: need to fill something to be able to attach mouse events. */
@@ -52,7 +52,7 @@ Werld.Views.SplashScreen = Backbone.View.extend({
       signInClickableGraphicsHeight
     );
 
-    var signInClickableGraphicsShape = new Shape(signInClickableGraphics);
+    var signInClickableGraphicsShape = new CreateJS.Shape(signInClickableGraphics);
     signInClickableGraphicsShape.onMouseOver = function() {
       signInClickableGraphicsShape.getStage().canvas.style.cursor = 'pointer';
       signInGraphicsShape.visible = true;
@@ -73,7 +73,7 @@ Werld.Views.SplashScreen = Backbone.View.extend({
       });
     };
 
-    this.container = new Container();
+    this.container = new CreateJS.Container();
     this.container.addChild(splashImage);
     this.container.addChild(titleText);
     this.container.addChild(signInClickableGraphicsShape);

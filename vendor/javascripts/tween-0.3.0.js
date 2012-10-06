@@ -36,7 +36,11 @@
 
 // TODO: possibly add a END actionsMode (only runs actions that == position)?
 // TODO: evaluate a way to decouple paused from tick registration.
-(function(window) {
+
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 /**
 * Returns a new Tween instance. See Tween.get for param documentation.
 * @class Tween
@@ -108,7 +112,8 @@ var p = Tween.prototype;
 	 *    <LI> ignoreGlobalPause: sets the ignoreGlobalPause property on this tween.</LI>
 	 *    <LI> override: if true, Tween.removeTweens(target) will be called to remove any other tweens with the same target.
 	 *    <LI> paused: indicates whether to start the tween paused.</LI>
-	 *    <LI> position: indicates the initial position for this timeline</LI>
+	 *    <LI> position: indicates the initial position for this tween.</LI>
+	 *    <LI> onChanged: specifies an onChange handler for this tween.</LI>
 	 * </UL>
 	 **/
 	Tween.get = function(target, props, pluginData) {
@@ -116,7 +121,7 @@ var p = Tween.prototype;
 	}
 	
 	/**
-	 * Advances all tweens. This typically uses the Ticker class (when available), but you can call it manually if you prefer to use
+	 * Advances all tweens. This typically uses the Ticker class (available in the EaselJS library), but you can call it manually if you prefer to use
 	 * your own "heartbeat" implementation.
 	 * @method tick
 	 * @static
@@ -124,14 +129,14 @@ var p = Tween.prototype;
 	 * @param paused Indicates whether a global pause is in effect. Tweens with ignoreGlobalPause will ignore this, but all others will pause if this is true.
 	 **/
 	Tween.tick = function(delta, paused) {
-		var tweens = Tween._tweens;
+		var tweens = Tween._tweens.slice(); // to avoid race conditions.
 		for (var i=tweens.length-1; i>=0; i--) {
 			var tween = tweens[i];
-			if (paused && !tween.ignoreGlobalPause) { continue; }
+			if ((paused && !tween.ignoreGlobalPause) || tween._paused) { continue; }
 			tween.tick(tween._useTicks?1:delta);
 		}
 	}
-	if (Ticker) { Ticker.addListener(Tween,false); }
+	if (createjs.Ticker) { createjs.Ticker.addListener(Tween,false); }
 	
 	
 	/** 
@@ -144,13 +149,29 @@ var p = Tween.prototype;
 		if (!target.tweenjs_count) { return; }
 		var tweens = Tween._tweens;
 		for (var i=tweens.length-1; i>=0; i--) {
-			if (tweens[i]._target == target) { tweens.splice(i,1); }
+			if (tweens[i]._target == target) {
+				tweens[i]._paused = true;
+				tweens.splice(i,1);
+			}
 		}
 		target.tweenjs_count = 0;
 	}
 	
 	/** 
-	 * TODO: doc.
+	 * Indicates whether there are any active tweens on the target object (if specified) or in general.
+	 * @method hasActiveTweens
+	 * @static
+	 * @param target Optional. If not specified, the return value will indicate if there are any active tweens on any target.
+	 * @return Boolean A boolean indicating whether there are any active tweens.
+	 **/
+	Tween.hasActiveTweens = function(target) {
+		if (target) { return target.tweenjs_count; }
+		return Tween._tweens && Tween._tweens.length;
+	}
+	
+	/** 
+	 * Installs a plugin, which can modify how certain properties are handled when tweened.
+	 * See the CSSPlugin for an example of how to write TweenJS plugins.
 	 * @method installPlugin
 	 * @static
 	 * @param plugin
@@ -181,6 +202,7 @@ var p = Tween.prototype;
 	Tween._register = function(tween, value) {
 		var target = tween._target;
 		if (value) {
+			// TODO: this approach might fail if a dev is using sealed objects in ES5
 			if (target) { target.tweenjs_count = target.tweenjs_count ? target.tweenjs_count+1 : 1; }
 			Tween._tweens.push(tween);
 		} else {
@@ -208,13 +230,13 @@ var p = Tween.prototype;
 	p.loop = false;
 	
 	/**
-	 * Read-only property specifying the total duration of this tween in milliseconds (or ticks if useTicks is true).
-	 * This value is automatically updated as you modify the tween.
+	 * Read-only. Specifies the total duration of this tween in milliseconds (or ticks if useTicks is true).
+	 * This value is automatically updated as you modify the tween. Changing it directly could result in unexpected
+	 * behaviour.
 	 * @property duration
 	 * @type Number
 	 **/
 	p.duration = 0;
-	
 	
 	/**
 	 * Allows you to specify data that will be used by installed plugins. Each plugin uses this differently, but in general
@@ -230,6 +252,29 @@ var p = Tween.prototype;
 	 * @type Object
 	 **/
 	p.pluginData = null;
+	
+	/**
+	 * Called whenever the tween's position changes with a single parameter referencing this tween instance.
+	 * @property onChange
+	 * @type Function
+	 **/
+	p.onChange = null;
+	
+	/**
+	 * Read-only. The target of this tween. This is the object on which the tweened properties will be changed. Changing 
+	 * this property after the tween is created will not have any effect.
+	 * @property target
+	 * @type Object
+	 **/
+	p.target = null;
+	
+	/**
+	 * Read-only. The current normalized position of the tween. This will always be a value between 0 and duration.
+	 * Changing this property directly will have no effect.
+	 * @property position
+	 * @type Object
+	 **/
+	p.position = null;
 
 // private properties:
 	
@@ -312,11 +357,12 @@ var p = Tween.prototype;
 	 * @protected
 	 **/
 	p.initialize = function(target, props, pluginData) {
-		this._target = target;
+		this.target = this._target = target;
 		if (props) {
 			this._useTicks = props.useTicks;
 			this.ignoreGlobalPause = props.ignoreGlobalPause;
 			this.loop = props.loop;
+			this.onChange = props.onChange;
 			if (props.override) { Tween.removeTweens(target); }
 		}
 		
@@ -349,8 +395,8 @@ var p = Tween.prototype;
 	 * properties will be set at the end of the specified duration.
 	 * @method to
 	 * @param props An object specifying property target values for this tween (Ex. {x:300} would tween the x property of the target to 300).
-	 * @param duration The duration of the wait in milliseconds (or in ticks if useTicks is true).
-	 * @param ease The easing function to use for this tween.
+	 * @param duration Optional. The duration of the wait in milliseconds (or in ticks if useTicks is true). Defaults to 0.
+	 * @param ease Optional. The easing function to use for this tween. Defaults to a linear ease.
 	 * @return Tween This tween instance (for chaining calls).
 	 **/
 	p.to = function(props, duration, ease) {
@@ -362,8 +408,8 @@ var p = Tween.prototype;
 	 * Queues an action to call the specified function. For example: myTween.wait(1000).call(myFunction); would call myFunction() after 1s.
 	 * @method call
 	 * @param callback The function to call.
-	 * @param params The parameters to call the function with. If this is omitted, then the function will be called with a single param pointing to this tween.
-	 * @param scope The scope to call the function in. If omitted, it will be called in the target's scope.
+	 * @param params Optional. The parameters to call the function with. If this is omitted, then the function will be called with a single param pointing to this tween.
+	 * @param scope Optional. The scope to call the function in. If omitted, it will be called in the target's scope.
 	 * @return Tween This tween instance (for chaining calls).
 	 **/
 	p.call = function(callback, params, scope) {
@@ -374,7 +420,7 @@ var p = Tween.prototype;
 	 * Queues an action to set the specified props on the specified target. If target is null, it will use this tween's target. Ex. myTween.wait(1000).set({visible:false},foo);
 	 * @method set
 	 * @param props The properties to set (ex. {visible:false}).
-	 * @param target The target to set the properties on. If omitted, they will be set on the tween's target.
+	 * @param target Optional. The target to set the properties on. If omitted, they will be set on the tween's target.
 	 * @return Tween This tween instance (for chaining calls).
 	 **/
 	p.set = function(props, target) {
@@ -441,7 +487,7 @@ var p = Tween.prototype;
 		
 		// run actions:
 		var prevPos = this._prevPos;
-		this._prevPos = t; // set this in advance in case an action modifies position.
+		this.position = this._prevPos = t; // set this in advance in case an action modifies position.
 		this._prevPosition = value;
 		if (actionsMode != 0 && this._actions.length > 0) {
 			if (this._useTicks) {
@@ -456,6 +502,8 @@ var p = Tween.prototype;
 		}
 
 		if (end) { this.setPaused(true); }
+		
+		this.onChange&&this.onChange(this);
 		return end;
 	}
 
@@ -476,10 +524,8 @@ var p = Tween.prototype;
 	 * @param value Indicates whether the tween should be paused (true) or played (false).
 	 **/
 	p.setPaused = function(value) {
-		if (this._paused != !!value) {
-			this._paused = !!value;
-			Tween._register(this, !value);
-		}
+		this._paused = !!value;
+		Tween._register(this, !value);
 		return this;
 	}
 
@@ -641,8 +687,8 @@ var p = Tween.prototype;
 		}
 	}
 	
-window.Tween = Tween;
-}(window));
+createjs.Tween = Tween;
+}());
 /*
 * Timeline
 * Visit http://createjs.com/ for documentation, updates and examples.
@@ -671,7 +717,10 @@ window.Tween = Tween;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 
 /**
@@ -684,7 +733,8 @@ window.Tween = Tween;
  *    <LI> useTicks: uses ticks for all durations instead of milliseconds.</LI>
  *    <LI> ignoreGlobalPause: sets the ignoreGlobalPause property on this tween.</LI>
  *    <LI> paused: indicates whether to start the tween paused.</LI>
- *    <LI> position: indicates the initial position for this timeline</LI>
+ *    <LI> position: indicates the initial position for this timeline.</LI>
+ *    <LI> onChanged: specifies an onChange handler for this timeline.</LI>
  * </UL>
  * @constructor
  **/
@@ -716,6 +766,21 @@ var p = Timeline.prototype;
 	 * @type Boolean
 	 **/
 	p.loop = false;
+	
+	/**
+	 * Called, with a single parameter referencing this timeline instance, whenever the timeline's position changes.
+	 * @property onChange
+	 * @type Function
+	 **/
+	p.onChange = null;
+	
+	/**
+	 * Read-only. The current normalized position of the timeline. This will always be a value between 0 and duration.
+	 * Changing this property directly will have no effect.
+	 * @property position
+	 * @type Object
+	 **/
+	p.position = null;
 
 // private properties:
 	
@@ -724,7 +789,7 @@ var p = Timeline.prototype;
 	 * @type Boolean
 	 * @protected
 	 **/
-	p._paused = true;
+	p._paused = false;
 	
 	/**
 	 * @property _tweens
@@ -773,12 +838,13 @@ var p = Timeline.prototype;
 			this._useTicks = props.useTicks;
 			this.loop = props.loop;
 			this.ignoreGlobalPause = props.ignoreGlobalPause;
+			this.onChange = props.onChange;
 		}
 		if (tweens) { this.addTween.apply(this, tweens); }
 		this.setLabels(labels);
 		if (props&&props.paused) { this._paused=true; }
-		else { Tween._register(this,true); }
-		if (props&&props.position!=null) { this.setPosition(props.position, Tween.NONE); }
+		else { createjs.Tween._register(this,true); }
+		if (props&&props.position!=null) { this.setPosition(props.position, createjs.Tween.NONE); }
 	}
 	
 // public methods:
@@ -801,7 +867,7 @@ var p = Timeline.prototype;
 		tween._paused = false;
 		tween._useTicks = this._useTicks;
 		if (tween.duration > this.duration) { this.duration = tween.duration; }
-		if (this._prevPos >= 0) { tween.setPosition(this._prevPos, Tween.NONE); }
+		if (this._prevPos >= 0) { tween.setPosition(this._prevPos, createjs.Tween.NONE); }
 		return tween;
 	}
 
@@ -878,12 +944,13 @@ var p = Timeline.prototype;
 		var end = !this.loop && value >= this.duration;
 		if (t == this._prevPos) { return end; }
 		this._prevPosition = value;
-		this._prevPos = t; // in case an action changes the current frame.
+		this.position = this._prevPos = t; // in case an action changes the current frame.
 		for (var i=0, l=this._tweens.length; i<l; i++) {
 			this._tweens[i].setPosition(t, actionsMode);
 			if (t != this._prevPos) { return false; } // an action changed this timeline's position.
 		}
 		if (end) { this.setPaused(true); }
+		this.onChange&&this.onChange(this);
 		return end;
 	}
 	
@@ -893,9 +960,8 @@ var p = Timeline.prototype;
 	 * @param value Indicates whether the tween should be paused (true) or played (false).
 	 **/
 	p.setPaused = function(value) {
-		if (this._paused == !!value) { return; }
 		this._paused = !!value;
-		Tween._register(this, !value);
+		createjs.Tween._register(this, !value);
 	}
 	
 	/** 
@@ -921,7 +987,13 @@ var p = Timeline.prototype;
 	p.tick = function(delta) {
 		this.setPosition(this._prevPosition+delta);
 	}
-	
+	 
+	/** 
+	 * If a numeric position is passed, it is returned unchanged. If a string is passed, the position of the
+	 * corresponding frame label will be returned, or null if a matching label is not defined.
+	 * @method resolve
+	 * @param positionOrLabel A numeric position value or label string.
+	 **/
 	p.resolve = function(positionOrLabel) {
 		var pos = parseFloat(positionOrLabel);
 		if (isNaN(pos)) { pos = this._labels[positionOrLabel]; }
@@ -955,8 +1027,8 @@ var p = Timeline.prototype;
 		if (pos != null) { this.setPosition(pos); }
 	}
 	
-window.Timeline = Timeline;
-}(window));
+createjs.Timeline = Timeline;
+}());
 /*
 * Ease
 * Visit http://createjs.com/ for documentation, updates and examples.
@@ -985,7 +1057,10 @@ window.Timeline = Timeline;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 // constructor:
 /**
@@ -1346,5 +1421,5 @@ var Ease = function() {
 	 **/
 	Ease.elasticInOut = Ease.getElasticInOut(1,0.3*1.5);
 	
-window.Ease = Ease;
-}(window));
+createjs.Ease = Ease;
+}());

@@ -8,7 +8,7 @@ Werld.Views.LootContainer = Werld.Views.Base.Container.extend({
 
     this.model.owner.on('destroy', this.removeContainerFromGumpsContainer);
 
-    this.bitmap = new Bitmap(Werld.IMAGES[this.model.get('name')].SRC);
+    this.bitmap = new CreateJS.Bitmap(Werld.IMAGES[this.model.get('name')].SRC);
     this.bitmap.onPress = this.onBitmapPress;
     this.container.addChildAt(this.bitmap, 0);
     Werld.containers.gumps.addChild(this.container);

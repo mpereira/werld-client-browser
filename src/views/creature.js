@@ -3,14 +3,14 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
     this.constructor.__super__.initialize.apply(this, arguments);
 
     this.hitPointsBarRectangleWidth = 40;
-    this.hitPointsBarRectangle = new Rectangle(
-      -((this.hitPointsBarRectangleWidth - Werld.Config.PIXELS_PER_TILE) / 2),
-      -((30 / 29) * this.options.image.DIMENSIONS[1] - 25),
+    this.hitPointsBarRectangle = new CreateJS.Rectangle(
+      - (this.hitPointsBarRectangleWidth / 2),
+      - (this.spriteSheet._frameHeight - 0.2 * this.spriteSheet._regY),
       this.hitPointsBarRectangleWidth,
       3
     );
-    this.hitPointsBarGraphics = new Graphics();
-    this.hitPointsBar = new Shape(this.hitPointsBarGraphics);
+    this.hitPointsBarGraphics = new CreateJS.Graphics();
+    this.hitPointsBar = new CreateJS.Shape(this.hitPointsBarGraphics);
     this.hitPointsBar.alpha = 0.7;
 
     this.container.addChild(this.hitPointsBar);

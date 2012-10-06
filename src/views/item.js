@@ -2,9 +2,9 @@ Werld.Views.Item = Backbone.View.extend({
   initialize: function() {
     _.bindAll(this);
 
-    this.container = new Container();
+    this.container = new CreateJS.Container();
     this.container.view = this;
-    this.bitmap = new Bitmap(Werld.IMAGES[this.model.get('name')].SRC);
+    this.bitmap = new CreateJS.Bitmap(Werld.IMAGES[this.model.get('name')].SRC);
     this.container.addChild(this.bitmap);
 
     if (this.model.get('stackable')) {

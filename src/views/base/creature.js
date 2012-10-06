@@ -2,7 +2,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
   initialize: function() {
     _.bindAll(this);
 
-    this.container = new Container();
+    this.container = new CreateJS.Container();
     this.container.view = this;
 
     // TODO: find a better place to pass the main character to the view.
@@ -11,7 +11,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       character: Werld.character
     });
 
-    this.spriteSheet = new SpriteSheet({
+    this.spriteSheet = new CreateJS.SpriteSheet({
       images: [this.options.image.SRC],
       frames: {
         width: this.options.image.DIMENSIONS[0],
@@ -27,14 +27,15 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       }
     });
 
-    this.bitmapAnimation = new BitmapAnimation(this.spriteSheet);
+    this.bitmapAnimation = new CreateJS.BitmapAnimation(this.spriteSheet);
     this.bitmapAnimation.currentFrame = 0;
     this.bitmapAnimation.onMouseOver = this.onBitmapAnimationMouseOver;
     this.bitmapAnimation.onMouseOut = this.onBitmapAnimationMouseOut;
     this.bitmapAnimation.onDoubleClick = this.onBitmapAnimationDoubleClick;
 
-    this.messagesContainer = new Container();
-    this.messagesContainer.y = this.container.y - Werld.Config.PIXELS_PER_TILE / 2;
+    this.messagesContainer = new CreateJS.Container();
+    this.messagesContainer.y =
+      - (this.spriteSheet._frameHeight - 0.1 * this.spriteSheet._regY);
 
     this.container.addChild(this.bitmapAnimation);
     this.container.addChild(this.messagesContainer);
@@ -133,7 +134,7 @@ Werld.Views.Base.Creature = Backbone.View.extend({
     this.messagesContainer.removeAllChildren();
     _(this.model.get('messages')).each(function(message) {
       if (message.content !== '') {
-        self.messageText = new Text();
+        self.messageText = new CreateJS.Text();
         self.messagesContainer.addChild(self.messageText);
 
         self.messageText.text = message.content;

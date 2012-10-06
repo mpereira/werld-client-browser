@@ -2,7 +2,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
   initialize: function() {
     _.bindAll(this);
 
-    this.container = new Container();
+    this.container = new CreateJS.Container();
     this.container.view = this;
     this.container.x = 0;
     this.container.y = 405;
@@ -12,8 +12,8 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.container.onMouseOut = this.onContainerMouseOut;
 
     // FIXME: jesus christ, please refactor this mess.
-    this.statusBarRectangle = new Rectangle(0, 0, 250, 75);
-    var statusBarRectangle = new Graphics();
+    this.statusBarRectangle = new CreateJS.Rectangle(0, 0, 250, 75);
+    var statusBarRectangle = new CreateJS.Graphics();
     statusBarRectangle.
       beginFill('#ccc').
       drawRoundRect(
@@ -24,13 +24,13 @@ Werld.Views.StatusBar = Backbone.View.extend({
         5
       ).
       endFill();
-    this.statusBarRectangleShape = new Shape(statusBarRectangle);
+    this.statusBarRectangleShape = new CreateJS.Shape(statusBarRectangle);
     this.statusBarRectangleShape.alpha = 0.5;
 
-    this.statsRectangle = new Rectangle(0, 0, 100, 75);
-    this.hitPointsStaminaManaRectangle = new Rectangle(100, 0, 150, 75);
+    this.statsRectangle = new CreateJS.Rectangle(0, 0, 100, 75);
+    this.hitPointsStaminaManaRectangle = new CreateJS.Rectangle(100, 0, 150, 75);
 
-    this.strengthTextKey = new Text('STR', '16px "PowellAntique" serif', 'white');
+    this.strengthTextKey = new CreateJS.Text('STR', '16px "PowellAntique" serif', 'white');
     this.strengthTextKey.x = this.statsRectangle.x + 25;
     var leftRectangleWidth = this.strengthTextKey.x + this.strengthTextKey.getMeasuredWidth();
     var valueTextX = leftRectangleWidth;
@@ -40,7 +40,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.strengthTextKey.textAlign = 'center';
 
     this.strengthTextValue =
-      new Text(this.model.get('strength'), '16px "PowellAntique" serif', 'white');
+      new CreateJS.Text(this.model.get('strength'), '16px "PowellAntique" serif', 'white');
     this.strengthTextValue.textBaseline = 'top';
     this.strengthTextValue.textAlign = 'center';
     this.strengthTextValue.y = this.strengthTextKey.y;
@@ -49,7 +49,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.container.addChild(this.strengthTextKey);
     this.container.addChild(this.strengthTextValue);
 
-    this.dexterityTextKey = new Text('DEX', '16px "PowellAntique" serif', 'white');
+    this.dexterityTextKey = new CreateJS.Text('DEX', '16px "PowellAntique" serif', 'white');
     this.dexterityTextKey.x = this.statsRectangle.x + 25;
     leftRectangleWidth = this.dexterityTextKey.x + this.dexterityTextKey.getMeasuredWidth();
     valueTextX = leftRectangleWidth;
@@ -59,7 +59,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.dexterityTextKey.textAlign = 'center';
 
     this.dexterityTextValue =
-      new Text(this.model.get('dexterity'), '16px "PowellAntique" serif', 'white');
+      new CreateJS.Text(this.model.get('dexterity'), '16px "PowellAntique" serif', 'white');
     this.dexterityTextValue.textBaseline = 'top';
     this.dexterityTextValue.textAlign = 'center';
     this.dexterityTextValue.y = this.dexterityTextKey.y;
@@ -68,7 +68,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.container.addChild(this.dexterityTextKey);
     this.container.addChild(this.dexterityTextValue);
 
-    this.intelligenceTextKey = new Text('INT', '16px "PowellAntique" serif', 'white');
+    this.intelligenceTextKey = new CreateJS.Text('INT', '16px "PowellAntique" serif', 'white');
     this.intelligenceTextKey.x = this.statsRectangle.x + 25;
     leftRectangleWidth = this.intelligenceTextKey.x + this.intelligenceTextKey.getMeasuredWidth();
     valueTextX = leftRectangleWidth;
@@ -78,7 +78,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.intelligenceTextKey.textAlign = 'center';
 
     this.intelligenceTextValue =
-      new Text(this.model.get('intelligence'), '16px "PowellAntique" serif', 'white');
+      new CreateJS.Text(this.model.get('intelligence'), '16px "PowellAntique" serif', 'white');
     this.intelligenceTextValue.textBaseline = 'top';
     this.intelligenceTextValue.textAlign = 'center';
     this.intelligenceTextValue.y = this.intelligenceTextKey.y;
@@ -88,7 +88,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.container.addChild(this.intelligenceTextValue);
 
 
-    this.hitPointsTextKey = new Text('H', '16px "PowellAntique" serif', 'white');
+    this.hitPointsTextKey = new CreateJS.Text('H', '16px "PowellAntique" serif', 'white');
     this.hitPointsTextKey.x = this.hitPointsStaminaManaRectangle.x + 15;
     leftRectangleWidth = this.hitPointsTextKey.x + this.hitPointsTextKey.getMeasuredWidth();
     valueTextX = leftRectangleWidth + (this.statusBarRectangle.width - leftRectangleWidth) / 2;
@@ -96,7 +96,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.hitPointsTextKey.y = 5;
     this.hitPointsTextKey.textBaseline = 'top';
     this.hitPointsTextKey.textAlign = 'center';
-    this.hitPointsTextValue = new Text(
+    this.hitPointsTextValue = new CreateJS.Text(
       this.model.get('hitPoints') + '/' + this.model.maxHitPoints(),
       '16px "PowellAntique" serif',
       'white'
@@ -107,14 +107,14 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.hitPointsTextValue.x = valueTextX;
     var hitPointsPercentage = this.model.maxHitPoints() / this.model.get('hitPoints');
     var barPadding = 5;
-    this.hitPointsBarRectangle = new Rectangle(
+    this.hitPointsBarRectangle = new CreateJS.Rectangle(
       leftRectangleWidth + barPadding,
       this.hitPointsTextKey.y,
       hitPointsPercentage * (this.statusBarRectangle.width - leftRectangleWidth - 2 * barPadding),
       this.hitPointsTextKey.getMeasuredLineHeight()
     );
 
-    this.hitPointsBarGraphics = new Graphics();
+    this.hitPointsBarGraphics = new CreateJS.Graphics();
     this.hitPointsBarGraphics.
       beginFill('red').
       drawRoundRect(
@@ -126,15 +126,15 @@ Werld.Views.StatusBar = Backbone.View.extend({
       ).
       endStroke().
       endFill();
-    this.hitPointsBar = new Shape(this.hitPointsBarGraphics);
+    this.hitPointsBar = new CreateJS.Shape(this.hitPointsBarGraphics);
     this.hitPointsBar.alpha = 0.5;
 
-    this.staminaTextKey = new Text('S', '16px "PowellAntique" serif', 'white');
+    this.staminaTextKey = new CreateJS.Text('S', '16px "PowellAntique" serif', 'white');
     this.staminaTextKey.x = this.hitPointsTextKey.x;
     this.staminaTextKey.y = this.hitPointsTextKey.y + this.staminaTextKey.getMeasuredLineHeight();
     this.staminaTextKey.textBaseline = 'top';
     this.staminaTextKey.textAlign = 'center';
-    this.staminaTextValue = new Text(
+    this.staminaTextValue = new CreateJS.Text(
       this.model.get('stamina') + '/' + this.model.maxStamina(),
       '16px "PowellAntique" serif',
       'white'
@@ -143,13 +143,13 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.staminaTextValue.textAlign = 'center';
     this.staminaTextValue.y = this.staminaTextKey.y;
     this.staminaTextValue.x = valueTextX;
-    this.staminaBarRectangle = new Rectangle(
+    this.staminaBarRectangle = new CreateJS.Rectangle(
       leftRectangleWidth + barPadding,
       this.staminaTextKey.y,
       this.statusBarRectangle.width - leftRectangleWidth - 2 * barPadding,
       this.staminaTextKey.getMeasuredLineHeight()
     );
-    this.staminaBarGraphics = new Graphics();
+    this.staminaBarGraphics = new CreateJS.Graphics();
     this.staminaBarGraphics.
       beginFill('yellow').
       drawRoundRect(
@@ -161,15 +161,15 @@ Werld.Views.StatusBar = Backbone.View.extend({
       ).
       endStroke().
       endFill();
-    this.staminaBar = new Shape(this.staminaBarGraphics);
+    this.staminaBar = new CreateJS.Shape(this.staminaBarGraphics);
     this.staminaBar.alpha = 0.5;
 
-    this.manaTextKey = new Text('M', '16px "PowellAntique" serif', 'white');
+    this.manaTextKey = new CreateJS.Text('M', '16px "PowellAntique" serif', 'white');
     this.manaTextKey.x = this.staminaTextKey.x;
     this.manaTextKey.y = this.staminaTextKey.y + this.manaTextKey.getMeasuredLineHeight();
     this.manaTextKey.textBaseline = 'top';
     this.manaTextKey.textAlign = 'center';
-    this.manaTextValue = new Text(
+    this.manaTextValue = new CreateJS.Text(
       this.model.get('mana') + '/' + this.model.maxMana(),
       '16px "PowellAntique" serif',
       'white'
@@ -178,13 +178,13 @@ Werld.Views.StatusBar = Backbone.View.extend({
     this.manaTextValue.textAlign = 'center';
     this.manaTextValue.y = this.manaTextKey.y;
     this.manaTextValue.x = valueTextX;
-    this.manaBarRectangle = new Rectangle(
+    this.manaBarRectangle = new CreateJS.Rectangle(
       leftRectangleWidth + barPadding,
       this.manaTextKey.y,
       this.statusBarRectangle.width - leftRectangleWidth - 2 * barPadding,
       this.manaTextKey.getMeasuredLineHeight()
     );
-    this.manaBarGraphics = new Graphics();
+    this.manaBarGraphics = new CreateJS.Graphics();
     this.manaBarGraphics.
       beginFill('blue').
       drawRoundRect(
@@ -196,7 +196,7 @@ Werld.Views.StatusBar = Backbone.View.extend({
       ).
       endStroke().
       endFill();
-    this.manaBar = new Shape(this.manaBarGraphics);
+    this.manaBar = new CreateJS.Shape(this.manaBarGraphics);
     this.manaBar.alpha = 0.5;
 
     this.container.addChild(this.statusBarRectangleShape);

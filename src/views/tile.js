@@ -7,7 +7,7 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
     this.model.bind('change', this.onModelChange);
 
     this.bitmap =
-      new Bitmap(Werld.canvas.textures.tiles[this.model.get('type')]);
+      new CreateJS.Bitmap(Werld.canvas.textures.tiles[this.model.get('type')]);
     this.bitmap.onPress = this.onBitmapPress;
     this.container.addChild(this.bitmap);
   },

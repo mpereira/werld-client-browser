@@ -25,8 +25,10 @@
 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 * OTHER DEALINGS IN THE SOFTWARE.
 */
+// namespace:
+this.createjs = this.createjs||{};
 
-(function(window) {
+(function() {
 
 /**
 * Global utility for generating sequential unique ID numbers.
@@ -55,8 +57,9 @@ var UID = function() {
 		return UID._nextID++;
 	}
 
-window.UID = UID;
-}(window));/*
+createjs.UID = UID;
+}());
+/*
 * Ticker
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -84,7 +87,10 @@ window.UID = UID;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 // constructor:
 /**
@@ -103,20 +109,13 @@ var Ticker = function() {
 // public static properties:
 	/**
 	 * Indicates whether Ticker should use requestAnimationFrame if it is supported in the browser. If false, Ticker
-	 * will use setTimeout. If you change this value, you must call setInterval or setFPS to reinitialize the Ticker.
+	 * will use setTimeout. If you use RAF, it is recommended that you set the framerate to a divisor of 60 (ex. 15,
+	 * 20, 30, 60).
 	 * @property useRAF
 	 * @static
 	 * @type Boolean
 	 **/
 	Ticker.useRAF = null;
-	
-	/**
-	 * Specifies the animation target to use with requestAnimationFrame if useRAF is true.
-	 * @property animationTarget
-	 * @static
-	 * @type Object
-	 **/
-	Ticker.animationTarget = null;
 	
 	/**
 	 * Event broadcast  once each tick / interval. The interval is specified via the 
@@ -180,11 +179,11 @@ var Ticker = function() {
 	
 	/**
 	 * Number of ticks that have passed while Ticker has been paused
-	 * @property _pausedTickers
+	 * @property _pausedTicks
 	 * @type Number
 	 * @protected 
 	 **/
-	Ticker._pausedTickers = 0;
+	Ticker._pausedTicks = 0;
 	
 	/** 
 	 * @property _interval
@@ -273,10 +272,11 @@ var Ticker = function() {
 	 * @param {Object} o The object or function to remove from listening from the tick event.
 	 **/
 	Ticker.removeListener = function(o) {
-		if (Ticker._listeners == null) { return; }
-		var index = Ticker._listeners.indexOf(o);
+		var listeners = Ticker._listeners;
+		if (!listeners) { return; }
+		var index = listeners.indexOf(o);
 		if (index != -1) {
-			Ticker._listeners.splice(index, 1);
+			listeners.splice(index, 1);
 			Ticker._pauseable.splice(index, 1);
 		}
 	}
@@ -400,7 +400,7 @@ var Ticker = function() {
 	 * @return {Number} of ticks that have been broadcast.
 	 **/
 	Ticker.getTicks = function(pauseable) {
-		return  Ticker._ticks - (pauseable ?Ticker._pausedTickers : 0);
+		return  Ticker._ticks - (pauseable ?Ticker._pausedTicks : 0);
 	}
 	
 // private static methods:
@@ -408,10 +408,11 @@ var Ticker = function() {
 	 * @method _handleAF
 	 * @protected
 	 **/
-	Ticker._handleAF = function(timeStamp) {
+	Ticker._handleAF = function() {
 		Ticker._rafActive = false;
 		Ticker._setupTick();
-		if (timeStamp - Ticker._lastTime >= Ticker._interval-1) {
+		// run if enough time has elapsed, with a little bit of flexibility to be early, because RAF seems to run a little faster than 60hz:
+		if (Ticker._getTime() - Ticker._lastTime >= (Ticker._interval-1)*0.97) {
 			Ticker._tick();
 		}
 	}
@@ -435,7 +436,7 @@ var Ticker = function() {
 		if (Ticker.useRAF) {
 			var f = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame;
 			if (f) {
-				f(Ticker._handleAF, Ticker.animationTarget);
+				f(Ticker._handleAF);
 				Ticker._rafActive = true;
 				return;
 			}
@@ -448,14 +449,15 @@ var Ticker = function() {
 	 * @protected
 	 **/
 	Ticker._tick = function() {
+		var time = Ticker._getTime();
 		Ticker._ticks++;
 		
-		var time = Ticker._getTime();
 		var elapsedTime = time-Ticker._lastTime;
+		
 		var paused = Ticker._paused;
 		
 		if (paused) {
-			Ticker._pausedTickers++;
+			Ticker._pausedTicks++;
 			Ticker._pausedTime += elapsedTime;
 		}
 		Ticker._lastTime = time;
@@ -481,12 +483,14 @@ var Ticker = function() {
 	 * @method _getTime
 	 * @protected
 	 **/
+	var now = window.performance && (performance.now || performance.mozNow || performance.msNow || performance.oNow || performance.webkitNow);
 	Ticker._getTime = function() {
-		return new Date().getTime();
+		return (now&&now.call(performance))||(new Date().getTime());
 	}
 
-window.Ticker = Ticker;
-}(window));
+createjs.Ticker = Ticker;
+}());
+
 /*
 * MouseEvent
 * Visit http://createjs.com/ for documentation, updates and examples.
@@ -515,41 +519,62 @@ window.Ticker = Ticker;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 /**
-* This is passed as the parameter to onPress, onMouseMove, onMouseUp, onMouseDown, and onClick handlers on
-* DisplayObject instances.
-* By default, mouse events are disabled for performance reasons. In order to enabled them for a specified stage
-* set mouseEventsEnabled to true on your stage instance.
+* This is passed as the parameter to onPress, onMouseMove, onMouseUp, onMouseDown, onMouseOver, onMouseOut and onClick
+* handlers on DisplayObject instances.
 * @class MouseEvent
 * @constructor
 * @param {String} type The event type.
-* @param {Number} stageX The mouseX position relative to the stage.
-* @param {Number} stageY The mouseY position relative to the stage.
+* @param {Number} stageX The normalized x position relative to the stage.
+* @param {Number} stageY The normalized y position relative to the stage.
 * @param {DisplayObject} target The display object this event relates to.
 * @param {MouseEvent} nativeEvent The native DOM event related to this mouse event.
+ * @param {Number} pointerID The unique id for the pointer.
+ * @param {Boolean} primary Indicates whether this is the primary pointer in a multitouch environment.
+ * @param {Number} rawX The raw x position relative to the stage.
+ * @param {Number} rawY The raw y position relative to the stage.
 **/
-var MouseEvent = function(type, stageX, stageY, target, nativeEvent) {
-  this.initialize(type, stageX, stageY, target, nativeEvent);
+var MouseEvent = function(type, stageX, stageY, target, nativeEvent, pointerID, primary, rawX, rawY) {
+  this.initialize(type, stageX, stageY, target, nativeEvent, pointerID, primary, rawX, rawY);
 }
 var p = MouseEvent.prototype;
 
 // public properties:
 
 	/**
-	 * The mouseX position on the stage.
+	 * The normalized x position on the stage. This will always be within the range 0 to stage width.
 	 * @property stageX
 	 * @type Number
 	*/
 	p.stageX = 0;
 
 	/**
-	 * The mouseY position on the stage.
+	 * The normalized y position on the stage. This will always be within the range 0 to stage height.
 	 * @property stageY
 	 * @type Number
 	 **/
 	p.stageY = 0;
+	
+	/**
+	 * The raw x position relative to the stage. Normally this will be the same as the stageX value, unless
+	 * stage.mouseMoveOutside is true and the pointer is outside of the stage bounds.
+	 * @property rawX
+	 * @type Number
+	*/
+	p.rawX = 0;
+
+	/**
+	 * The raw y position relative to the stage. Normally this will be the same as the stageY value, unless
+	 * stage.mouseMoveOutside is true and the pointer is outside of the stage bounds.
+	 * @property rawY
+	 * @type Number
+	*/
+	p.rawY = 0;
 
 	/**
 	 * The type of mouse event. This will be the same as the handler it maps to (onPress,
@@ -570,7 +595,7 @@ var p = MouseEvent.prototype;
 	p.nativeEvent = null;
 
 	/**
-	 * For events of type "onPress" and "onMouseDown" only you can assign a handler to the onMouseMove
+	 * For events of type "onPress" only you can assign a handler to the onMouseMove
 	 * property. This handler will be called every time the mouse is moved until the mouse is released.
 	 * This is useful for operations such as drag and drop.
 	 * @event onMouseMove
@@ -579,7 +604,7 @@ var p = MouseEvent.prototype;
 	p.onMouseMove = null;
 
 	/**
-	 * For events of type "onPress" and "onMouseDown" only you can assign a handler to the onMouseUp
+	 * For events of type "onPress" only you can assign a handler to the onMouseUp
 	 * property. This handler will be called every time the mouse is moved until the mouse is released.
 	 * This is useful for operations such as drag and drop.
 	 * @event onMouseUp
@@ -595,18 +620,38 @@ var p = MouseEvent.prototype;
 	*/
 	p.target = null;
 
+	/**
+	 * The unique id for the pointer (touch point or cursor). This will be either -1 for the mouse, or the system
+	 * supplied id value.
+	 * @property pointerID
+	 * @type {Number}
+	 */
+	p.pointerID = 0;
+
+	/**
+	 * Indicates whether this is the primary pointer in a multitouch environment. This will always be true for the mouse.
+	 * For touch pointers, the first pointer in the current stack will be considered the primary pointer.
+	 * @property primaryPointer
+	 * @type {Boolean}
+	 */
+	p.primary = false;
+
 // constructor:
 	/**
 	 * Initialization method.
 	 * @method initialize
 	 * @protected
 	 **/
-	p.initialize = function(type, stageX, stageY, target, nativeEvent) {
+	p.initialize = function(type, stageX, stageY, target, nativeEvent, pointerID, primary, rawX, rawY) {
 		this.type = type;
 		this.stageX = stageX;
 		this.stageY = stageY;
 		this.target = target;
 		this.nativeEvent = nativeEvent;
+		this.pointerID = pointerID;
+		this.primary = primary;
+		this.rawX = (rawX==null)?stageX:rawX;
+		this.rawY = (rawY==null)?stageY:rawY;
 	}
 
 // public methods:
@@ -616,7 +661,7 @@ var p = MouseEvent.prototype;
 	 * @return {MouseEvent} a clone of the MouseEvent instance.
 	 **/
 	p.clone = function() {
-		return new MouseEvent(this.type, this.stageX, this.stageY, this.target, this.nativeEvent);
+		return new MouseEvent(this.type, this.stageX, this.stageY, this.target, this.nativeEvent, this.pointerID, this.primary, this.rawX, this.rawY);
 	}
 
 	/**
@@ -628,8 +673,9 @@ var p = MouseEvent.prototype;
 		return "[MouseEvent (type="+this.type+" stageX="+this.stageX+" stageY="+this.stageY+")]";
 	}
 
-window.MouseEvent = MouseEvent;
-}(window));/*
+createjs.MouseEvent = MouseEvent;
+}());
+/*
 * Matrix2D
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -657,7 +703,10 @@ window.MouseEvent = MouseEvent;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 /**
 * Represents an affine transformation matrix, and provides tools for constructing and concatenating matrixes.
@@ -762,13 +811,14 @@ var p = Matrix2D.prototype;
 	 * @property compositeOperation
 	 * @type String
 	 **/
-	p.compositeOperation  = null;
+	p.compositeOperation = null;
 
 // constructor:
 	/**
 	 * Initialization method.
 	 * @method initialize
 	 * @protected
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	*/
 	p.initialize = function(a, b, c, d, tx, ty) {
 		if (a != null) { this.a = a; }
@@ -777,6 +827,7 @@ var p = Matrix2D.prototype;
 		if (d != null) { this.d = d; }
 		this.tx = tx || 0;
 		this.ty = ty || 0;
+		return this;
 	}
 
 // public methods:
@@ -789,6 +840,7 @@ var p = Matrix2D.prototype;
 	 * @param {Number} d
 	 * @param {Number} tx
 	 * @param {Number} ty
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	 **/
 	p.prepend = function(a, b, c, d, tx, ty) {
 		var tx1 = this.tx;
@@ -802,6 +854,7 @@ var p = Matrix2D.prototype;
 		}
 		this.tx = tx1*a+this.ty*c+tx;
 		this.ty = tx1*b+this.ty*d+ty;
+		return this;
 	}
 
 	/**
@@ -813,6 +866,7 @@ var p = Matrix2D.prototype;
 	 * @param {Number} d
 	 * @param {Number} tx
 	 * @param {Number} ty
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	 **/
 	p.append = function(a, b, c, d, tx, ty) {
 		var a1 = this.a;
@@ -826,6 +880,7 @@ var p = Matrix2D.prototype;
 		this.d  = c*b1+d*d1;
 		this.tx = tx*a1+ty*c1+this.tx;
 		this.ty = tx*b1+ty*d1+this.ty;
+		return this;
 	}
 
 	/**
@@ -836,16 +891,19 @@ var p = Matrix2D.prototype;
 	p.prependMatrix = function(matrix) {
 		this.prepend(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
 		this.prependProperties(matrix.alpha, matrix.shadow,  matrix.compositeOperation);
+		return this;
 	}
 
 	/**
 	 * Appends the specified matrix with this matrix.
 	 * @method appendMatrix
 	 * @param {Matrix2D} matrix
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	 **/
 	p.appendMatrix = function(matrix) {
 		this.append(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
 		this.appendProperties(matrix.alpha, matrix.shadow,  matrix.compositeOperation);
+		return this;
 	}
 
 	/**
@@ -862,6 +920,7 @@ var p = Matrix2D.prototype;
 	 * @param {Number} skewY
 	 * @param {Number} regX Optional.
 	 * @param {Number} regY Optional.
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	 **/
 	p.prependTransform = function(x, y, scaleX, scaleY, rotation, skewX, skewY, regX, regY) {
 		if (rotation%360) {
@@ -886,7 +945,7 @@ var p = Matrix2D.prototype;
 		} else {
 			this.prepend(cos*scaleX, sin*scaleX, -sin*scaleY, cos*scaleY, x, y);
 		}
-
+		return this;
 	}
 
 	/**
@@ -903,6 +962,7 @@ var p = Matrix2D.prototype;
 	 * @param {Number} skewY
 	 * @param {Number} regX Optional.
 	 * @param {Number} regY Optional.
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	 **/
 	p.appendTransform = function(x, y, scaleX, scaleY, rotation, skewX, skewY, regX, regY) {
 		if (rotation%360) {
@@ -929,12 +989,14 @@ var p = Matrix2D.prototype;
 			this.tx -= regX*this.a+regY*this.c; 
 			this.ty -= regX*this.b+regY*this.d;
 		}
+		return this;
 	}
 
 	/**
 	 * Applies a rotation transformation to the matrix.
 	 * @method rotate
 	 * @param {Number} angle The angle in degrees.
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	 **/
 	p.rotate = function(angle) {
 		var cos = Math.cos(angle);
@@ -950,6 +1012,7 @@ var p = Matrix2D.prototype;
 		this.d = c1*sin+this.d*cos;
 		this.tx = tx1*cos-this.ty*sin;
 		this.ty = tx1*sin+this.ty*cos;
+		return this;
 	}
 
 	/**
@@ -957,11 +1020,13 @@ var p = Matrix2D.prototype;
 	 * @method skew
 	 * @param {Number} skewX The amount to skew horizontally in degrees.
 	 * @param {Number} skewY The amount to skew vertically in degrees.
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	*/
 	p.skew = function(skewX, skewY) {
 		skewX = skewX*Matrix2D.DEG_TO_RAD;
 		skewY = skewY*Matrix2D.DEG_TO_RAD;
 		this.append(Math.cos(skewY), Math.sin(skewY), -Math.sin(skewX), Math.cos(skewX), 0, 0);
+		return this;
 	}
 
 	/**
@@ -969,12 +1034,14 @@ var p = Matrix2D.prototype;
 	 * @method scale
 	 * @param {Number} x
 	 * @param {Number} y
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	 **/
 	p.scale = function(x, y) {
 		this.a *= x;
 		this.d *= y;
 		this.tx *= x;
 		this.ty *= y;
+		return this;
 	}
 
 	/**
@@ -982,25 +1049,30 @@ var p = Matrix2D.prototype;
 	 * @method translate
 	 * @param {Number} x
 	 * @param {Number} y
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	 **/
 	p.translate = function(x, y) {
 		this.tx += x;
 		this.ty += y;
+		return this;
 	}
 
 	/**
 	 * Sets the properties of the matrix to those of an identity matrix (one that applies a null transformation).
 	 * @method identity
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	 **/
 	p.identity = function() {
 		this.alpha = this.a = this.d = 1;
 		this.b = this.c = this.tx = this.ty = 0;
 		this.shadow = this.compositeOperation = null;
+		return this;
 	}
 
 	/**
 	 * Inverts the matrix, causing it to perform the opposite transformation.
 	 * @method invert
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	 **/
 	p.invert = function() {
 		var a1 = this.a;
@@ -1016,6 +1088,7 @@ var p = Matrix2D.prototype;
 		this.d = a1/n;
 		this.tx = (c1*this.ty-d1*tx1)/n;
 		this.ty = -(a1*this.ty-b1*tx1)/n;
+		return this;
 	}
 
 	/**
@@ -1033,6 +1106,7 @@ var p = Matrix2D.prototype;
 	 * results.
 	 * @method decompose
 	 * @param {Object} target The object to apply the transform properties to. If null, then a new object will be returned.
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	*/
 	p.decompose = function(target) {
 		// TODO: it would be nice to be able to solve for whether the matrix can be decomposed into only scale/rotation
@@ -1071,6 +1145,7 @@ var p = Matrix2D.prototype;
 	 * @param {Number} alpha desired alpha value
 	 * @param {Shadow} shadow desired shadow value
 	 * @param {String} compositeOperation desired composite operation value
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	*/
 	p.reinitialize = function(a,b,c,d,tx,ty,alpha,shadow,compositeOperation) {
 		this.initialize(a,b,c,d,tx,ty);
@@ -1086,11 +1161,13 @@ var p = Matrix2D.prototype;
 	 * @param {Number} alpha desired alpha value
 	 * @param {Shadow} shadow desired shadow value
 	 * @param {String} compositeOperation desired composite operation value
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	*/
 	p.appendProperties = function(alpha, shadow, compositeOperation) {
 		this.alpha *= alpha;
 		this.shadow = shadow || this.shadow;
 		this.compositeOperation = compositeOperation || this.compositeOperation;
+		return this;
 	}
 
 	/**
@@ -1099,11 +1176,13 @@ var p = Matrix2D.prototype;
 	 * @param {Number} alpha desired alpha value
 	 * @param {Shadow} shadow desired shadow value
 	 * @param {String} compositeOperation desired composite operation value
+	 * @return {Matrix2D} This matrix. Useful for chaining method calls.
 	*/
 	p.prependProperties = function(alpha, shadow, compositeOperation) {
 		this.alpha *= alpha;
 		this.shadow = this.shadow || shadow;
 		this.compositeOperation = this.compositeOperation || compositeOperation;
+		return this;
 	}
 
 	/**
@@ -1131,8 +1210,9 @@ var p = Matrix2D.prototype;
 	// this has to be populated after the class is defined:
 	Matrix2D.identity = new Matrix2D(1, 0, 0, 1, 0, 0);
 
-window.Matrix2D = Matrix2D;
-}(window));/*
+createjs.Matrix2D = Matrix2D;
+}());
+/*
 * Point
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -1160,7 +1240,10 @@ window.Matrix2D = Matrix2D;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 /**
 * Represents a point on a 2 dimensional x / y coordinate system.
@@ -1220,8 +1303,9 @@ var p = Point.prototype;
 		return "[Point (x="+this.x+" y="+this.y+")]";
 	}
 	
-window.Point = Point;
-}(window));/*
+createjs.Point = Point;
+}());
+/*
 * Rectangle
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -1249,7 +1333,10 @@ window.Point = Point;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 /**
 * Represents a rectangle as defined by the points (x, y) and (x+width, y+height).
@@ -1326,8 +1413,9 @@ var p = Rectangle.prototype;
 		return "[Rectangle (x="+this.x+" y="+this.y+" width="+this.width+" height="+this.height+")]";
 	}
 	
-window.Rectangle = Rectangle;
-}(window));/*
+createjs.Rectangle = Rectangle;
+}());
+/*
 * Shadow
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -1355,7 +1443,10 @@ window.Rectangle = Rectangle;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 /**
 * Encapsulates the properties required to define a shadow to apply to a DisplayObject via it's .shadow property.
@@ -1450,8 +1541,9 @@ var p = Shadow.prototype;
 	// this has to be populated after the class is defined:
 	Shadow.identity = new Shadow("transparent", 0, 0, 0);
 	
-window.Shadow = Shadow;
-}(window));/*
+createjs.Shadow = Shadow;
+}());
+/*
 * SpriteSheet
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -1479,7 +1571,10 @@ window.Shadow = Shadow;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 /**
  * Encapsulates the properties and methods associated with a sprite sheet. A sprite sheet is a series of images (usually animation frames) combined
  * into a larger image (or images). For example, an animation consisting of 8 100x100 images could be combined into a 400x200
@@ -1508,7 +1603,7 @@ window.Shadow = Shadow;
 &#9;// OR, the complex way that defines individual rects for frames.
 &#9;// The 5th value is the image index per the list defined in "images" (defaults to 0).
 &#9;frames: [
-&#9;	// x, y, width, height, image index, regX, regY
+&#9;	// x, y, width, height, imageIndex, regX, regY
 &#9;	[0,0,64,64,0,32,64],
 &#9;	[64,0,96,64,0]
 &#9;],
@@ -1666,7 +1761,7 @@ var p = SpriteSheet.prototype;
 			a = this._images = [];
 			for (i=0; i<l; i++) {
 				var img = data.images[i];
-				if (!(img instanceof Image)) {
+				if (typeof img == "string") {
 					var src = img;
 					img = new Image();
 					img.src = src;
@@ -1687,7 +1782,7 @@ var p = SpriteSheet.prototype;
 			a = data.frames;
 			for (i=0,l=a.length;i<l;i++) {
 				var arr = a[i];
-				this._frames.push({image:this._images[arr[4]?arr[4]:0], rect:new Rectangle(arr[0],arr[1],arr[2],arr[3]), regX:arr[5]||0, regY:arr[6]||0 });
+				this._frames.push({image:this._images[arr[4]?arr[4]:0], rect:new createjs.Rectangle(arr[0],arr[1],arr[2],arr[3]), regX:arr[5]||0, regY:arr[6]||0 });
 			}
 		} else {
 			o = data.frames;
@@ -1719,7 +1814,8 @@ var p = SpriteSheet.prototype;
 				} else { // complex
 					anim.frequency = obj.frequency;
 					anim.next = obj.next;
-					a = anim.frames = obj.frames.slice(0);
+					var frames = obj.frames;
+					a = anim.frames = !isNaN(frames) ? [frames] : frames.slice(0);
 				}
 				anim.next = (a.length < 2 || anim.next == false) ? null : (anim.next == null || anim.next == true) ? name : anim.next;
 				if (!anim.frequency) { anim.frequency = 1; }
@@ -1762,7 +1858,8 @@ var p = SpriteSheet.prototype;
 	 * property indicating the advance frequency for this animation, a name property, 
 	 * and a next property, which specifies the default next animation. If the animation
 	 * loops, the name and next property will be the same.
-	 * @method getAnimations
+	 * @method getAnimation
+	 * @param name The name of the animation to get.
 	 * @return {Object} a generic object with frames, frequency, name, and next properties.
 	 **/
 	p.getAnimation = function(name) {
@@ -1771,7 +1868,7 @@ var p = SpriteSheet.prototype;
 	
 	/**
 	 * Returns an object specifying the image and source rect of the specified frame. The returned object
-	 * has an image property holding a reference to the image object in which the frame frame is found,
+	 * has an image property holding a reference to the image object in which the frame is found,
 	 * and a rect property containing a Rectangle instance which defines the boundaries for the
 	 * frame within that image.
 	 * @method getFrame
@@ -1841,15 +1938,16 @@ var p = SpriteSheet.prototype;
 			var rows = (img.height+1)/fh|0;
 			var ttl = this._numFrames>0 ? Math.min(this._numFrames-ttlFrames,cols*rows) : cols*rows;
 			for (var j=0;j<ttl;j++) {
-				this._frames.push({image:img, rect:new Rectangle(j%cols*fw,(j/cols|0)*fh,fw,fh), regX:this._regX, regY:this._regY });
+				this._frames.push({image:img, rect:new createjs.Rectangle(j%cols*fw,(j/cols|0)*fh,fw,fh), regX:this._regX, regY:this._regY });
 			}
 			ttlFrames += ttl;
 		}
 		this._numFrames = ttlFrames;
 	}
 
-window.SpriteSheet = SpriteSheet;
-}(window));
+createjs.SpriteSheet = SpriteSheet;
+}());
+
 /*
 * Graphics
 * Visit http://createjs.com/ for documentation, updates and examples.
@@ -1878,7 +1976,10 @@ window.SpriteSheet = SpriteSheet;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 // used to create the instruction lists used in Graphics:
 
@@ -1889,9 +1990,10 @@ window.SpriteSheet = SpriteSheet;
 * @for Graphics
 * @constructor
 **/
-function Command(f, params) {
+function Command(f, params, path) {
 	this.f = f;
 	this.params = params;
+	this.path = path==null ? true : path;
 }
 
 /**
@@ -2023,7 +2125,7 @@ var p = Graphics.prototype;
 	 * @protected
 	 * @type CanvasRenderingContext2D
 	 **/
-	Graphics._ctx = document.createElement("canvas").getContext("2d");
+	Graphics._ctx = (createjs.createCanvas?createjs.createCanvas():document.createElement("canvas")).getContext("2d");
 	
 	/**
 	 * @property beginCmd
@@ -2031,7 +2133,7 @@ var p = Graphics.prototype;
 	 * @protected
 	 * @type Command
 	 **/
-	Graphics.beginCmd = new Command(Graphics._ctx.beginPath, []);
+	Graphics.beginCmd = new Command(Graphics._ctx.beginPath, [], false);
 	
 	/**
 	 * @property fillCmd
@@ -2039,7 +2141,7 @@ var p = Graphics.prototype;
 	 * @protected
 	 * @type Command
 	 **/
-	Graphics.fillCmd = new Command(Graphics._ctx.fill, []);
+	Graphics.fillCmd = new Command(Graphics._ctx.fill, [], false);
 	
 	/**
 	 * @property strokeCmd
@@ -2047,8 +2149,11 @@ var p = Graphics.prototype;
 	 * @protected
 	 * @type Command
 	 **/
-	Graphics.strokeCmd = new Command(Graphics._ctx.stroke, []);
+	Graphics.strokeCmd = new Command(Graphics._ctx.stroke, [], false);
+	
+// public properties
 
+// private properties
 	/**
 	 * @property _strokeInstructions
 	 * @protected
@@ -2126,12 +2231,26 @@ var p = Graphics.prototype;
 	 * @param {CanvasRenderingContext2D} ctx The canvas 2D context object to draw into.
 	 **/
 	p.draw = function(ctx) {
-		if (this._dirty) {
-			this._updateInstructions();
-		}
+		if (this._dirty) { this._updateInstructions(); }
 		var instr = this._instructions;
 		for (var i=0, l=instr.length; i<l; i++) {
 			instr[i].exec(ctx);
+		}
+	}
+	
+	/**
+	 * Draws only the path described for this Graphics instance, skipping any
+	 * non-path instructions, including fill and stroke descriptions.
+	 * Used by DisplayObject.clippingPath to draw the clipping path, for example.
+	 * @method drawAsPath
+	 * @param {CanvasRenderingContext2D} ctx The canvas 2D context object to draw into.
+	 **/
+	p.drawAsPath = function(ctx) {
+		if (this._dirty) { this._updateInstructions(); }
+		var instr, instrs = this._instructions;
+		for (var i=0, l=instrs.length; i<l; i++) {
+			// the first command is always a beginPath command.
+			if ((instr = instrs[i]).path || i==0) { instr.exec(ctx); }
 		}
 	}
 	
@@ -2297,7 +2416,7 @@ var p = Graphics.prototype;
 	 **/
 	p.beginFill = function(color) {
 		if (this._active) { this._newPath(); }
-		this._fillInstructions = color ? [new Command(this._setProp, ["fillStyle", color])] : null;
+		this._fillInstructions = color ? [new Command(this._setProp, ["fillStyle", color], false)] : null;
 		return this;
 	}
 	
@@ -2322,7 +2441,7 @@ var p = Graphics.prototype;
 		for (var i=0, l=colors.length; i<l; i++) {
 			o.addColorStop(ratios[i], colors[i]);
 		}
-		this._fillInstructions = [new Command(this._setProp, ["fillStyle", o])];
+		this._fillInstructions = [new Command(this._setProp, ["fillStyle", o], false)];
 		return this;
 	}
 	
@@ -2349,7 +2468,7 @@ var p = Graphics.prototype;
 		for (var i=0, l=colors.length; i<l; i++) {
 			o.addColorStop(ratios[i], colors[i]);
 		}
-		this._fillInstructions = [new Command(this._setProp, ["fillStyle", o])];
+		this._fillInstructions = [new Command(this._setProp, ["fillStyle", o], false)];
 		return this;
 	}
 	
@@ -2365,7 +2484,7 @@ var p = Graphics.prototype;
 		if (this._active) { this._newPath(); }
 		repetition = repetition || "";
 		var o = this._ctx.createPattern(image, repetition);
-		this._fillInstructions = [new Command(this._setProp, ["fillStyle", o])];
+		this._fillInstructions = [new Command(this._setProp, ["fillStyle", o], false)];
 		return this;
 	}
 	
@@ -2374,13 +2493,13 @@ var p = Graphics.prototype;
 	 * @return {Graphics} The Graphics instance the method is called on (useful for chaining calls.)
 	 **/
 	p.endFill = function() {
-		this.beginFill();
-		return this;
+		return this.beginFill();
 	}
 	
 	/**
 	 * Sets the stroke style for the current subpath. Like all drawing methods, this can be chained, so you can define the stroke style and color in a single line of code like so:
 	 * myGraphics.setStrokeStyle(8,"round").beginStroke("#F00");
+	 * @method setStrokeStyle
 	 * @param thickness The width of the stroke.
 	 * @param caps Optional. Indicates the type of caps to use at the end of lines. One of butt, round, or square. Defaults to "butt". Also accepts the values 0 (butt), 1 (round), and 2 (square) for use with the tiny API.
 	 * @param joints Optional. Specifies the type of joints that should be used where two lines meet. One of bevel, round, or miter. Defaults to "miter". Also accepts the values 0 (miter), 1 (round), and 2 (bevel) for use with the tiny API.
@@ -2390,28 +2509,30 @@ var p = Graphics.prototype;
 	p.setStrokeStyle = function(thickness, caps, joints, miterLimit) {
 		if (this._active) { this._newPath(); }
 		this._strokeStyleInstructions = [
-			new Command(this._setProp, ["lineWidth", (thickness == null ? "1" : thickness)]),
-			new Command(this._setProp, ["lineCap", (caps == null ? "butt" : (isNaN(caps) ? caps : Graphics.STROKE_CAPS_MAP[caps]))]),
-			new Command(this._setProp, ["lineJoin", (joints == null ? "miter" : (isNaN(joints) ? joints : Graphics.STROKE_JOINTS_MAP[joints]))]),
-			new Command(this._setProp, ["miterLimit", (miterLimit == null ? "10" : miterLimit)])
+			new Command(this._setProp, ["lineWidth", (thickness == null ? "1" : thickness)], false),
+			new Command(this._setProp, ["lineCap", (caps == null ? "butt" : (isNaN(caps) ? caps : Graphics.STROKE_CAPS_MAP[caps]))], false),
+			new Command(this._setProp, ["lineJoin", (joints == null ? "miter" : (isNaN(joints) ? joints : Graphics.STROKE_JOINTS_MAP[joints]))], false),
+			new Command(this._setProp, ["miterLimit", (miterLimit == null ? "10" : miterLimit)], false)
 			];
 		return this;
 	}
 	
 	/**
 	 * Begins a stroke with the specified color. This ends the current subpath.
+	 * @method beginStroke
 	 * @param color A CSS compatible color value (ex. "#FF0000" or "rgba(255,0,0,0.5)"). Setting to null will result in no stroke.
 	 * @return {Graphics} The Graphics instance the method is called on (useful for chaining calls.)
 	 **/
 	p.beginStroke = function(color) {
 		if (this._active) { this._newPath(); }
-		this._strokeInstructions = color ? [new Command(this._setProp, ["strokeStyle", color])] : null;
+		this._strokeInstructions = color ? [new Command(this._setProp, ["strokeStyle", color], false)] : null;
 		return this;
 	}
 	
 	/**
 	 * Begins a linear gradient stroke defined by the line (x0, y0) to (x1, y1). This ends the current subpath. For example, the following code defines a black to white vertical gradient ranging from 20px to 120px, and draws a square to display it:<br/>
 	 * myGraphics.setStrokeStyle(10).beginLinearGradientStroke(["#000","#FFF"], [0, 1], 0, 20, 0, 120).drawRect(20, 20, 120, 120);
+	 * @method beginLinearGradientStroke
 	 * @param colors An array of CSS compatible color values. For example, ["#F00","#00F"] would define a gradient drawing from red to blue.
 	 * @param ratios An array of gradient positions which correspond to the colors. For example, [0.1, 0.9] would draw the first color to 10% then interpolating to the second color at 90%.
 	 * @param x0 The position of the first point defining the line that defines the gradient direction and size.
@@ -2426,7 +2547,7 @@ var p = Graphics.prototype;
 		for (var i=0, l=colors.length; i<l; i++) {
 			o.addColorStop(ratios[i], colors[i]);
 		}
-		this._strokeInstructions = [new Command(this._setProp, ["strokeStyle", o])];
+		this._strokeInstructions = [new Command(this._setProp, ["strokeStyle", o], false)];
 		return this;
 	}
 	
@@ -2434,6 +2555,7 @@ var p = Graphics.prototype;
 	/**
 	 * Begins a radial gradient stroke. This ends the current subpath. For example, the following code defines a red to blue radial gradient centered at (100, 100), with a radius of 50, and draws a rectangle to display it:<br/>
 	 * myGraphics.setStrokeStyle(10).beginRadialGradientStroke(["#F00","#00F"], [0, 1], 100, 100, 0, 100, 100, 50).drawRect(50, 90, 150, 110);
+	 * @method beginRadialGradientStroke
 	 * @param colors An array of CSS compatible color values. For example, ["#F00","#00F"] would define a gradient drawing from red to blue.
 	 * @param ratios An array of gradient positions which correspond to the colors. For example, [0.1, 0.9] would draw the first color to 10% then interpolating to the second color at 90%, then draw the second color to 100%.
 	 * @param x0 Center position of the inner circle that defines the gradient.
@@ -2450,12 +2572,13 @@ var p = Graphics.prototype;
 		for (var i=0, l=colors.length; i<l; i++) {
 			o.addColorStop(ratios[i], colors[i]);
 		}
-		this._strokeInstructions = [new Command(this._setProp, ["strokeStyle", o])];
+		this._strokeInstructions = [new Command(this._setProp, ["strokeStyle", o], false)];
 		return this;
 	}
 	
 	/**
 	 * Begins a pattern fill using the specified image. This ends the current subpath.
+	 * @method beginBitmapStroke
 	 * @param {Image | HTMLCanvasElement | HTMLVideoElement} image The Image, Canvas, or Video object to use as the pattern.
 	 * @param {String} repetition Optional. Indicates whether to repeat the image in the fill area. One of "repeat", "repeat-x",
 	 * "repeat-y", or "no-repeat". Defaults to "repeat".
@@ -2463,9 +2586,8 @@ var p = Graphics.prototype;
 	 **/
 	p.beginBitmapStroke = function(image, repetition) {
 		if (this._active) { this._newPath(); }
-		repetition = repetition || "";
-		var o = this._ctx.createPattern(image, repetition);
-		this._strokeInstructions = [new Command(this._setProp, ["strokeStyle", o])];
+		var o = this._ctx.createPattern(image, repetition || "");
+		this._strokeInstructions = [new Command(this._setProp, ["strokeStyle", o], false)];
 		return this;
 	}
 	
@@ -2510,7 +2632,7 @@ var p = Graphics.prototype;
 	}
 	
 	/**
-	 * Draws a rounded rectangle with different corner radiuses.
+	 * Draws a rounded rectangle with different corner radii. Supports positive and negative corner radii.
 	 * @method drawRoundRectComplex
 	 * @param {Number} x
 	 * @param {Number} y
@@ -2523,27 +2645,29 @@ var p = Graphics.prototype;
 	 * @return {Graphics} The Graphics instance the method is called on (useful for chaining calls.)
 	 **/
 	p.drawRoundRectComplex = function(x, y, w, h, radiusTL, radiusTR, radiusBR, radiusBL) {
-		this._dirty = this._active = true;
-		var pi = Math.PI, arc=this._ctx.arc, lineTo=this._ctx.lineTo;
+		var max = (w<h?w:h)/2;
+		var mTL=0, mTR=0, mBR=0, mBL=0;
+		if (radiusTL < 0) { radiusTL *= (mTL=-1); }
+		if (radiusTL > max) { radiusTL = max; }
+		if (radiusTR < 0) { radiusTR *= (mTR=-1); }
+		if (radiusTR > max) { radiusTR = max; }
+		if (radiusBR < 0) { radiusBR *= (mBR=-1); }
+		if (radiusBR > max) { radiusBR = max; }
+		if (radiusBL < 0) { radiusBL *= (mBL=-1); }
+		if (radiusBL > max) { radiusBL = max; }
 		
+		this._dirty = this._active = true;
+		var arcTo=this._ctx.arcTo, lineTo=this._ctx.lineTo;
 		this._activeInstructions.push(
-			new Command(this._ctx.moveTo, [x+radiusTL, y]),
-			new Command(lineTo, [x+w-radiusTR, y]),
-			(radiusTR>=0) ?
-				new Command(arc, [x+w-radiusTR, y+radiusTR, radiusTR, -pi/2, 0]) :
-				new Command(arc, [x+w, y, -radiusTR, pi, pi/2, true]) ,
+			new Command(this._ctx.moveTo, [x+w-radiusTR, y]),
+			new Command(arcTo, [x+w+radiusTR*mTR, y-radiusTR*mTR, x+w, y+radiusTR, radiusTR]),
 			new Command(lineTo, [x+w, y+h-radiusBR]),
-			(radiusBL>=0) ?
-				new Command(arc, [x+w-radiusBR, y+h-radiusBR, radiusBR, 0, pi/2]) :
-				new Command(arc, [x+w, y+h, -radiusBR, -pi/2, pi, true]) ,
+			new Command(arcTo, [x+w+radiusBR*mBR, y+h+radiusBR*mBR, x+w-radiusBR, y+h, radiusBR]),
 			new Command(lineTo, [x+radiusBL, y+h]),
-			(radiusBL>=0) ?
-				new Command(arc, [x+radiusBL, y+h-radiusBL, radiusBL, pi/2, pi]) :
-				new Command(arc, [x, y+h, -radiusBL, 0, -pi/2, true]) ,
+			new Command(arcTo, [x-radiusBL*mBL, y+h+radiusBL*mBL, x, y+h-radiusBL, radiusBL]),
 			new Command(lineTo, [x, y+radiusTL]),
-			(radiusTL>=0) ?
-				new Command(arc, [x+radiusTL, y+radiusTL, radiusTL, pi, -pi/2]) :
-				new Command(arc, [x, y, -radiusTL, pi/2, 0, true])
+			new Command(arcTo, [x-radiusTL*mTL, y-radiusTL*mTL, x+radiusTL, y, radiusTL]),
+			new Command(this._ctx.closePath)
 		);
 		return this;
 	} 
@@ -2583,7 +2707,7 @@ var p = Graphics.prototype;
 	 * @param {Number} h
 	 * @return {Graphics} The Graphics instance the method is called on (useful for chaining calls.)
 	 **/
-	p.drawEllipse = function(x, y, w, h) {
+	p.drawEllipse = function(x, y, w, h, startAngle, endAngle, innerRadius) {
 		this._dirty = this._active = true;
 		var k = 0.5522848;
 		var ox = (w / 2) * k;
@@ -2666,7 +2790,7 @@ var p = Graphics.prototype;
 	 * @param {String} str The path string to decode.
 	 * @return {Graphics} The Graphics instance the method is called on (useful for chaining calls.)
 	 **/
-	p.p = p.decodePath = function(str) {
+	p.decodePath = function(str) {
 		var instructions = [this.moveTo, this.lineTo, this.quadraticCurveTo, this.bezierCurveTo];
 		var paramCount = [2, 2, 4, 6];
 		var i=0, l=str.length;
@@ -2675,11 +2799,12 @@ var p = Graphics.prototype;
 		var base64 = Graphics.BASE_64;
 		
 		while (i<l) {
-			var n = base64[str.charAt(i)];
+			var c = str.charAt(i);
+			var n = base64[c];
 			var fi = n>>3; // highest order bits 1-3 code for operation.
 			var f = instructions[fi];
 			// check that we have a valid instruction & that the unused bits are empty:
-			if (!f || (n&3)) { throw("bad path data"); }
+			if (!f || (n&3)) { throw("bad path data (@"+i+"): "+c); }
 			var pl = paramCount[fi];
 			if (!fi) { x=y=0; }
 			params.length = 0;
@@ -2716,6 +2841,7 @@ var p = Graphics.prototype;
 		if (this._strokeStyleInstructions) { o._strokeStyleInstructions = this._strokeStyleInstructions.slice(); }
 		o._active = this._active;
 		o._dirty = this._dirty;
+		o.drawAsPath = this.drawAsPath;
 		return o;
 	}
 		
@@ -2917,7 +3043,7 @@ var p = Graphics.prototype;
 	 * @protected
 	 * type Function
 	 **/
-	p.p
+	p.p = p.decodePath;
 	
 	
 // private methods:
@@ -2926,7 +3052,7 @@ var p = Graphics.prototype;
 	 * @protected
 	 **/
 	p._updateInstructions = function() {
-		this._instructions = this._oldInstructions.slice()
+		this._instructions = this._oldInstructions.slice();
 		this._instructions.push(Graphics.beginCmd);
 		 
 		if (this._fillInstructions) { this._instructions.push.apply(this._instructions, this._fillInstructions); }
@@ -2941,6 +3067,25 @@ var p = Graphics.prototype;
 		
 		if (this._fillInstructions) { this._instructions.push(Graphics.fillCmd); }
 		if (this._strokeInstructions) { this._instructions.push(Graphics.strokeCmd); }
+	}
+	
+	p._getEllipseArc = function(x, y, w, h, startAngle, endAngle) {
+		var k = 0.5522848;
+		var ox = (w / 2) * k;
+		var oy = (h / 2) * k;
+		var xe = x + w;
+		var ye = y + h;
+		var xm = x + w / 2;
+		var ym = y + h / 2;
+			
+		this._activeInstructions.push(
+			new Command(this._ctx.moveTo, [x, ym]),
+			new Command(this._ctx.bezierCurveTo, [x, ym-oy, xm-ox, y, xm, y]),
+			new Command(this._ctx.bezierCurveTo, [xm+ox, y, xe, ym-oy, xe, ym]),
+			new Command(this._ctx.bezierCurveTo, [xe, ym+oy, xm+ox, ye, xm, ye]),
+			new Command(this._ctx.bezierCurveTo, [xm-ox, ye, x, ym+oy, x, ym])
+		);
+		return this;
 	}
 	
 	/**
@@ -2966,8 +3111,9 @@ var p = Graphics.prototype;
 		this[name] = value;
 	}
 
-window.Graphics = Graphics;
-}(window));
+createjs.Graphics = Graphics;
+}());
+
 /*
 * DisplayObject
 * Visit http://createjs.com/ for documentation, updates and examples.
@@ -3003,11 +3149,14 @@ window.Graphics = Graphics;
 * @module EaselJS
 **/
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 /**
 * DisplayObject is an abstract class that should not be constructed directly. Instead construct subclasses such as
-* Sprite, Bitmap, and Shape. DisplayObject is the base class for all display classes in the CanvasDisplay library.
+* Container, Bitmap, and Shape. DisplayObject is the base class for all display classes in the EaselJS library.
 * It defines the core properties and methods that are shared between all display objects.
 * @class DisplayObject
 * @constructor
@@ -3033,7 +3182,7 @@ var p = DisplayObject.prototype;
 	 * @static
 	 * @protected
 	 **/
-	DisplayObject._hitTestCanvas = document.createElement("canvas");
+	DisplayObject._hitTestCanvas = createjs.createCanvas?createjs.createCanvas():document.createElement("canvas");
 	DisplayObject._hitTestCanvas.width = DisplayObject._hitTestCanvas.height = 1;
 
 	/**
@@ -3078,8 +3227,9 @@ var p = DisplayObject.prototype;
 	p.id = -1;
 
 	/**
-	 * Indicates whether to include this object when running Stage.getObjectsUnderPoint(). Setting this to true for
-	 * Sprites will cause the Sprite to be returned (not its children) regardless of whether it's mouseChildren property
+	 * Indicates whether to include this object when running Stage.getObjectsUnderPoint(), and thus for mouse
+	 * interactions. Setting this to true for
+	 * Containers will cause the Container to be returned (not its children) regardless of whether it's mouseChildren property
 	 * is true.
 	 * @property mouseEnabled
 	 * @type Boolean
@@ -3096,7 +3246,7 @@ var p = DisplayObject.prototype;
 	p.name = null;
 
 	/**
-	 * A reference to the Sprite or Stage object that contains this display object, or null if it has not been added to
+	 * A reference to the Container or Stage object that contains this display object, or null if it has not been added to
 	 * one. READ-ONLY.
 	 * @property parent
 	 * @final
@@ -3211,9 +3361,13 @@ var p = DisplayObject.prototype;
 
 	/**
 	 * Indicates whether the display object should have it's x & y position rounded prior to drawing it to stage.
-	 * This only applies if the enclosing stage has snapPixelsEnabled set to true, and the display object's composite
-	 * transform does not include any scaling, rotation, or skewing. The snapToPixel property is true by default for
-	 * Bitmap and BitmapAnimation instances, and false for all other display objects.
+	 * Snapping to whole pixels can result in a sharper and faster draw for images (ex. Bitmap & cached objects).
+	 * This only applies if the enclosing stage has snapPixelsEnabled set to true. The snapToPixel property is true
+	 * by default for Bitmap and BitmapAnimation instances, and false for all other display objects.
+	 * <br/><br/>
+	 * Note that this applies only rounds the display object's local position. You should
+	 * ensure that all of the display object's ancestors (parent containers) are also on a whole pixel. You can do this
+	 * by setting the ancestors' snapToPixel property to true.
 	 * @property snapToPixel
 	 * @type Boolean
 	 * @default false
@@ -3266,7 +3420,12 @@ var p = DisplayObject.prototype;
 
 	/**
 	 * The onTick callback is called on each display object on a stage whenever the stage updates.
-	 * This occurs immediately before the rendering (draw) pass.
+	 * This occurs immediately before the rendering (draw) pass. When stage.update() is called, first all display objects
+	 * on the stage have onTick called, then all of the display objects are drawn to stage. Children will have their
+	 * onTick called in order of their depth prior to onTick being called on their parent.
+	 * <br/><br/>
+	 * Any parameters passed in to stage.update() are passed on to the onTick() handlers. For example, if you call
+	 * stage.update("hello"), all of the display objects with a handler will have onTick("hello") called.
 	 * @event onTick
 	 **/
 	p.onTick = null;
@@ -3288,6 +3447,26 @@ var p = DisplayObject.prototype;
 	* @default 0
 	*/
 	p.cacheID = 0;
+	
+	/**
+	 * A Shape instance that defines a vector mask (clipping path) for this display object.  The shape's transformation
+	 * will be applied relative to the display object's parent coordinates (as if it were a child of the parent).
+	 * @property mask
+	 * @type Shape
+	 * @default null
+	 */
+	p.mask = null;
+	
+	/**
+	 * A display object that will be tested when checking mouse interactions or testing getObjectsUnderPoint. The hit area
+	 * will have its transformation applied relative to this display object's coordinate space (as though the hit test object were a child of this
+	 * display object and relative to its regX/Y). It is NOT used for hitTest().
+	 * @property hitArea
+	 * @type DisplayObject
+	 * @default null
+	 */
+	p.hitArea = null;
+	
 
 // private properties:
 
@@ -3306,6 +3485,14 @@ var p = DisplayObject.prototype;
 	 * @default 0
 	 **/
 	p._cacheOffsetY = 0;
+	
+	/**
+	 * @property _cacheScale
+	 * @protected
+	 * @type Number
+	 * @default 1
+	 **/
+	p._cacheScale = 1;
 
 	/**
 	* @property _cacheDataURLID
@@ -3330,6 +3517,7 @@ var p = DisplayObject.prototype;
 	 * @default null
 	 **/
 	p._matrix = null;
+	
 
 // constructor:
 	// separated so it can be easily addressed in subclasses:
@@ -3340,8 +3528,8 @@ var p = DisplayObject.prototype;
 	 * @protected
 	*/
 	p.initialize = function() {
-		this.id = UID.get();
-		this._matrix = new Matrix2D();
+		this.id = createjs.UID.get();
+		this._matrix = new createjs.Matrix2D();
 	}
 
 // public methods:
@@ -3367,14 +3555,45 @@ var p = DisplayObject.prototype;
 	 * into itself).
 	 **/
 	p.draw = function(ctx, ignoreCache) {
-		if (ignoreCache || !this.cacheCanvas) { return false; }
-		ctx.drawImage(this.cacheCanvas, this._cacheOffsetX, this._cacheOffsetY);
+		var cacheCanvas = this.cacheCanvas;
+		if (ignoreCache || !cacheCanvas) { return false; }
+		var scale = this._cacheScale;
+		ctx.drawImage(cacheCanvas, this._cacheOffsetX, this._cacheOffsetY, cacheCanvas.width/scale, cacheCanvas.height/scale);
 		return true;
+	}
+	
+	/**
+	 * Applies this display object's transformation, alpha, globalCompositeOperation, clipping path (mask), and shadow to the specified
+	 * context. This is typically called prior to draw.
+	 * @method setupContext
+	 * @param {CanvasRenderingContext2D} ctx The canvas 2D to update.
+	 **/
+	p.updateContext = function(ctx) {
+		var mtx, mask=this.mask, o=this;
+		
+		if (mask && mask.graphics) {
+			mtx = mask.getMatrix(mask._matrix);
+			ctx.transform(mtx.a,  mtx.b, mtx.c, mtx.d, mtx.tx, mtx.ty);
+			
+			mask.graphics.drawAsPath(ctx);
+			ctx.clip();
+			
+			mtx.invert();
+			ctx.transform(mtx.a,  mtx.b, mtx.c, mtx.d, mtx.tx, mtx.ty);
+		}
+		
+		mtx = o._matrix.identity().appendTransform(o.x, o.y, o.scaleX, o.scaleY, o.rotation, o.skewX, o.skewY, o.regX, o.regY);
+		// TODO: should be a better way to manage this setting. For now, using dynamic access to avoid circular dependencies:
+		if (createjs["Stage"]._snapToPixelEnabled && o.snapToPixel) { ctx.transform(mtx.a,  mtx.b, mtx.c, mtx.d, mtx.tx+0.5|0, mtx.ty+0.5|0); }
+		else { ctx.transform(mtx.a,  mtx.b, mtx.c, mtx.d, mtx.tx, mtx.ty); }
+		ctx.globalAlpha *= o.alpha;
+		if (o.compositeOperation) { ctx.globalCompositeOperation = o.compositeOperation; }
+		if (o.shadow) { this._applyShadow(ctx, o.shadow); }
 	}
 
 	/**
 	 * Draws the display object into a new canvas, which is then used for subsequent draws. For complex content
-	 * that does not change frequently (ex. a Sprite with many children that do not move, or a complex vector Shape),
+	 * that does not change frequently (ex. a Container with many children that do not move, or a complex vector Shape),
 	 * this can provide for much faster rendering because the content does not need to be re-rendered each tick. The
 	 * cached display object can be moved, rotated, faded, etc freely, however if it's content changes, you must manually
 	 * update the cache by calling updateCache() or cache() again. You must specify the cache area via the x, y, w,
@@ -3386,21 +3605,20 @@ var p = DisplayObject.prototype;
 	 * @param {Number} y The y coordinate origin for the cache region.
 	 * @param {Number} width The width of the cache region.
 	 * @param {Number} height The height of the cache region.
+	 * @param {Number} scale Optional. The scale at which the cache will be created. For example, if you cache a vector shape using
+	 * 	myShape.cache(0,0,100,100,2) then the resulting cacheCanvas will be 200x200 px. This lets you scale and rotate
+	 * 	cached elements with greater fidelity. Default is 1.
 	 **/
-	p.cache = function(x, y, width, height) {
+	p.cache = function(x, y, width, height, scale) {
 		// draw to canvas.
-		var cacheCanvas = this.cacheCanvas;
-		if (cacheCanvas == null) { cacheCanvas = this.cacheCanvas = document.createElement("canvas"); }
-		var ctx = cacheCanvas.getContext("2d");
-		cacheCanvas.width = width;
-		cacheCanvas.height = height;
-		ctx.setTransform(1, 0, 0, 1, -x, -y);
-		ctx.clearRect(x, y, cacheCanvas.width, cacheCanvas.height); // some browsers don't clear correctly.
-		this.draw(ctx, true, this._matrix.reinitialize(1,0,0,1,-x,-y)); // containers require the matrix to work from
+		scale = scale||1;
+		if (!this.cacheCanvas) { this.cacheCanvas = createjs.createCanvas?createjs.createCanvas():document.createElement("canvas"); }
+		this.cacheCanvas.width = Math.ceil(width*scale);
+		this.cacheCanvas.height = Math.ceil(height*scale);
 		this._cacheOffsetX = x;
 		this._cacheOffsetY = y;
-		this._applyFilters();
-		this.cacheID = DisplayObject._nextCacheID++;
+		this._cacheScale = scale||1;
+		this.updateCache();
 	}
 
 	/**
@@ -3413,16 +3631,16 @@ var p = DisplayObject.prototype;
 	 * whatwg spec on compositing</a>.
 	 **/
 	p.updateCache = function(compositeOperation) {
-		var cacheCanvas = this.cacheCanvas, offX = this._cacheOffsetX, offY = this._cacheOffsetY;
-		if (cacheCanvas == null) { throw "cache() must be called before updateCache()"; }
+		var cacheCanvas = this.cacheCanvas, offX = this._cacheOffsetX, offY = this._cacheOffsetY, scale = this._cacheScale;
+		if (!cacheCanvas) { throw "cache() must be called before updateCache()"; }
 		var ctx = cacheCanvas.getContext("2d");
-		ctx.setTransform(1, 0, 0, 1, -offX, -offY);
-		if (!compositeOperation) {
-			ctx.clearRect(offX, offY, cacheCanvas.width, cacheCanvas.height);
-		} else { ctx.globalCompositeOperation = compositeOperation; }
+		ctx.save();
+		if (!compositeOperation) { ctx.clearRect(0, 0, cacheCanvas.width, cacheCanvas.height); }
+		ctx.globalCompositeOperation = compositeOperation;
+		ctx.setTransform(scale, 0, 0, scale, -offX, -offY);
 		this.draw(ctx, true);
-		if (compositeOperation) { ctx.globalCompositeOperation = "source-over"; }
 		this._applyFilters();
+		ctx.restore();
 		this.cacheID = DisplayObject._nextCacheID++;
 	}
 
@@ -3433,6 +3651,7 @@ var p = DisplayObject.prototype;
 	p.uncache = function() {
 		this._cacheDataURL = this.cacheCanvas = null;
 		this.cacheID = this._cacheOffsetX = this._cacheOffsetY = 0;
+		this._cacheScale = 1;
 	}
 	
 	/**
@@ -3457,7 +3676,8 @@ var p = DisplayObject.prototype;
 		while (o.parent) {
 			o = o.parent;
 		}
-		if (o instanceof Stage) { return o; }
+		// using dynamic access to avoid circular dependencies;
+		if (o instanceof createjs["Stage"]) { return o; }
 		return null;
 	}
 
@@ -3476,7 +3696,7 @@ var p = DisplayObject.prototype;
 		var mtx = this.getConcatenatedMatrix(this._matrix);
 		if (mtx == null) { return null; }
 		mtx.append(1, 0, 0, 1, x, y);
-		return new Point(mtx.tx, mtx.ty);
+		return new createjs.Point(mtx.tx, mtx.ty);
 	}
 
 	/**
@@ -3495,7 +3715,7 @@ var p = DisplayObject.prototype;
 		if (mtx == null) { return null; }
 		mtx.invert();
 		mtx.append(1, 0, 0, 1, x, y);
-		return new Point(mtx.tx, mtx.ty);
+		return new createjs.Point(mtx.tx, mtx.ty);
 	}
 
 	/**
@@ -3528,6 +3748,7 @@ var p = DisplayObject.prototype;
 	 * @param {Number} skewY
 	 * @param {Number} regX
 	 * @param {Number} regY
+	 * @return {DisplayObject} Returns this instance. Useful for chaining commands.
 	*/
 	p.setTransform = function(x, y, scaleX, scaleY, rotation, skewX, skewY, regX, regY) {
 		this.x = x || 0;
@@ -3539,8 +3760,21 @@ var p = DisplayObject.prototype;
 		this.skewY = skewY || 0;
 		this.regX = regX || 0;
 		this.regY = regY || 0;
+		return this;
 	}
-
+	
+	/**
+	 * Returns a matrix based on this object's transform.
+	 * @method getMatrix
+	 * @param {Matrix2D} matrix Optional. A Matrix2D object to populate with the calculated values. If null, a new
+	 * Matrix object is returned.
+	 * @return {Matrix2D} A matrix representing this display object's transform.
+	 **/
+	p.getMatrix = function(matrix) {
+		var o = this;
+		return (matrix ? matrix.identity() : new createjs.Matrix2D()).appendTransform(o.x, o.y, o.scaleX, o.scaleY, o.rotation, o.skewX, o.skewY, o.regX, o.regY).appendProperties(o.alpha, o.shadow, o.compositeOperation);
+	}
+	
 	/**
 	 * Generates a concatenated Matrix2D object representing the combined transform of
 	 * the display object and all of its parent Containers up to the highest level ancestor
@@ -3552,17 +3786,15 @@ var p = DisplayObject.prototype;
 	 * @return {Matrix2D} a concatenated Matrix2D object representing the combined transform of
 	 * the display object and all of its parent Containers up to the highest level ancestor (usually the stage).
 	 **/
-	p.getConcatenatedMatrix = function(mtx) {
-		if (mtx) { mtx.identity(); }
-		else { mtx = new Matrix2D(); }
-		var target = this;
-		while (target != null) {
-			mtx.prependTransform(target.x, target.y, target.scaleX, target.scaleY, target.rotation, target.skewX,
-									target.skewY, target.regX, target.regY);
-			mtx.prependProperties(target.alpha, target.shadow, target.compositeOperation);
-			target = target.parent;
+	p.getConcatenatedMatrix = function(matrix) {
+		if (matrix) { matrix.identity(); }
+		else { matrix = new createjs.Matrix2D(); }
+		var o = this;
+		while (o != null) {
+			matrix.prependTransform(o.x, o.y, o.scaleX, o.scaleY, o.rotation, o.skewX, o.skewY, o.regX, o.regY).prependProperties(o.alpha, o.shadow, o.compositeOperation);
+			o = o.parent;
 		}
-		return mtx;
+		return matrix;
 	}
 
 	/**
@@ -3642,12 +3874,12 @@ var p = DisplayObject.prototype;
 	}
 
 	/**
-	 * @method applyShadow
+	 * @method _applyShadow
 	 * @protected
 	 * @param {CanvasRenderingContext2D} ctx
 	 * @param {Shadow} shadow
 	 **/
-	p.applyShadow = function(ctx, shadow) {
+	p._applyShadow = function(ctx, shadow) {
 		shadow = shadow || Shadow.identity;
 		ctx.shadowColor = shadow.color;
 		ctx.shadowOffsetX = shadow.offsetX;
@@ -3660,8 +3892,10 @@ var p = DisplayObject.prototype;
 	 * @method _tick
 	 * @protected
 	 **/
-	p._tick = function(data) {
-		if (this.onTick) { this.onTick(data); }
+	p._tick = function(params) {
+		if (!this.onTick) { return; }
+		if (params) { this.onTick.apply(this, params); }
+		else { this.onTick(); }
 	}
 
 	/**
@@ -3675,8 +3909,7 @@ var p = DisplayObject.prototype;
 			var hit = ctx.getImageData(0, 0, 1, 1).data[3] > 1;
 		} catch (e) {
 			if (!DisplayObject.suppressCrossDomainErrors) {
-				throw "An error has occured. This is most likely due to security restrictions on reading canvas pixel " +
-				"data with local or cross-domain images.";
+				throw "An error has occurred. This is most likely due to security restrictions on reading canvas pixel data with local or cross-domain images.";
 			}
 		}
 		return hit;
@@ -3696,9 +3929,11 @@ var p = DisplayObject.prototype;
 			this.filters[i].applyFilter(ctx, 0, 0, w, h);
 		}
 	}
+	 
 
-window.DisplayObject = DisplayObject;
-}(window));/*
+createjs.DisplayObject = DisplayObject;
+}());
+/*
 * Container
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -3726,7 +3961,10 @@ window.DisplayObject = DisplayObject;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 /**
 * A Container is a nestable display lists that allows you to work with compound display elements. For
@@ -3743,7 +3981,7 @@ window.DisplayObject = DisplayObject;
 var Container = function() {
   this.initialize();
 }
-var p = Container.prototype = new DisplayObject();
+var p = Container.prototype = new createjs.DisplayObject();
 
 // public properties:
 	/**
@@ -3804,39 +4042,24 @@ var p = Container.prototype = new DisplayObject();
 	 * For example, used for drawing the cache (to prevent it from simply drawing an existing cache back
 	 * into itself).
 	 **/
-	p.draw = function(ctx, ignoreCache, _mtx) {
-		var snap = Stage._snapToPixelEnabled;
+	p.draw = function(ctx, ignoreCache) {
 		if (this.DisplayObject_draw(ctx, ignoreCache)) { return true; }
-		_mtx = _mtx || this._matrix.reinitialize(1,0,0,1,0,0,this.alpha, this.shadow, this.compositeOperation);
-		var l = this.children.length;
+		
 		// this ensures we don't have issues with display list changes that occur during a draw:
 		var list = this.children.slice(0);
-		for (var i=0; i<l; i++) {
+		for (var i=0,l=list.length; i<l; i++) {
 			var child = list[i];
 			if (!child.isVisible()) { continue; }
-
-			var shadow = false;
-			var mtx = child._matrix.reinitialize(_mtx.a,_mtx.b,_mtx.c,_mtx.d,_mtx.tx,_mtx.ty,_mtx.alpha,_mtx.shadow,_mtx.compositeOperation);
-			mtx.appendTransform(child.x, child.y, child.scaleX, child.scaleY, child.rotation, child.skewX, child.skewY,
-									child.regX, child.regY);
-			mtx.appendProperties(child.alpha, child.shadow, child.compositeOperation);
-
-			if (!(child instanceof Container && child.cacheCanvas == null)) {
-				if (snap && child.snapToPixel && mtx.a == 1 && mtx.b == 0 && mtx.c == 0 && mtx.d == 1) {
-					ctx.setTransform(mtx.a,  mtx.b, mtx.c, mtx.d, mtx.tx+0.5|0, mtx.ty+0.5|0);
-				} else {
-					ctx.setTransform(mtx.a,  mtx.b, mtx.c, mtx.d, mtx.tx, mtx.ty);
-				}
-				ctx.globalAlpha = mtx.alpha;
-				ctx.globalCompositeOperation = mtx.compositeOperation || "source-over";
-				if (shadow = mtx.shadow) { this.applyShadow(ctx, shadow); }
-			}
-			child.draw(ctx, false, mtx);
-			if (shadow) { this.applyShadow(ctx); }
+			
+			// draw the child:
+			ctx.save();
+			child.updateContext(ctx);
+			child.draw(ctx);
+			ctx.restore();
 		}
 		return true;
 	}
-
+	
 	/**
 	 * Adds a child to the top of the display list. You can also add multiple children, such as "addChild(child1, child2, ...);".
 	 * Returns the child that was added, or the last child if multiple children were added.
@@ -3862,7 +4085,8 @@ var p = Container.prototype = new DisplayObject();
 	 * its parent to this Container. You can also add multiple children, such as "addChildAt(child1, child2, ..., index);". The
 	 * index must be between 0 and numChildren. For example, to add myShape under otherShape in the display list, you could use:
 	 * container.addChildAt(myShape, container.getChildIndex(otherShape)). This would also bump otherShape's index up by one.
-	 * Returns the last child that was added, or the last child if multiple children were added.
+	 * Returns the last child that was added, or the last child if multiple children were added. Fails silently if the index 
+	 * is out of range.
 	 * @method addChildAt
 	 * @param {DisplayObject} child The display object to add.
 	 * @param {Number} index The index to add the child at.
@@ -3870,9 +4094,10 @@ var p = Container.prototype = new DisplayObject();
 	 **/
 	p.addChildAt = function(child, index) {
 		var l = arguments.length;
+		var indx = arguments[l-1]; // can't use the same name as the index param or it replaces arguments[1]
+		if (indx < 0 || indx > this.children.length) { return arguments[l-2]; }
 		if (l > 2) {
-			index = arguments[i-1];
-			for (var i=0; i<l-1; i++) { this.addChildAt(arguments[i], index+i); }
+			for (var i=0; i<l-1; i++) { this.addChildAt(arguments[i], indx+i); }
 			return arguments[l-2];
 		}
 		if (child.parent) { child.parent.removeChild(child); }
@@ -3911,14 +4136,14 @@ var p = Container.prototype = new DisplayObject();
 		if (l > 1) {
 			var a = [];
 			for (var i=0; i<l; i++) { a[i] = arguments[i]; }
-			a.sort(function(a, b) { return b-a; })
+			a.sort(function(a, b) { return b-a; });
 			var good = true;
 			for (var i=0; i<l; i++) { good = good && this.removeChildAt(a[i]); }
 			return good;
 		}
 		if (index < 0 || index > this.children.length-1) { return false; }
 		var child = this.children[index];
-		if (child != null) { child.parent = null; }
+		if (child) { child.parent = null; }
 		this.children.splice(index, 1);
 		return true;
 	}
@@ -3981,7 +4206,7 @@ var p = Container.prototype = new DisplayObject();
 		var kids = this.children;
 		var o1 = kids[index1];
 		var o2 = kids[index2];
-		if (!o1 || !o2) { return; } // TODO: throw error?
+		if (!o1 || !o2) { return; }
 		kids[index1] = o2;
 		kids[index2] = o1;
 	}
@@ -4012,14 +4237,15 @@ var p = Container.prototype = new DisplayObject();
 	 * @method setChildIndex
 	 **/
 	p.setChildIndex = function(child, index) {
-		var kids = this.children;
-		for (var i=0,l=kids.length;i<l;i++) {
+		var kids = this.children, l=kids.length;
+		if (child.parent != this || index < 0 || index >= l) { return; }
+		for (var i=0;i<l;i++) {
 			if (kids[i] == child) { break; }
 		}
-		if (i==l || index < 0 || index > l || i == index) { return; }
-		kids.splice(index,1);
-		if (index<i) { i--; }
-		kids.splice(child,i,0); // TODO: test.
+		if (i==l || i == index) { return; }
+		kids.splice(i,1);
+		if (index<i) { index--; }
+		kids.splice(index,0,child);
 	}
 
 	/**
@@ -4115,15 +4341,22 @@ var p = Container.prototype = new DisplayObject();
 
 // private properties:
 	/**
+	 * @property DisplayObject__tick
+	 * @type Function
+	 * @private
+	 **/
+	p.DisplayObject__tick = p._tick;
+	
+	/**
 	 * @method _tick
 	 * @protected
 	 **/
-	p._tick = function(data) {
+	p._tick = function(params) {
 		for (var i=this.children.length-1; i>=0; i--) {
 			var child = this.children[i];
-			if (child._tick) { child._tick(data); }
+			if (child._tick) { child._tick(params); }
 		}
-		if (this.onTick) { this.onTick(data); }
+		this.DisplayObject__tick(params);
 	}
 
 	/**
@@ -4137,14 +4370,15 @@ var p = Container.prototype = new DisplayObject();
 	 * @protected
 	 **/
 	p._getObjectsUnderPoint = function(x, y, arr, mouseEvents) {
-		var ctx = DisplayObject._hitTestContext;
-		var canvas = DisplayObject._hitTestCanvas;
+		var ctx = createjs.DisplayObject._hitTestContext;
+		var canvas = createjs.DisplayObject._hitTestCanvas;
 		var mtx = this._matrix;
 		var hasHandler = (mouseEvents&1 && (this.onPress || this.onClick || this.onDoubleClick)) || (mouseEvents&2 &&
 																(this.onMouseOver || this.onMouseOut));
 
-		// if we have a cache handy, we can use it to do a quick check:
-		if (this.cacheCanvas) {
+		// if we have a cache handy & this has a handler, we can use it to do a quick check.
+		// we can't use the cache for screening children, because they might have hitArea set.
+		if (this.cacheCanvas && hasHandler) {
 			this.getConcatenatedMatrix(mtx);
 			ctx.setTransform(mtx.a,  mtx.b, mtx.c, mtx.d, mtx.tx-x, mtx.ty-y);
 			ctx.globalAlpha = mtx.alpha;
@@ -4152,9 +4386,7 @@ var p = Container.prototype = new DisplayObject();
 			if (this._testHit(ctx)) {
 				canvas.width = 0;
 				canvas.width = 1;
-				if (hasHandler) { return this; }
-			} else {
-				return null;
+				return this;
 			}
 		}
 
@@ -4174,12 +4406,18 @@ var p = Container.prototype = new DisplayObject();
 					result = child._getObjectsUnderPoint(x, y, arr, mouseEvents);
 					if (!arr && result) { return result; }
 				}
-			} else if (!mouseEvents || hasHandler || (mouseEvents&1 && (child.onPress || child.onClick || child.onDoubleClick)) ||
-														(mouseEvents&2 && (child.onMouseOver || child.onMouseOut))) {
+			} else if (!mouseEvents || hasHandler || (mouseEvents&1 && (child.onPress || child.onClick || child.onDoubleClick)) || (mouseEvents&2 && (child.onMouseOver || child.onMouseOut))) {
+				var hitArea = child.hitArea;
 				child.getConcatenatedMatrix(mtx);
-				ctx.setTransform(mtx.a,  mtx.b, mtx.c, mtx.d, mtx.tx-x, mtx.ty-y);
+				
+				if (hitArea) {
+					mtx.appendTransform(hitArea.x+child.regX, hitArea.y+child.regY, hitArea.scaleX, hitArea.scaleY, hitArea.rotation, hitArea.skewX, hitArea.skewY, hitArea.regX, hitArea.regY);
+					mtx.alpha *= hitArea.alpha/child.alpha;
+				}
+				
 				ctx.globalAlpha = mtx.alpha;
-				child.draw(ctx);
+				ctx.setTransform(mtx.a,  mtx.b, mtx.c, mtx.d, mtx.tx-x, mtx.ty-y);
+				(hitArea||child).draw(ctx);
 				if (!this._testHit(ctx)) { continue; }
 				canvas.width = 0;
 				canvas.width = 1;
@@ -4191,8 +4429,9 @@ var p = Container.prototype = new DisplayObject();
 		return null;
 	}
 
-window.Container = Container;
-}(window));/*
+createjs.Container = Container;
+}());
+/*
 * Stage
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -4220,7 +4459,10 @@ window.Container = Container;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 /**
 * A stage is the root level Container for a display list. Each time its tick method is called, it will render its display
@@ -4233,7 +4475,7 @@ window.Container = Container;
 var Stage = function(canvas) {
   this.initialize(canvas);
 }
-var p = Stage.prototype = new Container();
+var p = Stage.prototype = new createjs.Container();
 
 // static properties:
 	/**
@@ -4255,7 +4497,8 @@ var p = Stage.prototype = new Container();
 	 **/
 	p.autoClear = true;
 
-	/** The canvas the stage will render to. Multiple stages can share a single canvas, but you must disable autoClear for all but the
+	/**
+	 * The canvas the stage will render to. Multiple stages can share a single canvas, but you must disable autoClear for all but the
 	 * first stage that will be ticked (or they will clear each other's render).
 	 * @property canvas
 	 * @type HTMLCanvasElement
@@ -4267,19 +4510,19 @@ var p = Stage.prototype = new Container();
 	 * position over the canvas, and mouseInBounds will be set to false.
 	 * @property mouseX
 	 * @type Number
-	 * @final
 	 **/
-	p.mouseX = null;
+	p.mouseX = 0;
 
-	/** READ-ONLY. The current mouse Y position on the canvas. If the mouse leaves the canvas, this will indicate the most recent
+	/**
+	 * READ-ONLY. The current mouse Y position on the canvas. If the mouse leaves the canvas, this will indicate the most recent
 	 * position over the canvas, and mouseInBounds will be set to false.
 	 * @property mouseY
 	 * @type Number
-	 * @final
 	 **/
-	p.mouseY = null;
+	p.mouseY = 0;
 
-	/** The onMouseMove callback is called when the user moves the mouse over the canvas.  The handler is passed a single param
+	/**
+	 * The onMouseMove callback is called when the user moves the mouse over the canvas.  The handler is passed a single param
 	 * containing the corresponding MouseEvent instance.
 	 * @event onMouseMove
 	 * @param {MouseEvent} event A MouseEvent instance with information about the current mouse event.
@@ -4303,42 +4546,65 @@ var p = Stage.prototype = new Container();
 	p.onMouseDown = null;
 
 	/**
-	 * Indicates whether this stage should use the snapToPixel property of display objects when rendering them.
+	 * Indicates whether this stage should use the snapToPixel property of display objects when rendering them. See
+	 * DisplayObject.snapToPixel for more information.
 	 * @property snapToPixelEnabled
 	 * @type Boolean
 	 * @default false
 	 **/
 	p.snapToPixelEnabled = false;
 
-	/** Indicates whether the mouse is currently within the bounds of the canvas.
+	/**
+	 * Indicates whether the mouse is currently within the bounds of the canvas.
 	 * @property mouseInBounds
 	 * @type Boolean
 	 * @default false
 	 **/
 	p.mouseInBounds = false;
 
-	/** If false, tick callbacks will be called on all display objects on the stage prior to rendering to the canvas.
+	/**
+	 * If false, tick callbacks will be called on all display objects on the stage prior to rendering to the canvas.
 	 * @property tickOnUpdate
 	 * @type Boolean
 	 * @default false
 	 **/
 	p.tickOnUpdate = true;
+	
+	/**
+	 * If true, onMouseMove handlers will continue to be called when the mouse leaves the target canvas. See
+	 * mouseInBounds, and MouseEvent.x/y/rawX/rawY.
+	 * @property tickOnUpdate
+	 * @type mouseMoveOutside
+	 * @default false
+	 **/
+	p.mouseMoveOutside = false;
 
 // private properties:
 
 	/**
-	 * @property _activeMouseEvent
-	 * @protected
-	 * @type MouseEvent
-	 **/
-	p._activeMouseEvent = null;
-
+	 * Holds objects with data for each active pointer id. Each object has the following properties:
+	 * x, y, event, target, overTarget, overX, overY, inBounds
+	 * @property _pointerData
+	 * @type {Object}
+	 * @private
+	 */
+	p._pointerData = null;
+	
 	/**
-	 * @property _activeMouseTarget
-	 * @protected
-	 * @type DisplayObject
-	 **/
-	p._activeMouseTarget = null;
+	 * Number of active pointers.
+	 * @property _pointerCount
+	 * @type {Object}
+	 * @private
+	 */
+	p._pointerCount = 0;
+	
+	/**
+	 * Number of active pointers.
+	 * @property _pointerCount
+	 * @type {Object}
+	 * @private
+	 */
+	p._primaryPointerID = null;
 
 	/**
 	 * @property _mouseOverIntervalID
@@ -4346,27 +4612,6 @@ var p = Stage.prototype = new Container();
 	 * @type Number
 	 **/
 	p._mouseOverIntervalID = null;
-
-	/**
-	 * @property _mouseOverX
-	 * @protected
-	 * @type Number
-	 **/
-	p._mouseOverX = 0;
-
-	/**
-	 * @property _mouseOverY
-	 * @protected
-	 * @type Number
-	 **/
-	p._mouseOverY = 0;
-
-	/**
-	 * @property _mouseOverTarget
-	 * @protected
-	 * @type DisplayObject
-	 **/
-	p._mouseOverTarget = null;
 
 // constructor:
 	/**
@@ -4385,6 +4630,7 @@ var p = Stage.prototype = new Container();
 	p.initialize = function(canvas) {
 		this.Container_initialize();
 		this.canvas = (canvas instanceof HTMLCanvasElement) ? canvas : document.getElementById(canvas);
+		this._pointerData = {};
 		this._enableMouseEvents(true);
 	}
 
@@ -4397,17 +4643,20 @@ var p = Stage.prototype = new Container();
 
 	/**
 	 * Each time the update method is called, the stage will tick any descendants exposing a tick method (ex. BitmapAnimation)
-	 * and render its entire display list to the canvas.
+	 * and render its entire display list to the canvas. Any parameters passed to update will be passed on to any
+	 * onTick handlers.
 	 * @method update
 	 **/
-	p.update = function(data) {
+	p.update = function() {
 		if (!this.canvas) { return; }
 		if (this.autoClear) { this.clear(); }
 		Stage._snapToPixelEnabled = this.snapToPixelEnabled;
-		if (this.tickOnUpdate) {
-			this._tick(data);
-		}
-		this.draw(this.canvas.getContext("2d"), false, this.getConcatenatedMatrix(this._matrix));
+		if (this.tickOnUpdate) { this._tick((arguments.length ? arguments : null)); }
+		var ctx = this.canvas.getContext("2d");
+		ctx.save();
+		this.updateContext(ctx);
+		this.draw(ctx, false);
+		ctx.restore();
 	}
 
 	/**
@@ -4502,8 +4751,6 @@ var p = Stage.prototype = new Container();
 		else if (frequency <= 0) { return; }
 		var o = this;
 		this._mouseOverIntervalID = setInterval(function(){ o._testMouseOver(); }, 1000/Math.min(50,frequency));
-		this._mouseOverX = NaN;
-		this._mouseOverTarget = null;
 	}
 
 	/**
@@ -4530,7 +4777,6 @@ var p = Stage.prototype = new Container();
 	/**
 	 * @method _enableMouseEvents
 	 * @protected
-	 * @param {Boolean} enabled
 	 **/
 	p._enableMouseEvents = function() {
 		var o = this;
@@ -4541,6 +4787,21 @@ var p = Stage.prototype = new Container();
 		// this is to facilitate extending Stage:
 		if (this.canvas) { this.canvas.addEventListener("mousedown", function(e) { o._handleMouseDown(e); }, false); }
 	}
+	
+	/**
+	 * @method _getPointerData
+	 * @protected
+	 * @param {Number} id
+	 **/
+	p._getPointerData = function(id) {
+		var data = this._pointerData[id];
+		if (!data) {
+			data = this._pointerData[id] = {x:0,y:0};
+			// if it's the mouse (id == NaN) or the first new touch, then make it the primary pointer id:
+			if (this._primaryPointerID == null) { this._primaryPointerID = id; }
+		}
+		return data;
+	}
 
 	/**
 	 * @method _handleMouseMove
@@ -4548,42 +4809,92 @@ var p = Stage.prototype = new Container();
 	 * @param {MouseEvent} e
 	 **/
 	p._handleMouseMove = function(e) {
-
-		if (!this.canvas) {
-			this.mouseX = this.mouseY = null;
-			return;
-		}
 		if(!e){ e = window.event; }
-
-		var inBounds = this.mouseInBounds;
-		this._updateMousePosition(e.pageX, e.pageY);
-		if (!inBounds && !this.mouseInBounds) { return; }
-
-		var evt = new MouseEvent("onMouseMove", this.mouseX, this.mouseY, this, e);
-
-		if (this.onMouseMove) { this.onMouseMove(evt); }
-		if (this._activeMouseEvent && this._activeMouseEvent.onMouseMove) { this._activeMouseEvent.onMouseMove(evt); }
+		this._handlePointerMove(-1, e, e.pageX, e.pageY);
 	}
-
+	
 	/**
-	 * @method _updateMousePosition
+	 * @method _handlePointerMove
 	 * @protected
+	 * @param {Number} id
+	 * @param {Event} e
 	 * @param {Number} pageX
 	 * @param {Number} pageY
 	 **/
-	p._updateMousePosition = function(pageX, pageY) {
+	p._handlePointerMove = function(id, e, pageX, pageY) {
+		if (!this.canvas) { return; } // this.mouseX = this.mouseY = null;
+		var o = this._getPointerData(id);
 
-		var o = this.canvas;
-		do {
-			pageX -= o.offsetLeft;
-			pageY -= o.offsetTop;
-		} while (o = o.offsetParent);
+		var inBounds = o.inBounds;
+		this._updatePointerPosition(id, pageX, pageY);
+		if (!inBounds && !o.inBounds && !this.mouseMoveOutside) { return; }
+		var evt = new createjs.MouseEvent("onMouseMove", o.x, o.y, this, e, id, id == this._primaryPointerID, o.rawX, o.rawY);
 
-		this.mouseInBounds = (pageX >= 0 && pageY >= 0 && pageX < this.canvas.width && pageY < this.canvas.height);
+		if (this.onMouseMove) { this.onMouseMove(evt); }
+		if (o.event && o.event.onMouseMove) {
+			evt = evt.clone(); // not sure this is entirely necessary.
+			evt.target = o.event.target;
+			o.event.onMouseMove(evt);
+		}
+	}
 
-		if (this.mouseInBounds) {
-			this.mouseX = pageX;
-			this.mouseY = pageY;
+	/**
+	 * @method _updatePointerPosition
+	 * @protected
+	 * @param {Number} id
+	 * @param {Number} pageX
+	 * @param {Number} pageY
+	 **/
+	p._updatePointerPosition = function(id, pageX, pageY) {
+		var rect = this._getElementRect(this.canvas);
+		pageX -= rect.left;
+		pageY -= rect.top;
+		
+		var w = this.canvas.width;
+		var h = this.canvas.height;
+		pageX /= (rect.right-rect.left)/w;
+		pageY /= (rect.bottom-rect.top)/h;
+		var o = this._getPointerData(id);
+		if (o.inBounds = (pageX >= 0 && pageY >= 0 && pageX <= w-1 && pageY <= h-1)) {
+			o.x = pageX;
+			o.y = pageY;
+		} else if (this.mouseMoveOutside) {
+			o.x = pageX < 0 ? 0 : (pageX > w-1 ? w-1 : pageX);
+			o.y = pageY < 0 ? 0 : (pageY > h-1 ? h-1 : pageY);
+		}
+		
+		o.rawX = pageX;
+		o.rawY = pageY;
+		
+		if (id == this._primaryPointerID) {
+			this.mouseX = o.x;
+			this.mouseY = o.y;
+			this.mouseInBounds = o.inBounds;
+		}
+	}
+	
+	/**
+	 * @method _getElementRect
+	 * @protected
+	 * @param {HTMLElement} e
+	 **/
+	p._getElementRect = function(e) {
+		var bounds = e.getBoundingClientRect();
+		var offX = (window.pageXOffset || document.scrollLeft || 0) - (document.clientLeft || document.body.clientLeft || 0);
+		var offY = (window.pageYOffset || document.scrollTop || 0) - (document.clientTop  || document.body.clientTop  || 0);
+		
+		var styles = window.getComputedStyle ? getComputedStyle(e) : e.currentStyle; // IE <9 compatibility.
+		var padL = parseInt(styles.paddingLeft)+parseInt(styles.borderLeftWidth);
+		var padT = parseInt(styles.paddingTop)+parseInt(styles.borderTopWidth);
+		var padR = parseInt(styles.paddingRight)+parseInt(styles.borderRightWidth);
+		var padB = parseInt(styles.paddingBottom)+parseInt(styles.borderBottomWidth);
+		
+		// note: in some browsers bounds properties are read only.
+		return {
+			left: bounds.left+offX+padL,
+			right: bounds.right+offX-padR,
+			top: bounds.top+offY+padT,
+			bottom: bounds.bottom+offY-padB
 		}
 	}
 
@@ -4593,15 +4904,33 @@ var p = Stage.prototype = new Container();
 	 * @param {MouseEvent} e
 	 **/
 	p._handleMouseUp = function(e) {
-		var evt = new MouseEvent("onMouseUp", this.mouseX, this.mouseY, this, e);
+		this._handlePointerUp(-1, e, false);
+	}
+	
+	/**
+	 * @method _handlePointerUp
+	 * @protected
+	 * @param {Number} id
+	 * @param {Event} e
+	 * @param {Boolean} clear
+	 **/
+	p._handlePointerUp = function(id, e, clear) {
+		var o = this._getPointerData(id);
+		
+		var evt = new createjs.MouseEvent("onMouseUp", o.x, o.y, this, e, id, id==this._primaryPointerID, o.rawX, o.rawY);
 		if (this.onMouseUp) { this.onMouseUp(evt); }
-		if (this._activeMouseEvent && this._activeMouseEvent.onMouseUp) { this._activeMouseEvent.onMouseUp(evt); }
-		if (this._activeMouseTarget && this._activeMouseTarget.onClick &&
-				this._getObjectsUnderPoint(this.mouseX, this.mouseY, null, true, (this._mouseOverIntervalID ? 3 : 1)) == this._activeMouseTarget) {
-
-			this._activeMouseTarget.onClick(new MouseEvent("onClick", this.mouseX, this.mouseY, this._activeMouseTarget, e));
+		if (o.event && o.event.onMouseUp) {
+			evt = evt.clone(); // not sure this is entirely necessary.
+			evt.target = o.event.target;
+			o.event.onMouseUp(evt);
 		}
-		this._activeMouseEvent = this._activeMouseTarget = null;
+		if (o.target && o.target.onClick && this._getObjectsUnderPoint(o.x, o.y, null, true, (this._mouseOverIntervalID ? 3 : 1)) == o.target) {
+			o.target.onClick(new createjs.MouseEvent("onClick", o.x, o.y, o.target, e, id, id==this._primaryPointerID, o.rawX, o.rawY));
+		}
+		if (clear) {
+			if (id == this._primaryPointerID) { this._primaryPointerID = null; }
+			delete(this._pointerData[id]);
+		} else { o.event = o.target = null; }
 	}
 
 	/**
@@ -4610,17 +4939,32 @@ var p = Stage.prototype = new Container();
 	 * @param {MouseEvent} e
 	 **/
 	p._handleMouseDown = function(e) {
+		this._handlePointerDown(-1, e, false);
+	}
+	
+	/**
+	 * @method _handlePointerDown
+	 * @protected
+	 * @param {Number} id
+	 * @param {Event} e
+	 * @param {Number} pageX
+	 * @param {Number} pageY
+	 **/
+	p._handlePointerDown = function(id, e, x, y) {
+		var o = this._getPointerData(id);
+		if (y != null) { this._updatePointerPosition(id, x, y); }
+		
 		if (this.onMouseDown) {
-			this.onMouseDown(new MouseEvent("onMouseDown", this.mouseX, this.mouseY, this, e));
+			this.onMouseDown(new createjs.MouseEvent("onMouseDown", o.x, o.y, this, e, id, id==this._primaryPointerID, o.rawX, o.rawY));
 		}
-		var target = this._getObjectsUnderPoint(this.mouseX, this.mouseY, null, (this._mouseOverIntervalID ? 3 : 1));
+		var target = this._getObjectsUnderPoint(o.x, o.y, null, (this._mouseOverIntervalID ? 3 : 1));
 		if (target) {
-			if (target.onPress instanceof Function) {
-				var evt = new MouseEvent("onPress", this.mouseX, this.mouseY, target, e);
+			if (target.onPress) {
+				var evt = new createjs.MouseEvent("onPress", o.x, o.y, target, e, id, id==this._primaryPointerID, o.rawX, o.rawY);
 				target.onPress(evt);
-				if (evt.onMouseMove || evt.onMouseUp) { this._activeMouseEvent = evt; }
+				if (evt.onMouseMove || evt.onMouseUp) { o.event = evt; }
 			}
-			this._activeMouseTarget = target;
+			o.target = target;
 		}
 	}
 
@@ -4629,6 +4973,9 @@ var p = Stage.prototype = new Container();
 	 * @protected
 	 **/
 	p._testMouseOver = function() {
+		// for now, this only tests the mouse.
+		if (this._primaryPointerID != -1) { return; }
+		
 		if (this.mouseX == this._mouseOverX && this.mouseY == this._mouseOverY && this.mouseInBounds) { return; }
 		var target = null;
 		if (this.mouseInBounds) {
@@ -4639,10 +4986,10 @@ var p = Stage.prototype = new Container();
 
 		if (this._mouseOverTarget != target) {
 			if (this._mouseOverTarget && this._mouseOverTarget.onMouseOut) {
-				this._mouseOverTarget.onMouseOut(new MouseEvent("onMouseOut", this.mouseX, this.mouseY, this._mouseOverTarget));
+				this._mouseOverTarget.onMouseOut(new createjs.MouseEvent("onMouseOut", this.mouseX, this.mouseY, this._mouseOverTarget));
 			}
 			if (target && target.onMouseOver) {
-				target.onMouseOver(new MouseEvent("onMouseOver", this.mouseX, this.mouseY, target));
+				target.onMouseOver(new createjs.MouseEvent("onMouseOver", this.mouseX, this.mouseY, target));
 			}
 			this._mouseOverTarget = target;
 		}
@@ -4654,19 +5001,19 @@ var p = Stage.prototype = new Container();
 	 * @param {MouseEvent} e
 	 **/
 	p._handleDoubleClick = function(e) {
+		// TODO: add Touch support for double tap.
 		if (this.onDoubleClick) {
-			this.onDoubleClick(new MouseEvent("onDoubleClick", this.mouseX, this.mouseY, this, e));
+			this.onDoubleClick(new createjs.MouseEvent("onDoubleClick", this.mouseX, this.mouseY, this, e, -1, true));
 		}
 		var target = this._getObjectsUnderPoint(this.mouseX, this.mouseY, null, (this._mouseOverIntervalID ? 3 : 1));
-		if (target) {
-			if (target.onDoubleClick instanceof Function) {
-				target.onDoubleClick(new MouseEvent("onPress", this.mouseX, this.mouseY, target, e));
-			}
+		if (target && target.onDoubleClick) {
+			target.onDoubleClick(new createjs.MouseEvent("onDoubleClick", this.mouseX, this.mouseY, target, e, -1, true));
 		}
 	}
 
-window.Stage = Stage;
-}(window));/*
+createjs.Stage = Stage;
+}());
+/*
 * Bitmap
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -4694,7 +5041,10 @@ window.Stage = Stage;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 /**
 * A Bitmap represents an Image, Canvas, or Video in the display list.
@@ -4706,7 +5056,7 @@ window.Stage = Stage;
 var Bitmap = function(imageOrUri) {
   this.initialize(imageOrUri);
 }
-var p = Bitmap.prototype = new DisplayObject();
+var p = Bitmap.prototype = new createjs.DisplayObject();
 
 // public properties:
 	/**
@@ -4840,8 +5190,9 @@ var p = Bitmap.prototype = new DisplayObject();
 
 // private methods:
 
-window.Bitmap = Bitmap;
-}(window));/*
+createjs.Bitmap = Bitmap;
+}());
+/*
 * BitmapAnimation
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -4869,7 +5220,10 @@ window.Bitmap = Bitmap;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 	
 /**
 * Displays frames or sequences of frames (ie. animations) from a sprite sheet image. A sprite sheet is a series of images
@@ -4886,7 +5240,7 @@ window.Bitmap = Bitmap;
 var BitmapAnimation = function(spriteSheet) {
   this.initialize(spriteSheet);
 }
-var p = BitmapAnimation.prototype = new DisplayObject();
+var p = BitmapAnimation.prototype = new createjs.DisplayObject();
 
 // public properties:
 
@@ -5127,16 +5481,23 @@ var p = BitmapAnimation.prototype = new DisplayObject();
 
 // private methods:
 	/**
+	 * @property DisplayObject__tick
+	 * @type Function
+	 * @private
+	 **/
+	p.DisplayObject__tick = p._tick;
+	
+	/**
 	 * Advances the currentFrame if paused is not true. This is called automatically when the Stage ticks.
 	 * @protected
 	 * @method _tick
 	 **/
-	p._tick = function(data) {
+	p._tick = function(params) {
 		var f = this._animation ? this._animation.frequency : 1;
 		if (!this.paused && ((++this._advanceCount)+this.offset)%f == 0) {
 			this.advance();
 		}
-		if (this.onTick) { this.onTick(data); }
+		this.DisplayObject__tick(params);
 	}
 	
 	
@@ -5212,8 +5573,9 @@ var p = BitmapAnimation.prototype = new DisplayObject();
 		}
 	}
 
-window.BitmapAnimation = BitmapAnimation;
-}(window));
+createjs.BitmapAnimation = BitmapAnimation;
+}());
+
 /*
 * Shape
 * Visit http://createjs.com/ for documentation, updates and examples.
@@ -5242,7 +5604,10 @@ window.BitmapAnimation = BitmapAnimation;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 /**
 * A Shape allows you to display vector art in the display list. It composites a Graphics instance which exposes all of the vector
@@ -5255,7 +5620,7 @@ window.BitmapAnimation = BitmapAnimation;
 var Shape = function(graphics) {
   this.initialize(graphics);
 }
-var p = Shape.prototype = new DisplayObject();
+var p = Shape.prototype = new createjs.DisplayObject();
 
 // public properties:
 	/**
@@ -5281,7 +5646,7 @@ var p = Shape.prototype = new DisplayObject();
 	 **/
 	p.initialize = function(graphics) {
 		this.DisplayObject_initialize();
-		this.graphics = graphics ? graphics : new Graphics();
+		this.graphics = graphics ? graphics : new createjs.Graphics();
 	}
 
 	/**
@@ -5292,7 +5657,7 @@ var p = Shape.prototype = new DisplayObject();
 	 * @return {Boolean} Boolean indicating whether the Shape would be visible if drawn to a canvas
 	 **/
 	p.isVisible = function() {
-		return this.visible && this.alpha > 0 && this.scaleX != 0 && this.scaleY != 0 && this.graphics;
+		return Boolean(this.visible && this.alpha > 0 && this.scaleX != 0 && this.scaleY != 0 && this.graphics);
 	}
 
 	/**
@@ -5340,8 +5705,9 @@ var p = Shape.prototype = new DisplayObject();
 		return "[Shape (name="+  this.name +")]";
 	}
 
-window.Shape = Shape;
-}(window));/*
+createjs.Shape = Shape;
+}());
+/*
 * Text
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -5369,7 +5735,10 @@ window.Shape = Shape;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 	
 /**
 * Allows you to display one or more lines of dynamic text (not user editable) in the display list.
@@ -5381,14 +5750,14 @@ window.Shape = Shape;
 * @constructor
 * @param {String} text Optional. The text to display.
 * @param {String} font Optional. The font style to use. Any valid value for the CSS font attribute is 
-* acceptable (ex. "36px bold Arial").
+* acceptable (ex. "bold 36px Arial").
 * @param {String} color Optional. The color to draw the text in. Any valid value for the CSS color attribute
 * is acceptable (ex. "#F00").
 **/
 var Text = function(text, font, color) {
   this.initialize(text, font, color);
 }
-var p = Text.prototype = new DisplayObject();
+var p = Text.prototype = new createjs.DisplayObject();
 
 
 	/**
@@ -5396,7 +5765,7 @@ var p = Text.prototype = new DisplayObject();
 	 * @type CanvasRenderingContext2D
 	 * @private
 	 **/
-	Text._workingContext = document.createElement("canvas").getContext("2d");
+	Text._workingContext = (createjs.createCanvas?createjs.createCanvas():document.createElement("canvas")).getContext("2d");
 
 // public properties:
 	/**
@@ -5414,34 +5783,34 @@ var p = Text.prototype = new DisplayObject();
 	p.font = null;
 	
 	/**
-	 * The color to draw the text in. Any valid value for the CSS color attribute is acceptable (ex. "#F00").
+	 * The color to draw the text in. Any valid value for the CSS color attribute is acceptable (ex. "#F00"). Default is "#000".
 	 * @property color
 	 * @type String
 	 **/
-	p.color = null;
+	p.color = "#000";
 	
 	/**
 	 * The horizontal text alignment. Any of "start", "end", "left", "right", and "center". For detailed 
 	 * information view the 
-	 * <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-0">
-	 * whatwg spec</a>.
+	 * <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles">
+	 * whatwg spec</a>. Default is "left".
 	 * @property textAlign
 	 * @type String
 	 **/
-	p.textAlign = null;
+	p.textAlign = "left";
 	
 	/** The vertical alignment point on the font. Any of "top", "hanging", "middle", "alphabetic", 
 	 * "ideographic", or "bottom". For detailed information view the 
-	 * <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-0">
-	 * whatwg spec</a>.
+	 * <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles">
+	 * whatwg spec</a>. Default is "top".
 	 * @property textBaseline
 	 * @type String
 	*/
-	p.textBaseline = null;
+	p.textBaseline = "top";
 	
 	/** The maximum width to draw the text. If maxWidth is specified (not null), the text will be condensed or 
 	 * shrunk to make it fit in this width. For detailed information view the 
-	 * <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-0">
+	 * <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles">
 	 * whatwg spec</a>.
 	 * @property maxWidth
 	 * @type Number
@@ -5454,12 +5823,12 @@ var p = Text.prototype = new DisplayObject();
 	 **/
 	p.outline = false;
 	
-	/** Indicates the line height (vertical distance between baselines) for multi-line text. If null, 
+	/** Indicates the line height (vertical distance between baselines) for multi-line text. If null or 0, 
 	 * the value of getMeasuredLineHeight is used.
 	 * @property lineHeight
 	 * @type Number
 	 **/
-	p.lineHeight = null;
+	p.lineHeight = 0;
 	
 	/**
 	 * Indicates the maximum width for a line of text before it is wrapped to multiple lines. If null, 
@@ -5497,8 +5866,8 @@ var p = Text.prototype = new DisplayObject();
 	 * @return {Boolean} Boolean indicating whether the display object would be visible if drawn to a canvas
 	 **/
 	p.isVisible = function() {
-		return Boolean(this.visible && this.alpha > 0 && 
-						this.scaleX != 0 && this.scaleY != 0 && this.text != null && this.text != "");
+		// Note: this.text = "0" will evaluate to false in JS.
+		return Boolean(this.visible && this.alpha > 0 && this.scaleX != 0 && this.scaleY != 0 && this.text != null && this.text !== "");
 	}
 
 	/**
@@ -5524,41 +5893,15 @@ var p = Text.prototype = new DisplayObject();
 		if (this.outline) { ctx.strokeStyle = this.color; }
 		else { ctx.fillStyle = this.color; }
 		ctx.font = this.font;
-		ctx.textAlign = this.textAlign ? this.textAlign : "start";
-		ctx.textBaseline = this.textBaseline ? this.textBaseline : "alphabetic";
+		ctx.textAlign = this.textAlign||"start";
+		ctx.textBaseline = this.textBaseline||"alphabetic";
 
-		var lines = String(this.text).split(/(?:\r\n|\r|\n)/);
-		var lineHeight = (this.lineHeight == null) ? this.getMeasuredLineHeight() : this.lineHeight;
-		var y = 0;
-		for (var i=0, l=lines.length; i<l; i++) {
-			var w = ctx.measureText(lines[i]).width;
-			if (this.lineWidth == null || w < this.lineWidth) {
-				this._drawTextLine(ctx, lines[i], y);
-				y += lineHeight;
-				continue;
-			}
-
-			// split up the line
-			var words = lines[i].split(/(\s)/);
-			var str = words[0];
-			for (var j=1, jl=words.length; j<jl; j+=2) {
-				// Line needs to wrap:
-				if (ctx.measureText(str + words[j] + words[j+1]).width > this.lineWidth) {
-					this._drawTextLine(ctx, str, y);
-					y += lineHeight;
-					str = words[j+1];
-				} else {
-					str += words[j] + words[j+1];
-				}
-			}
-			this._drawTextLine(ctx, str, y); // Draw remaining text
-			y += lineHeight;
-		}
+		this._drawText(ctx);
 		return true;
 	}
 	
 	/**
-	 * Returns the measured, untransformed width of the text.
+	 * Returns the measured, untransformed width of the text without wrapping.
 	 * @method getMeasuredWidth
 	 * @return {Number} The measured, untransformed width of the text.
 	 **/
@@ -5575,6 +5918,17 @@ var p = Text.prototype = new DisplayObject();
 	 **/
 	p.getMeasuredLineHeight = function() {
 		return this._getWorkingContext().measureText("M").width*1.2;
+	}
+
+	/**
+	 * Returns the approximate height of multiline text by multiplying the number of lines against
+	 * either the lineHeight (if specified) or getMeasuredLineHeight(). Note that this operation
+	 * requires the text flowing logic to run, which has an associated CPU cost.
+	 * @method getMeasuredHeight
+	 * @return {Number} The approximate height of the drawn multiline text.
+	 **/
+	p.getMeasuredHeight = function() {
+		return this._drawText()*(this.lineHeight||this.getMeasuredLineHeight());
 	}
 	
 	/**
@@ -5628,9 +5982,48 @@ var p = Text.prototype = new DisplayObject();
 	p._getWorkingContext = function() {
 		var ctx = Text._workingContext;
 		ctx.font = this.font;
-		ctx.textAlign = this.textAlign ? this.textAlign : "start";
-		ctx.textBaseline = this.textBaseline ? this.textBaseline : "alphabetic";
+		ctx.textAlign = this.textAlign||"start";
+		ctx.textBaseline = this.textBaseline||"alphabetic";
 		return ctx;
+	}
+	 
+	/**
+	 * Draws multiline text.
+	 * @method _getWorkingContext
+	 * @protected
+	 * @return {Number} The number of lines drawn.
+	 **/
+	p._drawText = function(ctx) {
+		var paint = !!ctx;
+		if (!paint) { ctx = this._getWorkingContext(); }
+		var lines = String(this.text).split(/(?:\r\n|\r|\n)/);
+		var lineHeight = this.lineHeight||this.getMeasuredLineHeight();
+		var count = 0;
+		for (var i=0, l=lines.length; i<l; i++) {
+			var w = ctx.measureText(lines[i]).width;
+			if (this.lineWidth == null || w < this.lineWidth) {
+				if (paint) { this._drawTextLine(ctx, lines[i], count*lineHeight); }
+				count++;
+				continue;
+			}
+
+			// split up the line
+			var words = lines[i].split(/(\s)/);
+			var str = words[0];
+			for (var j=1, jl=words.length; j<jl; j+=2) {
+				// Line needs to wrap:
+				if (ctx.measureText(str + words[j] + words[j+1]).width > this.lineWidth) {
+					if (paint) { this._drawTextLine(ctx, str, count*lineHeight); }
+					count++;
+					str = words[j+1];
+				} else {
+					str += words[j] + words[j+1];
+				}
+			}
+			if (paint) { this._drawTextLine(ctx, str, count*lineHeight); } // Draw remaining text
+			count++;
+		}
+		return count;
 	}
 	
 	/** 
@@ -5642,13 +6035,14 @@ var p = Text.prototype = new DisplayObject();
 	 **/
 	p._drawTextLine = function(ctx, text, y) {
 		// Chrome 17 will fail to draw the text if the last param is included but null, so we feed it a large value instead:
-			if (this.outline) { ctx.strokeText(text, 0, y, this.maxWidth)||0xFFFF; }
+			if (this.outline) { ctx.strokeText(text, 0, y, this.maxWidth||0xFFFF); }
 			else { ctx.fillText(text, 0, y, this.maxWidth||0xFFFF); }
 		
 	}
 
-window.Text = Text;
-}(window));/*
+createjs.Text = Text;
+}());
+/*
 * SpriteSheetUtils
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -5676,7 +6070,10 @@ window.Text = Text;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 // constructor:
 /**
 * The SpriteSheetUtils class is a collection of static methods for working
@@ -5697,7 +6094,7 @@ var SpriteSheetUtils = function() {
 	 * @type HTMLCanvasElement
 	 * @protected
 	*/
-	SpriteSheetUtils._workingCanvas = document.createElement("canvas");
+	SpriteSheetUtils._workingCanvas = createjs.createCanvas?createjs.createCanvas():document.createElement("canvas");
 
 	/**
 	 * @property _workingContext
@@ -5758,6 +6155,31 @@ var SpriteSheetUtils = function() {
 		return img;
 	}
 
+	/**
+	 * Merges the rgb channels of one image with the alpha channel of another. This can be used to combine a compressed
+	 * JPEG image containing color data with a PNG32 monochromatic image containing alpha data. With certain types of
+	 * images (those with detail that lend itself to JPEG compression) this can provide significant file size savings
+	 * versus a single RGBA PNG32. This method is very fast (generally on the order of 1-2 ms to run).
+	 * @method mergeAlpha
+	 * @static
+	 * @param {Image} rbgImage The image (or canvas) containing the RGB channels to use.
+	 * @param {Image} alphaImage The image (or canvas) containing the alpha channel to use.
+	 * @param {Canvas} canvas Optional. If specified, this canvas will be used and returned. If not, a new canvas will be created.
+	 * @return {Canvas} A canvas with the combined image data. This can be used as a source for Bitmap or SpriteSheet.
+	*/
+	SpriteSheetUtils.mergeAlpha = function(rgbImage, alphaImage, canvas) {
+		if (!canvas) { canvas = createjs.createCanvas?createjs.createCanvas():document.createElement("canvas"); }
+		canvas.width = Math.max(alphaImage.width, rgbImage.width);
+		canvas.height = Math.max(alphaImage.height, rgbImage.height);
+		var ctx = canvas.getContext("2d");
+		ctx.save();
+		ctx.drawImage(rgbImage,0,0);
+		ctx.globalCompositeOperation = "destination-in";
+		ctx.drawImage(alphaImage,0,0);
+		ctx.restore();
+		return canvas;
+	}
+
 	
 // private static methods:
 	SpriteSheetUtils._flip = function(spriteSheet, count, h, v) {
@@ -5768,6 +6190,7 @@ var SpriteSheetUtils = function() {
 		for (var i=0;i<il;i++) {
 			var src = imgs[i];
 			src.__tmp = i; // a bit hacky, but faster than doing indexOf below.
+			canvas.width = 0; // make sure it clears.
 			canvas.width = src.width;
 			canvas.height = src.height;
 			ctx.setTransform(h?-1:1, 0, 0, v?-1:1, h?src.width:0, v?src.height:0);
@@ -5816,9 +6239,482 @@ var SpriteSheetUtils = function() {
 			names.push(anim.name);
 		}
 	}
+	
 
-window.SpriteSheetUtils = SpriteSheetUtils;
-}(window));/*
+createjs.SpriteSheetUtils = SpriteSheetUtils;
+}());
+/*
+* SpriteSheetBuilder
+* Visit http://createjs.com/ for documentation, updates and examples.
+*
+* Copyright (c) 2010 gskinner.com, inc.
+* 
+* Permission is hereby granted, free of charge, to any person
+* obtaining a copy of this software and associated documentation
+* files (the "Software"), to deal in the Software without
+* restriction, including without limitation the rights to use,
+* copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the
+* Software is furnished to do so, subject to the following
+* conditions:
+* 
+* The above copyright notice and this permission notice shall be
+* included in all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+* OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
+
+/**
+ * The SpriteSheetBuilder allows you to generate sprite sheets at run time from any display object. This can allow
+ * you to maintain your assets as vector graphics (for low file size), and render them at run time as sprite sheets
+ * for better performance.
+ * <br/><br/>
+ * Sprite sheets can be built either synchronously, or asynchronously, so that large sprite sheets can be generated
+ * without locking the UI.
+ * <br/><br/>
+ * Note that the "images" used in the generated sprite sheet are actually canvas elements, and that they will be sized
+ * to the nearest power of 2 up to the value of maxWidth or maxHeight.
+ * @class SpriteSheetBuilder
+ * @constructor
+ **/
+var SpriteSheetBuilder = function() {
+  this.initialize();
+}
+var p = SpriteSheetBuilder.prototype;
+
+// constants:
+	SpriteSheetBuilder.ERR_DIMENSIONS = "frame dimensions exceed max spritesheet dimensions";
+	SpriteSheetBuilder.ERR_RUNNING = "a build is already running";
+
+// public properties:
+
+	/**
+	 * The maximum width for the images (not individual frames) in the generated sprite sheet. It is recommended to use
+	 * a power of 2 for this value (ex. 1024, 2048, 4096). If the frames cannot all fit within the max dimensions, then
+	 * additional images will be created as needed.
+	 * @property maxWidth
+	 * @type Number
+	 * @default 2048
+	*/
+	p.maxWidth = 2048;
+
+	/**
+	 * The maximum height for the images (not individual frames) in the generated sprite sheet. It is recommended to use
+	 * a power of 2 for this value (ex. 1024, 2048, 4096). If the frames cannot all fit within the max dimensions, then
+	 * additional images will be created as needed.
+	 * @property maxHeight
+	 * @type Number
+	 * @default 2048
+	 **/
+	p.maxHeight = 2048;
+
+	/**
+	 * The sprite sheet that was generated. This will be null before a build is completed successfully.
+	 * @property spriteSheet
+	 * @type SpriteSheet
+	 **/
+	p.spriteSheet = null;
+	
+	/**
+	 * The scale to apply when drawing all frames to the sprite sheet. This is multiplied against any scale specified
+	 * in the addFrame call. This can be used, for example, to generate a sprite sheet at run time that is tailored to
+	 * the a specific device resolution (ex. tablet vs mobile).
+	 * @property defaultScale
+	 * @type Number
+	 * @default 1
+	 **/
+	p.scale = 1;
+	
+	/**
+	* The padding to use between frames. This is helpful to preserve antialiasing on drawn vector content.
+	* @property padding
+	* @type Number
+	* @default 1
+	**/
+	p.padding = 1;
+
+// private properties:
+
+	/**
+	 * @property _frames
+	 * @protected
+	 * @type Array
+	 **/
+	p._frames = null;
+	
+	/**
+	 * @property _animations
+	 * @protected
+	 * @type Array
+	 **/
+	p._animations = null;
+	
+	/**
+	 * @property _data
+	 * @protected
+	 * @type Array
+	 **/
+	p._data = null;
+	
+	/**
+	 * @property _nextFrameIndex
+	 * @protected
+	 * @type Number
+	 **/
+	p._nextFrameIndex = 0;
+	
+	/**
+	 * @property _index
+	 * @protected
+	 * @type Number
+	 **/
+	p._index = 0;
+	
+	/**
+	 * @property _callback
+	 * @protected
+	 * @type Function
+	 **/
+	p._callback = null;
+	
+	/**
+	 * @property _timeSlice
+	 * @protected
+	 * @type Number
+	 **/
+	p._timeSlice = null;
+	
+	/**
+	 * @property _timerID
+	 * @protected
+	 * @type Number
+	 **/
+	p._timerID = null;
+	
+	/**
+	 * @property _scale
+	 * @protected
+	 * @type Number
+	 **/
+	p._scale = 1;
+
+// constructor:
+	/**
+	 * Initialization method.
+	 * @method initialize
+	 * @protected
+	 **/
+	p.initialize = function() {
+		this._frames = [];
+		this._animations = {};
+	}
+
+// public methods:
+	
+	/**
+	 * Adds a frame to the sprite sheet. Note that the frame will not be drawn until you call build. The optional
+	 * setup params allow you to have a function run immediately before the draw occurs. For example, this allows you to
+	 * add a single source multiple times, but manipulate it or it's children to change it to generate different frames.
+	 * <br/><br/>
+	 * Note that the source's transformations (x,y,scale,rotate,alpha) will be ignored, except for regX/Y. To apply
+	 * transforms to a source object and have them captured in the sprite sheet, simply place it into a Container
+	 * and pass in the Container as the source.
+	 * @method addFrame
+	 * @param {DisplayObject} source The source display object to draw as the frame.
+	 * @param {Rectangle} sourceRect Optional. A rectangle defining the portion of the source to draw to the frame. If
+	 * not specified, it will look for a getBounds method, bounds property, or nominalBounds property on the source to use.
+	 * If one is not found, the frame will be skipped.
+	 * @param {Number} scale Optional. The scale to draw this frame at. Default is 1.
+	 * @param {Function} setupFunction Optional. A function to call immediately before drawing this frame.
+	 * @param {Array} setupParams Optional. Parameters to pass to the setup function.
+	 * @param {Object} setupScope Optional. The scope to call the setupFunction in.
+	 * @return {Number} The index of the frame that was just added, or null if a sourceRect could not be determined.
+	 **/
+	p.addFrame = function(source, sourceRect, scale, setupFunction, setupParams, setupScope) {
+		if (this._data) { throw SpriteSheetBuilder.ERR_RUNNING; }
+		var rect = sourceRect||source.bounds||source.nominalBounds;
+		if (!rect&&source.getBounds) { rect = source.getBounds(); }
+		if (!rect) { return null; }
+		scale = scale||1;
+		return this._frames.push({source:source, sourceRect:rect, scale:scale, funct:setupFunction, params:setupParams, scope:setupScope, index:this._frames.length, height:rect.height*scale})-1;
+	}
+	
+	/**
+	 * Adds an animation that will be included in the created sprite sheet.
+	 * @method addFrame
+	 * @param {String} name The name for the animation.
+	 * @param {Array} frames An array of frame indexes that comprise the animation. Ex. [3,6,5] would describe an animation
+	 * that played frame indexes 3, 6, and 5 in that order.
+	 * @param {String} next Optional. Specifies the name of the animation to continue to after this animation ends. You can
+	 * also pass false to have the animation stop when it ends. By default it will loop to the start of the same animation.
+	 * @param {Number} frequency Optional. Specifies a frame advance frequency for this animation. For example, a value
+	 * of 2 would cause the animation to advance every second tick.
+	 **/
+	p.addAnimation = function(name, frames, next, frequency) {
+		if (this._data) { throw SpriteSheetBuilder.ERR_RUNNING; }
+		this._animations[name] = {frames:frames, next:next, frequency:frequency};
+	}
+	
+	/**
+	 * This will take a MovieClip, and add its frames and labels to this builder. Labels will be added as an animation
+	 * running from the label index to the next label. For example, if there is a label named "foo" at frame 0 and a label
+	 * named "bar" at frame 10, in a MovieClip with 15 frames, it will add an animation named "foo" that runs from frame
+	 * index 0 to 9, and an animation named "bar" that runs from frame index 10 to 14.
+	 * <br/><br/>
+	 * Note that this will iterate through the full MovieClip with actionsEnabled set to false, ending on the last frame.
+	 * @method addMovieClip
+	 * @param {MovieClip} source The source MovieClip to add to the sprite sheet.
+	 * @param {Rectangle} sourceRect Optional. A rectangle defining the portion of the source to draw to the frame. If
+	 * not specified, it will look for a getBounds method, frameBounds array, bounds property, or nominalBounds property
+	 * on the source to use. If one is not found, the MovieClip will be skipped.
+	 * @param {Number} scale Optional. The scale to draw the movie clip at. Default is 1.
+	 **/
+	p.addMovieClip = function(source, sourceRect, scale) {
+		if (this._data) { throw SpriteSheetBuilder.ERR_RUNNING; }
+		var rects = source.frameBounds;
+		var rect = sourceRect||source.bounds||source.nominalBounds;
+		if (!rect&&source.getBounds) { rect = source.getBounds(); }
+		if (!rect && !rects) { return null; }
+		
+		var duration = source.timeline.duration;
+		for (var i=0; i<duration; i++) {
+			var r = (rects&&rects[i]) ? rects[i] : rect;
+			this.addFrame(source, r, scale, function(frame) {
+				var ae = this.actionsEnabled;
+				this.actionsEnabled = false;
+				this.gotoAndStop(frame);
+				this.actionsEnabled = ae;
+			}, [i], source);
+		}
+		var labels = source.timeline._labels;
+		var lbls = [];
+		for (var n in labels) {
+			lbls.push({index:labels[n], label:n});
+		}
+		if (lbls.length) {
+			lbls.sort(function(a,b){ return a.index-b.index; });
+			for (var i=0,l=lbls.length; i<l; i++) {
+				var label = lbls[i].label;
+				var start = lbls[i].index;
+				var end = (i == l-1) ? duration : lbls[i+1].index;
+				var frames = [];
+				for (var j=start; j<end; j++) { frames.push(j); }
+				this.addAnimation(label, frames, true); // for now, this loops all animations.
+			}
+		}
+	}
+	
+	/**
+	 * Builds a SpriteSheet instance based on the current frames.
+	 * @method build
+	 * @return SpriteSheet The created SpriteSheet instance, or null if a build is already running or an error occurred.
+	 **/
+	p.build = function() {
+		if (this._data) { throw SpriteSheetBuilder.ERR_RUNNING; }
+		this._callback = null;
+		this._startBuild();
+		while (this._drawNext()) {}
+		this._endBuild();
+		return this.spriteSheet;
+	}
+	
+	/**
+	 * Asynchronously builds a SpriteSheet instance based on the current frames. It will run 20 times per second, using
+	 * an amount of time defined by timeSlice. When it is complete it will call the specified callback.
+	 * @method buildAsync
+	 * @param {Function} callback Optional. The function to call when the build operation completes. It will be called
+	 * with a single parameter providing a reference back to the builder.
+	 * @param {Number} timeSlice Optional. A number from 0.01 to 1 that indicates what percentage of time the builder can use. This can be
+	 * thought of as the number of seconds per second the builder will use. For example, with a timeSlice value of 0.3,
+	 * the builder will run 20 times per second, using approximately 15ms per build (30% of available time, or 0.3s per second).
+	 * Defaults to 0.3.
+	 **/
+	p.buildAsync = function(callback, timeSlice) {
+		if (this._data) { throw SpriteSheetBuilder.ERR_RUNNING; }
+		this._callback = callback;
+		this._startBuild();
+		this._timeSlice = Math.max(0.01, Math.min(0.99, timeSlice||0.3))*50;
+		var _this = this;
+		this._timerID = setTimeout(function() { _this._run(); }, 50-this._timeSlice);
+	}
+	
+	/**
+	 * Stops the current asynchronous build.
+	 * @method stopAsync
+	 **/
+	p.stopAsync = function() {
+		clearTimeout(this._timerID);
+		this._data = null;
+	}
+	
+	/**
+	 * SpriteSheetBuilder instances cannot be cloned.
+	 * @method clone
+	 **/
+	p.clone = function() {
+		throw("SpriteSheetBuilder cannot be cloned.");
+	}
+
+	/**
+	 * Returns a string representation of this object.
+	 * @method toString
+	 * @return {String} a string representation of the instance.
+	 **/
+	p.toString = function() {
+		return "[SpriteSheetBuilder]";
+	}
+
+// private methods:
+	/**
+	 * @method _startBuild
+	 * @protected
+	 **/
+	p._startBuild = function() {
+		var pad = this.padding||0;
+		this.spriteSheet = null;
+		this._index = 0;
+		this._scale = this.scale;
+		var dataFrames = [];
+		this._data = {
+			images: [],
+			frames: dataFrames,
+			animations: this._animations // TODO: should we "clone" _animations in case someone adds more animations after a build?
+		};
+		
+		var frames = this._frames.slice();
+		frames.sort(function(a,b) { return (a.height<=b.height) ? -1 : 1; });
+		
+		if (frames[frames.length-1].height+pad*2 > this.maxHeight) { throw SpriteSheetBuilder.ERR_DIMENSIONS; }
+		var y=0, x=0;
+		var img = 0;
+		while (frames.length) {
+			var o = this._fillRow(frames, y, img, dataFrames, pad);
+			if (o.w > x) { x = o.w; }
+			y += o.h;
+			if (!o.h || !frames.length) {
+				var canvas = createjs.createCanvas?createjs.createCanvas():document.createElement("canvas");
+				canvas.width = this._getSize(x,this.maxWidth);
+				canvas.height = this._getSize(y,this.maxHeight);
+				this._data.images[img] = canvas;
+				if (!o.h) {
+					x=y=0;
+					img++;
+				}
+			}
+		}
+	}
+	
+	/**
+	 * @method _fillRow
+	 * @protected
+	 * @return {Number} The width & height of the row.
+	 **/
+	p._getSize = function(size,max) {
+		var pow = 4;
+		while (Math.pow(2,++pow) < size){}
+		return Math.min(max,Math.pow(2,pow));
+	}
+	
+	/**
+	 * @method _fillRow
+	 * @protected
+	 * @return {Number} The width & height of the row.
+	 **/
+	p._fillRow = function(frames, y, img, dataFrames, pad) {
+		var w = this.maxWidth;
+		var maxH = this.maxHeight;
+		var h = maxH-y;
+		var x = pad;
+		y += pad;
+		var height = 0;
+		for (var i=frames.length-1; i>=0; i--) {
+			var frame = frames[i];
+			var sc = this._scale*frame.scale;
+			var rect = frame.sourceRect;
+			var source = frame.source;
+			var rx = Math.floor(sc*rect.x-pad);
+			var ry = Math.floor(sc*rect.y-pad);
+			var rh = Math.ceil(sc*rect.height+pad*2);
+			var rw = Math.ceil(sc*rect.width+pad*2);
+			if (rw > w) { throw SpriteSheetBuilder.ERR_DIMENSIONS; }
+			if (rh > h || x+rw > w) { continue; }
+			frame.img = img;
+			frame.rect = new createjs.Rectangle(x,y,rw,rh);
+			height = height || rh;
+			frames.splice(i,1);
+			dataFrames[frame.index] = [x,y,rw,rh,img,Math.round(-rx+sc*source.regX-pad),Math.round(-ry+sc*source.regY-pad)];
+			x += rw;
+		}
+		return {w:x, h:height};
+	}
+	
+	/**
+	 * @method _endBuild
+	 * @protected
+	 **/
+	p._endBuild = function() {
+		this.spriteSheet = new createjs.SpriteSheet(this._data);
+		this._data = null;
+		if (this._callback) { this._callback(this); }
+	}
+	
+	/**
+	 * @method _run
+	 * @protected
+	 **/
+	p._run = function() {
+		var t = (new Date()).getTime()+this._timeSlice;
+		var complete = false;
+		while (t > (new Date()).getTime()) {
+			if (!this._drawNext()) { complete = true; break; }
+		}
+		if (complete) {
+			this._endBuild();
+		} else {
+			var _this = this;
+			this._timerID = setTimeout(function() { _this._run(); }, 50-this._timeSlice);
+		}
+	}
+	
+	/**
+	 * @method _drawNext
+	 * @protected
+	 * @return Boolean Returns false if this is the last draw.
+	 **/
+	p._drawNext = function() {
+		var frame = this._frames[this._index];
+		var sc = frame.scale*this._scale;
+		var rect = frame.rect;
+		var sourceRect = frame.sourceRect;
+		var canvas = this._data.images[frame.img];
+		var ctx = canvas.getContext("2d");
+		frame.funct&&frame.funct.apply(frame.scope, frame.params);
+		ctx.save();
+		ctx.beginPath();
+		ctx.rect(rect.x, rect.y, rect.width, rect.height);
+		ctx.clip();
+		ctx.translate(Math.ceil(rect.x-sourceRect.x*sc), Math.ceil(rect.y-sourceRect.y*sc));
+		ctx.scale(sc,sc);
+		frame.source.draw(ctx); // display object will draw itself.
+		ctx.restore();
+		return (++this._index) < this._frames.length;
+	}
+
+createjs.SpriteSheetBuilder = SpriteSheetBuilder;
+}());
+/*
 * DOMElement
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -5846,7 +6742,10 @@ window.SpriteSheetUtils = SpriteSheetUtils;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 // TODO: fix problems with rotation.
 // TODO: exclude from getObjectsUnderPoint
 
@@ -5872,7 +6771,7 @@ window.SpriteSheetUtils = SpriteSheetUtils;
 var DOMElement = function(htmlElement) {
   this.initialize(htmlElement);
 }
-var p = DOMElement.prototype = new DisplayObject();
+var p = DOMElement.prototype = new createjs.DisplayObject();
 
 // public properties:
 	/**
@@ -5910,7 +6809,7 @@ var p = DOMElement.prototype = new DisplayObject();
 		if (htmlElement) {
 			this._style = htmlElement.style;
 			this._style.position = "absolute";
-			this._style.transformOrigin = this._style.webkitTransformOrigin = this._style.msTransformOrigin = this._style.MozTransformOrigin = "0% 0%";
+			this._style.transformOrigin = this._style.WebkitTransformOrigin = this._style.msTransformOrigin = this._style.MozTransformOrigin = this._style.OTransformOrigin = "0% 0%";
 		}
 	}
 
@@ -5938,15 +6837,16 @@ var p = DOMElement.prototype = new DisplayObject();
 	 * into itself).
 	 **/
 	p.draw = function(ctx, ignoreCache) {
-		// TODO: possibly save out previous matrix values, to compare against new ones (so layout doesn't need to fire if no change)
+		// TODO: possibly save out previous matrix values, to compare against new ones (so layout doesn't need to fire if there is no change)
 		if (this.htmlElement == null) { return; }
-		var mtx = this._matrix;
+		var mtx = this.getConcatenatedMatrix(this._matrix);
+		
 		var o = this.htmlElement;
 		o.style.opacity = ""+mtx.alpha;
 		// this relies on the _tick method because draw isn't called if a parent is not visible.
 		o.style.visibility = this.visible ? "visible" : "hidden";
-		o.style.transform = o.style.webkitTransform = o.style.oTransform =  o.style.msTransform = ["matrix("+mtx.a,mtx.b,mtx.c,mtx.d,mtx.tx,mtx.ty+")"].join(",");
-		o.style.MozTransform = ["matrix("+mtx.a,mtx.b,mtx.c,mtx.d,mtx.tx+"px",mtx.ty+"px)"].join(",");
+		o.style.transform = o.style.WebkitTransform = o.style.OTransform =  o.style.msTransform = ["matrix("+mtx.a,mtx.b,mtx.c,mtx.d,(mtx.tx+0.5|0),(mtx.ty+0.5|0)+")"].join(",");
+		o.style.MozTransform = ["matrix("+mtx.a,mtx.b,mtx.c,mtx.d,(mtx.tx+0.5|0)+"px",(mtx.ty+0.5|0)+"px)"].join(",");
 		return true;
 	}
 
@@ -6029,8 +6929,9 @@ var p = DOMElement.prototype = new DisplayObject();
 		return true;
 	}
 	*/
-window.DOMElement = DOMElement;
-}(window));/*
+createjs.DOMElement = DOMElement;
+}());
+/*
 * Filter
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -6058,7 +6959,10 @@ window.DOMElement = DOMElement;
 * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
+
+(function() {
 
 /**
 * Base class that all filters should inherit from.
@@ -6087,7 +6991,7 @@ var p = Filter.prototype;
 	 * @return {Rectangle} a rectangle object indicating the margins required to draw the filter.
 	 **/
 	p.getBounds = function() {
-		return new Rectangle(0,0,0,0);
+		return new createjs.Rectangle(0,0,0,0);
 	}
 	
 	/**
@@ -6123,566 +7027,9 @@ var p = Filter.prototype;
 		return new Filter();
 	}
 	
-window.Filter = Filter;
-}(window));/*
-* BoxBlurFilter
-* Visit http://createjs.com/ for documentation, updates and examples.
-*
-* Copyright (c) 2010 gskinner.com, inc.
-* 
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
-* 
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-* 
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-(function(window) {
-
-/**
-* BoxBlurFilter applies a box blur to DisplayObjects
-* @class BoxBlurFilter
-* @augments Filter
-* @constructor
-* @param {Number} blurX
-* @param {Number} blurY
-* @param {Number} quality
-**/
-var BoxBlurFilter = function( blurX, blurY, quality ) {
-  this.initialize( blurX, blurY, quality );
-}
-var p = BoxBlurFilter.prototype = new Filter();
-
-// constructor:
-	/** @ignore */
-	p.initialize = function( blurX, blurY, quality ) {
-		if ( isNaN(blurX) || blurX < 0 ) blurX = 0;
-		this.blurX = blurX | 0;
-		if ( isNaN(blurY) || blurY < 0 ) blurY = 0;
-		this.blurY = blurY | 0;
-		if ( isNaN(quality) || quality < 1  ) quality = 1;
-		this.quality = quality | 0;
-	}
-
-// public properties:
-
-	/**
-	 * Horizontal blur radius
-	 * @property blurX
-	 * @type Number
-	 **/
-	p.blurX = 0;
-
-	/**
-	 * Vertical blur radius
-	 * @property blurY
-	 * @type Number
-	 **/
-	p.blurY = 0;
-
-	/**
-	 * Number of blur iterations. For example, a value of 1 will produce a rough blur.
-	 * A value of 2 will produce a smoother blur, but take twice as long to run.
-	 * @property quality
-	 * @type Number
-	 **/
-	p.quality = 1;
-
-// public methods:
-	/**
-	 * Returns a rectangle with values indicating the margins required to draw the filter.
-	 * For example, a filter that will extend the drawing area 4 pixels to the left, and 7 pixels to the right
-	 * (but no pixels up or down) would return a rectangle with (x=-4, y=0, width=11, height=0).
-	 * @method getBounds
-	 * @return {Rectangle} a rectangle object indicating the margins required to draw the filter.
-	 **/
-	p.getBounds = function() {
-		// TODO: this doesn't properly account for blur quality.
-		return new Rectangle(-this.blurX,-this.blurY,2*this.blurX,2*this.blurY);
-	}
-
-	/**
-	 * Applies the filter to the specified context.
-	 * @method applyFilter
-	 * @param ctx The 2D context to use as the source.
-	 * @param x The x position to use for the source rect.
-	 * @param y The y position to use for the source rect.
-	 * @param width The width to use for the source rect.
-	 * @param height The height to use for the source rect.
-	 * @param targetCtx Optional. The 2D context to draw the result to. Defaults to the context passed to ctx.
-	 * @param targetX Optional. The x position to draw the result to. Defaults to the value passed to x.
-	 * @param targetY Optional. The y position to draw the result to. Defaults to the value passed to y.
-	 **/
-	p.applyFilter = function(ctx, x, y, width, height, targetCtx, targetX, targetY) {
-		targetCtx = targetCtx || ctx;
-		if (targetX == null) { targetX = x; }
-		if (targetY == null) { targetY = y; }
-		try {
-			var imageData = ctx.getImageData(x, y, width, height);
-		} catch(e) {
-			//if (!this.suppressCrossDomainErrors) throw new Error("unable to access local image data: " + e);
-			return false;
-		}
-
-		var radiusX = this.blurX;
-		if ( isNaN(radiusX) || radiusX < 0 ) return false;
-		radiusX |= 0;
-
-		var radiusY = this.blurY;
-		if ( isNaN(radiusY) || radiusY < 0 ) return false;
-		radiusY |= 0;
-
-		if ( radiusX == 0 && radiusY == 0 ) return false;
-
-		var iterations = this.quality;
-		if ( isNaN(iterations) || iterations < 1  ) iterations = 1;
-		iterations |= 0;
-		if ( iterations > 3 ) iterations = 3;
-		if ( iterations < 1 ) iterations = 1;
-
-		var pixels = imageData.data;
-
-		var rsum,gsum,bsum,asum,x,y,i,p,p1,p2,yp,yi,yw;
-		var wm = width - 1;
-		var hm = height - 1;
-		var rad1x = radiusX + 1;
-		var divx = radiusX + rad1x;
-		var rad1y = radiusY + 1;
-		var divy = radiusY + rad1y;
-		var div2 = 1 / (divx * divy);
-
-		var r = [];
-		var g = [];
-		var b = [];
-		var a = [];
-
-		var vmin = [];
-		var vmax = [];
-
-		while ( iterations-- > 0 ) {
-			yw = yi = 0;
-
-			for ( y=0; y < height; y++ ){
-				rsum = pixels[yw]   * rad1x;
-				gsum = pixels[yw+1] * rad1x;
-				bsum = pixels[yw+2] * rad1x;
-				asum = pixels[yw+3] * rad1x;
-
-
-				for( i = 1; i <= radiusX; i++ ) {
-					p = yw + (((i > wm ? wm : i )) << 2 );
-					rsum += pixels[p++];
-					gsum += pixels[p++];
-					bsum += pixels[p++];
-					asum += pixels[p]
-				}
-
-				for ( x = 0; x < width; x++ ) {
-					r[yi] = rsum;
-					g[yi] = gsum;
-					b[yi] = bsum;
-					a[yi] = asum;
-
-					if(y==0){
-						vmin[x] = Math.min( x + rad1x, wm ) << 2;
-						vmax[x] = Math.max( x - radiusX, 0 ) << 2;
-					}
-
-					p1 = yw + vmin[x];
-					p2 = yw + vmax[x];
-
-					rsum += pixels[p1++] - pixels[p2++];
-					gsum += pixels[p1++] - pixels[p2++];
-					bsum += pixels[p1++] - pixels[p2++];
-					asum += pixels[p1]   - pixels[p2];
-
-					yi++;
-				}
-				yw += ( width << 2 );
-			}
-
-			for ( x = 0; x < width; x++ ) {
-				yp = x;
-				rsum = r[yp] * rad1y;
-				gsum = g[yp] * rad1y;
-				bsum = b[yp] * rad1y;
-				asum = a[yp] * rad1y;
-
-				for( i = 1; i <= radiusY; i++ ) {
-				  yp += ( i > hm ? 0 : width );
-				  rsum += r[yp];
-				  gsum += g[yp];
-				  bsum += b[yp];
-				  asum += a[yp];
-				}
-
-				yi = x << 2;
-				for ( y = 0; y < height; y++) {
-				  pixels[yi]   = (rsum * div2 + 0.5) | 0;
-				  pixels[yi+1] = (gsum * div2 + 0.5) | 0;
-				  pixels[yi+2] = (bsum * div2 + 0.5) | 0;
-				  pixels[yi+3] = (asum * div2 + 0.5) | 0;
-
-				  if( x == 0 ){
-					vmin[y] = Math.min( y + rad1y, hm ) * width;
-					vmax[y] = Math.max( y - radiusY,0 ) * width;
-				  }
-
-				  p1 = x + vmin[y];
-				  p2 = x + vmax[y];
-
-				  rsum += r[p1] - r[p2];
-				  gsum += g[p1] - g[p2];
-				  bsum += b[p1] - b[p2];
-				  asum += a[p1] - a[p2];
-
-				  yi += width << 2;
-				}
-			}
-		}
-
-		targetCtx.putImageData(imageData, targetX, targetY);
-		return true;
-	}
-
-	/**
-	 * Returns a clone of this DisplayObject. Some properties that are specific to this instance's current context are reverted to their defaults (for example .parent).
-	 **/
-	p.clone = function() {
-		return new BoxBlurFilter(this.blurX, this.blurY, this.quality);
-	}
-
-	/**
-	 * Returns a string representation of this object.
-	 **/
-	p.toString = function() {
-		return "[BoxBlurFilter (name="+  this.name +")]";
-	}
-
-// private methods:
-
-
-
-window.BoxBlurFilter = BoxBlurFilter;
-}(window));/*
-* ColorFilter
-* Visit http://createjs.com/ for documentation, updates and examples.
-*
-* Copyright (c) 2010 gskinner.com, inc.
-* 
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
-* 
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-* 
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-(function(window) {
-
-/**
-* Applies color transforms.
-* @class ColorFilter
-* @constructor
-* @augments Filter
-* @param {Number} redMultiplier
-* @param {Number} greenMultiplier
-* @param {Number} blueMultiplier
-* @param {Number} alphaMultiplier
-* @param {Number} redOffset
-* @param {Number} greenOffset
-* @param {Number} blueOffset
-* @param {Number} alphaOffset
-**/
-var ColorFilter = function(redMultiplier, greenMultiplier, blueMultiplier, alphaMultiplier, redOffset, greenOffset, blueOffset, alphaOffset) {
-  this.initialize(redMultiplier, greenMultiplier, blueMultiplier, alphaMultiplier, redOffset, greenOffset, blueOffset, alphaOffset);
-}
-var p = ColorFilter.prototype = new Filter();
-
-// public properties:
-	/**
-	 * Red channel multiplier.
-	 * @property redMultiplier
-	 * @type Number
-	 **/
-	p.redMultiplier = 1;
-	
-	/** 
-	 * Green channel multiplier.
-	 * @property greenMultiplier
-	 * @type Number
-	 **/
-	p.greenMultiplier = 1;
-	
-	/**
-	 * Blue channel multiplier.
-	 * @property blueMultiplier
-	 * @type Number
-	 **/
-	p.blueMultiplier = 1;
-	
-	/**
-	 * Alpha channel multiplier.
-	 * @property redMultiplier
-	 * @type Number
-	 **/
-	p.alphaMultiplier = 1;
-	
-	/**
-	 * Red channel offset (added to value).
-	 * @property redOffset
-	 * @type Number
-	 **/
-	p.redOffset = 0;
-	
-	/**
-	 * Green channel offset (added to value).
-	 * @property greenOffset
-	 * @type Number
-	 **/
-	p.greenOffset = 0;
-	
-	/**
-	 * Blue channel offset (added to value).
-	 * @property blueOffset
-	 * @type Number
-	 **/
-	p.blueOffset = 0;
-	
-	/**
-	 * Alpha channel offset (added to value).
-	 * @property alphaOffset
-	 * @type Number
-	 **/
-	p.alphaOffset = 0;
-
-// constructor:
-	/**
-	 * Initialization method.
-	 * @method initialize
-	 * @protected
-	 **/
-	p.initialize = function(redMultiplier, greenMultiplier, blueMultiplier, alphaMultiplier, redOffset, greenOffset, blueOffset, alphaOffset) {
-		this.redMultiplier = redMultiplier != null ? redMultiplier : 1;
-		this.greenMultiplier = greenMultiplier != null ? greenMultiplier : 1;
-		this.blueMultiplier = blueMultiplier != null ? blueMultiplier : 1;
-		this.alphaMultiplier = alphaMultiplier != null ? alphaMultiplier : 1;
-		this.redOffset = redOffset || 0;
-		this.greenOffset = greenOffset || 0;
-		this.blueOffset = blueOffset || 0;
-		this.alphaOffset = alphaOffset || 0;
-	}
-
-// public methods:
-	/**
-	 * Applies the filter to the specified context.
-	 * @method applyFilter
-	 * @param ctx The 2D context to use as the source.
-	 * @param x The x position to use for the source rect.
-	 * @param y The y position to use for the source rect.
-	 * @param width The width to use for the source rect.
-	 * @param height The height to use for the source rect.
-	 * @param targetCtx Optional. The 2D context to draw the result to. Defaults to the context passed to ctx.
-	 * @param targetX Optional. The x position to draw the result to. Defaults to the value passed to x.
-	 * @param targetY Optional. The y position to draw the result to. Defaults to the value passed to y.
-	 **/
-	p.applyFilter = function(ctx, x, y, width, height, targetCtx, targetX, targetY) {
-		targetCtx = targetCtx || ctx;
-		if (targetX == null) { targetX = x; }
-		if (targetY == null) { targetY = y; }
-		try {
-			var imageData = ctx.getImageData(x, y, width, height);
-		} catch(e) {
-			//if (!this.suppressCrossDomainErrors) throw new Error("unable to access local image data: " + e);
-			return false;
-		}
-		var data = imageData.data;
-		var l = data.length;
-		for (var i=0; i<l; i+=4) {
-			data[i] = data[i]*this.redMultiplier+this.redOffset;
-			data[i+1] = data[i+1]*this.greenMultiplier+this.greenOffset;
-			data[i+2] = data[i+2]*this.blueMultiplier+this.blueOffset;
-			data[i+3] = data[i+3]*this.alphaMultiplier+this.alphaOffset;
-		}
-		imageData.data = data;
-		targetCtx.putImageData(imageData, targetX, targetY);
-		return true;
-	}
-
-	/**
-	 * Returns a string representation of this object.
-	 * @method toString
-	 * @return {String} a string representation of the instance.
-	 **/
-	p.toString = function() {
-		return "[ColorFilter]";
-	}
-
-
-	/**
-	 * Returns a clone of this ColorFilter instance.
-	 * @method clone
-	 @return {ColorFilter} A clone of the current ColorFilter instance.
-	 **/
-	p.clone = function() {
-		return new ColorFilter(this.redMultiplier, this.greenMultiplier, this.blueMultiplier, this.alphaMultiplier, this.redOffset, this.greenOffset, this.blueOffset, this.alphaOffset);
-	}
-
-window.ColorFilter = ColorFilter;
-}(window));/*
-* ColorMatrixFilter
-* Visit http://createjs.com/ for documentation, updates and examples.
-*
-* Copyright (c) 2010 gskinner.com, inc.
-* 
-* Permission is hereby granted, free of charge, to any person
-* obtaining a copy of this software and associated documentation
-* files (the "Software"), to deal in the Software without
-* restriction, including without limitation the rights to use,
-* copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following
-* conditions:
-* 
-* The above copyright notice and this permission notice shall be
-* included in all copies or substantial portions of the Software.
-* 
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-* HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-* OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-(function(window) {
-
-/**
-* Applies color transforms.
-* @class ColorMatrixFilter
-* @constructor
-* @augments Filter
-* @param {Number} blurX
-**/
-var ColorMatrixFilter = function(matrix) {
-  this.initialize(matrix);
-}
-var p = ColorMatrixFilter.prototype = new Filter();
-
-// public properties:
-	p.matrix = null;
-	
-// constructor:
-	// TODO: detailed docs.
-	/** 
-	 * Allows you to carry out complex color operations such as modifying saturation, brightness, or inverting.
-	 * @method initialize
-	 * @protected
-	 * @param matrix A 4x5 matrix describing the color operation to perform.
-	 **/
-	p.initialize = function(matrix) {
-		this.matrix = matrix;
-	}
-	
-// public methods:
-	/**
-	 * Applies the filter to the specified context.
-	 * @method applyFilter
-	 * @param ctx The 2D context to use as the source.
-	 * @param x The x position to use for the source rect.
-	 * @param y The y position to use for the source rect.
-	 * @param width The width to use for the source rect.
-	 * @param height The height to use for the source rect.
-	 * @param targetCtx Optional. The 2D context to draw the result to. Defaults to the context passed to ctx.
-	 * @param targetX Optional. The x position to draw the result to. Defaults to the value passed to x.
-	 * @param targetY Optional. The y position to draw the result to. Defaults to the value passed to y.
-	 **/
-	p.applyFilter = function(ctx, x, y, width, height, targetCtx, targetX, targetY) {
-		targetCtx = targetCtx || ctx;
-		if (targetX == null) { targetX = x; }
-		if (targetY == null) { targetY = y; }
-		try {
-			var imageData = ctx.getImageData(x, y, width, height);
-		} catch(e) {
-			//if (!this.suppressCrossDomainErrors) throw new Error("unable to access local image data: " + e);
-			return false;
-		}
-		var data = imageData.data;
-		var l = data.length;
-		var r,g,b,a;
-		var mtx = this.matrix;
-		var m0 =  mtx[0],  m1 =  mtx[1],  m2 =  mtx[2],  m3 =  mtx[3],  m4 =  mtx[4];
-		var m5 =  mtx[5],  m6 =  mtx[6],  m7 =  mtx[7],  m8 =  mtx[8],  m9 =  mtx[9];
-		var m10 = mtx[10], m11 = mtx[11], m12 = mtx[12], m13 = mtx[13], m14 = mtx[14];
-		var m15 = mtx[15], m16 = mtx[16], m17 = mtx[17], m18 = mtx[18], m19 = mtx[19];
-		
-		for (var i=0; i<l; i+=4) {
-			r = data[i];
-			g = data[i+1];
-			b = data[i+2];
-			a = data[i+3];
-			data[i] = r*m0+g*m1+b*m2+a*m3+m4; // red
-			data[i+1] = r*m5+g*m6+b*m7+a*m8+m9; // green
-			data[i+2] = r*m10+g*m11+b*m12+a*m13+m14; // blue
-			data[i+3] = r*m15+g*m16+b*m17+a*m18+m19; // alpha
-		}
-		imageData.data = data;
-		targetCtx.putImageData(imageData, targetX, targetY);
-		return true;
-	}
-
-	/**
-	 * Returns a string representation of this object.
-	 * @method toString
-	 * @return {String} a string representation of the instance.
-	 **/
-	p.toString = function() {
-		return "[ColorMatrixFilter]";
-	}
-	
-	
-	/**
-	 * Returns a clone of this ColorMatrixFilter instance.
-	 * @method clone
-	 @return {ColorMatrixFilter} A clone of the current ColorMatrixFilter instance.
-	 **/
-	p.clone = function() {
-		return new ColorMatrixFilter(this.matrix);
-	}
-	
-window.ColorMatrixFilter = ColorMatrixFilter;
-}(window));/*
+createjs.Filter = Filter;
+}());
+/*
 * Touch
 * Visit http://createjs.com/ for documentation, updates and examples.
 *
@@ -6711,133 +7058,226 @@ window.ColorMatrixFilter = ColorMatrixFilter;
 */
 
 
-(function(window) {
+// namespace:
+this.createjs = this.createjs||{};
 
+(function() {
+
+// TODO: support for double tap.
 /**
-* Global utility for working with touch enabled devices in EaselJS.
-* @class Touch
-* @static
-**/
+ * Global utility for working with multi-touch enabled devices in EaselJS. Currently supports W3C Touch API
+ * (iOS & modern Android browser) and IE10.
+ * @class Touch
+ * @static
+ **/
 var Touch = function() {
 	throw "Touch cannot be instantiated";
-}
+};
 
+// Public static methods:
 	/**
-	 * Enables touch interaction for the specified EaselJS stage. This
-	 * currently only supports iOS, and simply maps single touch events
-	 * to the existing EaselJS mouse events.
+	 * Returns true if touch is supported in the current browser.
 	 * @method isSupported
-	 * @return {Boolean} A boolean indicating whether touch is supported in the current environment.
+	 * @return {Boolean} A boolean indicating whether touch is supported in the current browser.
 	 * @static
 	 **/
 	Touch.isSupported = function() {
-		return ('ontouchstart' in window);
-	}
+		return	('ontouchstart' in window) || // iOS
+					(window.navigator['msPointerEnabled']); // IE10
+	};
 
 	/**
-	 * Enables touch interaction for the specified EaselJS stage. This
-	 * currently only supports iOS, and simply maps single touch events
-	 * to the existing EaselJS mouse events.
+	 * Enables touch interaction for the specified EaselJS stage. Currently supports iOS (and compatible browsers, such
+	 * as modern Android browsers), and IE10.
+	 * Supports both single touch and multi-touch modes. Extends the EaselJS MouseEvent model, but without support for
+	 * double click or over/out events. See MouseEvent.pointerID for more information.
 	 * @method enable
 	 * @param {Stage} stage The stage to enable touch on.
+	 * @param {Boolean} singleTouch If true, only a single touch will be active at a time. Default is false.
+	 * @param {Boolean} allowDefault If true, then default gesture actions (ex. scrolling, zooming) will be allowed when the user is interacting with the target canvas. Default is false.
+	 * @return {Boolean} Returns true if touch was successfully enabled on the target stage.
 	 * @static
 	 **/
-	Touch.enable = function(stage) {
-		if (stage == null || !Touch.isSupported()) { return; }
-		var o = stage;
+	Touch.enable = function(stage, singleTouch, allowDefault) {
+		if (!stage || !stage.canvas || !Touch.isSupported()) { return false; }
 
 		// inject required properties on stage:
-		o._primaryTouchId = -1;
-		o._handleTouchMoveListener = null;
-
+		stage.__touch = {pointers:{}, multitouch:!singleTouch, preventDefault:!allowDefault, count:0};
+		
 		// note that in the future we may need to disable the standard mouse event model before adding
 		// these to prevent duplicate calls. It doesn't seem to be an issue with iOS devices though.
-		o.canvas.addEventListener("touchstart", function(e) {
-			Touch._handleTouchStart(o,e);
-		}, false);
-
-		document.addEventListener("touchend", function(e) {
-			Touch._handleTouchEnd(o,e);
-		}, false);
-	}
+		if ('ontouchstart' in window) { Touch._IOS_enable(stage); }
+		else if (window.navigator['msPointerEnabled']) { Touch._IE_enable(stage); }
+		return true;
+	};
+	
+/**
+	 * Removes all listeners that were set up when calling Touch.enable on a stage.
+	 * @method disable
+	 * @param {Stage} stage The stage to disable touch on.
+	 * @static
+	 **/
+	Touch.disable = function(stage) {
+		if (!stage) { return; }
+		if ('ontouchstart' in window) { Touch._IOS_disable(stage); }
+		else if (window.navigator['msPointerEnabled']) { Touch._IE_disable(stage); }
+	};
+	
+// Private static methods:
 
 	/**
-	 * @method _handleTouchStart
+	 * @method _IOS_enable
 	 * @protected
 	 * @param {Stage} stage
-	 * @param {TouchEvent} e
+	 * @static
 	 **/
-	Touch._handleTouchStart = function(stage,e) {
-		e.preventDefault();
-
-		if(stage._primaryTouchId != -1) {
-			//we are already tracking an id
-			return;
-		}
-
-		stage._handleTouchMoveListener = stage._handleTouchMoveListener || function(e){
-			Touch._handleTouchMove(stage,e);
-		}
-
-		//for touch we only need to listen to move events once a touch has started
-		//on the canvas
-		document.addEventListener("touchmove", stage._handleTouchMoveListener, false);
-
-		var touch = e.changedTouches[0];
-		stage._primaryTouchId = touch.identifier;
-		stage._updateMousePosition(touch.pageX, touch.pageY);
-		stage._handleMouseDown(touch);
-	}
+	Touch._IOS_enable = function(stage) {
+		var canvas = stage.canvas;
+		var f = stage.__touch.f = function(e) { Touch._IOS_handleEvent(stage,e); };
+		canvas.addEventListener("touchstart", f, false);
+		canvas.addEventListener("touchmove", f, false);
+		canvas.addEventListener("touchend", f, false);
+		canvas.addEventListener("touchcancel", f, false);
+	};
+	
+	/**
+	 * @method _IOS_disable
+	 * @protected
+	 * @param {Stage} stage
+	 * @static
+	 **/
+	Touch._IOS_disable = function(stage) {
+		var canvas = stage.canvas;
+		if (!canvas) { return; }
+		var f = stage.__touch.f;
+		canvas.removeEventListener("touchstart", f, false);
+		canvas.removeEventListener("touchmove", f, false);
+		canvas.removeEventListener("touchend", f, false);
+		canvas.removeEventListener("touchcancel", f, false);
+	};
 
 	/**
-	 * @method _handleTouchMove
+	 * @method _IOS_handleEvent
 	 * @protected
-	 * @param {Stage} stage
-	 * @param {TouchEvent} e
+	 * @static
 	 **/
-	Touch._handleTouchMove = function(stage,e) {
-		var touch = Touch._findPrimaryTouch(stage,e.changedTouches);
-		if(touch) {
-			stage._handleMouseMove(touch);
-		}
-	}
-
-	/**
-	 * @method _handleTouchEnd
-	 * @protected
-	 * @param {Stage} stage
-	 * @param {TouchEvent} e
-	 **/
-	Touch._handleTouchEnd = function(stage,e) {
-		var touch = Touch._findPrimaryTouch(stage,e.changedTouches);
-
-		if(touch) {
-			stage._primaryTouchId = -1;
-			stage._handleMouseUp(touch);
-			//stop listening for move events, until another new touch starts on the canvas
-			document.removeEventListener("touchmove", stage._handleTouchMoveListener);
-			stage._handleTouchMoveListener = null;
-		}
-	}
-
-	/**
-	 * @method _findPrimaryTouch
-	 * @protected
-	 * @param {Stage} stage
-	 * @param {Array[Touch]} touches
-	 **/
-	Touch._findPrimaryTouch = function(stage,touches) {
-		var l = touches.length;
-		for(var i = 0; i < l; i++){
+	Touch._IOS_handleEvent = function(stage, e) {
+		if (!stage) { return; }
+		if (stage.__touch.preventDefault) { e.preventDefault&&e.preventDefault(); }
+		var touches = e.changedTouches;
+		var type = e.type;
+		for (var i= 0,l=touches.length; i<l; i++) {
 			var touch = touches[i];
-
-			//find the primary touchPoint by id
-			if(touch.identifier == stage._primaryTouchId) {
-				return touch;
+			var id = touch.identifier;
+			if (touch.target != stage.canvas) { continue; }
+			
+			if (type == "touchstart") {
+				this._handleStart(stage, id, e, touch.pageX, touch.pageY);
+			} else if (type == "touchmove") {
+				this._handleMove(stage, id, e, touch.pageX, touch.pageY);
+			} else if (type == "touchend" || type == "touchcancel") {
+				this._handleEnd(stage, id, e);
 			}
 		}
-		return null;
-	}
+	};
+	
+	/**
+	 * @method _IE_enable
+	 * @protected
+	 * @param {Stage} stage
+	 * @static
+	 **/
+	Touch._IE_enable = function(stage) {
+		var canvas = stage.canvas;
+		var f = stage.__touch.f = function(e) { Touch._IE_handleEvent(stage,e); };
+		canvas.addEventListener("MSPointerDown", f, false);
+		window.addEventListener("MSPointerMove", f, false);
+		window.addEventListener("MSPointerUp", f, false);
+		window.addEventListener("MSPointerCancel", f, false);
+		if (stage.__touch.preventDefault) { canvas.style.msTouchAction = "none"; }
+		stage.__touch.activeIDs = {};
+	};
+	
+	/**
+	 * @method _IE_enable
+	 * @protected
+	 * @param {Stage} stage
+	 * @static
+	 **/
+	Touch._IE_disable = function(stage) {
+		var f = stage.__touch.f;
+		window.removeEventListener("MSPointerMove", f, false);
+		window.removeEventListener("MSPointerUp", f, false);
+		window.removeEventListener("MSPointerCancel", f, false);
+		if (stage.canvas) {
+			stage.canvas.removeEventListener("MSPointerDown", f, false);
+		}
+	};
+	
+	/**
+	 * @method _IE_handleEvent
+	 * @protected
+	 * @static
+	 **/
+	Touch._IE_handleEvent = function(stage, e) {
+		if (!stage) { return; }
+		if (stage.__touch.preventDefault) { e.preventDefault&&e.preventDefault(); }
+		var type = e.type;
+		var id = e.pointerId;
+		var ids = stage.__touch.activeIDs;
+		
+		if (type == "MSPointerDown") {
+			if (e.srcElement != stage.canvas) { return; }
+			ids[id] = true;
+			this._handleStart(stage, id, e, e.pageX, e.pageY);
+		} else if (ids[id]) { // it's an id we're watching
+			if (type == "MSPointerMove") {
+				this._handleMove(stage, id, e, e.pageX, e.pageY);
+			} else if (type == "MSPointerUp" || type == "MSPointerCancel") {
+				delete(ids[id]);
+				this._handleEnd(stage, id, e);
+			}
+		}
+	};
+	
+	
+	/**
+	 * @method _handleStart
+	 * @protected
+	 **/
+	Touch._handleStart = function(stage, id, e, x, y) {
+		var props = stage.__touch;
+		if (!props.multitouch && props.count) { return; }
+		var ids = props.pointers;
+		if (ids[id]) { return; }
+		ids[id] = true;
+		props.count++;
+		stage._handlePointerDown(id, e, x, y);
+	};
+	
+	/**
+	 * @method _handleMove
+	 * @protected
+	 **/
+	Touch._handleMove = function(stage, id, e, x, y) {
+		if (!stage.__touch.pointers[id]) { return; }
+		stage._handlePointerMove(id, e, x, y);
+	};
+	
+	/**
+	 * @method _handleEnd
+	 * @protected
+	 **/
+	Touch._handleEnd = function(stage, id, e) {
+		// TODO: cancel should be handled differently for proper UI (ex. an up would trigger a click, a cancel would more closely resemble an out).
+		var props = stage.__touch;
+		var ids = props.pointers;
+		if (!ids[id]) { return; }
+		props.count--;
+		stage._handlePointerUp(id, e, true);
+		delete(ids[id]);
+	};
 
-window.Touch = Touch;
-}(window));
+
+createjs.Touch = Touch;
+}());

@@ -3,7 +3,7 @@ Werld.Views.Base.Container = Backbone.View.extend({
     _.bindAll(this);
 
     this.itemViews = [];
-    this.container = new Container();
+    this.container = new CreateJS.Container();
     this.container.view = this;
 
     this.model.items.on('add', this.addItemView);
