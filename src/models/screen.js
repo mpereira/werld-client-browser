@@ -1,6 +1,7 @@
 Werld.Models.Screen = Backbone.Model.extend({
   initialize: function() {
-    this.get('character').bind('change:coordinates', this.updateCoordinates, this);
+    this.updateCoordinates();
+    this.get('character').on('change:coordinates', this.updateCoordinates, this);
   },
   updateCoordinates: function() {
     var characterCoordinates = this.get('character').get('coordinates');
