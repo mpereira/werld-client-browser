@@ -48,6 +48,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       this.setIsMovingToTrueIfNotOnDestination
     );
     this.on('change:coordinates', this.updateTileCreatures);
+    this.on('change:coordinates', this.updateTile);
     this.on('change:path', this.setIsMovingToFalseIfOnDestinationAndNoPath);
     this.on('change:destination', this.onDestinationChange);
     this.on('change:hitPoints', this.resurrectIfHitPointsGreaterThanZero);
@@ -72,6 +73,12 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     if (!tile) { return; }
 
     tile.get('creatures').add(this);
+  },
+  updateTile: function(creature, value, options) {
+    this.set(
+      'tile',
+      Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates'))
+    );
   },
   maxHitPoints: function() {
     return(this.get('strength'));
@@ -143,7 +150,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     Werld.Utils.Interval.install({ movementHandler: Werld.frameRate() }, this);
   },
-  onFolloweeCoordinatesChange: function(followee, coordinates, options) {
+  onFolloweeTileChange: function(followee, coordinates, options) {
     this.moveToCreature(this.get('followee'));
   },
   movementHandler: function() {
@@ -176,7 +183,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   follow: function(creature) {
     this.set('followee', creature);
     this.moveToCreature(creature);
-    creature.on('change:coordinates', this.onFolloweeCoordinatesChange, this);
+    creature.on('change:tile', this.onFolloweeTileChange, this);
   },
   pathfind: function(thing) {
     var self = this;
@@ -234,7 +241,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   stopFollowing: function(creature) {
     this.unset('followee');
-    creature.off('change:coordinates', this.onFolloweeCoordinatesChange, this);
+    creature.off('change:tile', this.onFolloweeTileChange, this);
   },
   attackSpeed: function() {
     var baseAttackSpeed = this.has('weapon') ?
