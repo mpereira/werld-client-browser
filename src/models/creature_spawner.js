@@ -42,25 +42,29 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
       }
 
       if (creature.state() === creature.states.idle) {
-        var randomAdjacentTileCoordinatePointWithinSpawnArea =
-          spawner.randomAdjacentTileCoordinatePointWithinSpawnArea(creature);
+        var randomWalkableAdjacentTileCoordinatePointWithinSpawnArea =
+          spawner.randomWalkableAdjacentTileCoordinatePointWithinSpawnArea(creature);
 
         // This means the creature is either inside the spawn area or at least
         // tangential to the spawn area's bounds.
-        if (randomAdjacentTileCoordinatePointWithinSpawnArea) {
-          creature.moveToCoordinates(randomAdjacentTileCoordinatePointWithinSpawnArea);
+        if (randomWalkableAdjacentTileCoordinatePointWithinSpawnArea) {
+          creature.moveToCoordinatePoint(
+            randomWalkableAdjacentTileCoordinatePointWithinSpawnArea
+          );
         } else {
-          creature.moveToCoordinates(spawner.adjacentTileCoordinatePointCloserToSpawnArea(creature));
+          creature.moveToCoordinatePoint(
+            spawner.walkableAdjacentTileCoordinatePointCloserToSpawnArea(creature)
+          );
         }
       }
 
       spawner.spawnAreaMovementHandler(creature);
     }).delay(time);
   },
-  adjacentTileCoordinatePointCloserToSpawnArea: function(creature) {
+  walkableAdjacentTileCoordinatePointCloserToSpawnArea: function(creature) {
     var spawner = this;
 
-    return(_(creature.adjacentTileCoordinatePoints()).sortBy(function(tilePoint) {
+    return(_(creature.walkableAdjacentTileCoordinatePoints()).sortBy(function(tilePoint) {
       return(Werld.Utils.Geometry.tileDistance(
         Werld.Utils.Geometry.pixelPointToTilePoint(
           spawner.spawnAreaCircle.center
@@ -69,14 +73,14 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
       ));
     })[0]);
   },
-  randomAdjacentTileCoordinatePointWithinSpawnArea: function(creature) {
+  randomWalkableAdjacentTileCoordinatePointWithinSpawnArea: function(creature) {
     var spawner = this;
-    var adjacentTilePointsWithinSpawnArea =
-      _(creature.adjacentTileCoordinatePoints()).filter(function(tileCoordinatePoint) {
-        return(spawner.tileCoordinatePointWithinSpawnArea(tileCoordinatePoint));
+    var walkableAdjacentTilePointsWithinSpawnArea =
+      _(creature.walkableAdjacentTileCoordinatePoints()).filter(function(coordinatePoint) {
+        return(spawner.tileCoordinatePointWithinSpawnArea(coordinatePoint));
       });
 
-    return(_.shuffle(adjacentTilePointsWithinSpawnArea)[0]);
+    return(_.shuffle(walkableAdjacentTilePointsWithinSpawnArea)[0]);
   },
   tileCoordinatePointWithinSpawnArea: function(tileCoordinatePoint) {
     return(this.spawnAreaCircle.pixelPointWithinArea(tileCoordinatePoint));

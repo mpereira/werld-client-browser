@@ -21,9 +21,12 @@ Werld.Models.Map = Backbone.Model.extend({
       dimensions: [tiles.length, tiles[0].length]
     });
   },
-  getTileByCoordinates: function(coordinates) {
-    var tile = Werld.Utils.Geometry.pixelPointToTilePoint(coordinates);
+  getTileByTilePoint: function(tilePoint) {
+    return(this.get('tiles')[tilePoint[0]][tilePoint[1]]);
+  },
+  getTileByCoordinatePoint: function(coordinates) {
+    var tilePoint = Werld.Utils.Geometry.pixelPointToTilePoint(coordinates);
 
-    return(this.get('tiles')[tile[0]][tile[1]]);
+    return(this.getTileByTilePoint(tilePoint));
   }
 });

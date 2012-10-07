@@ -12,7 +12,7 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
     this.container.addChild(this.bitmap);
   },
   onBitmapPress: function(event) {
-    Werld.character.moveToCoordinates(this.model.get('coordinates'), {
+    Werld.character.moveToCoordinatePoint(this.model.get('coordinates'), {
       stopFollowing: true
     });
   },
