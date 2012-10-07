@@ -6,11 +6,14 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
 
     this.filters = {};
 
-    var brightnessFilterMatrix = new CreateJS.ColorMatrix();
-    brightnessFilterMatrix.adjustBrightness(50);
-    this.filters.brightness = new CreateJS.ColorMatrixFilter(brightnessFilterMatrix);
+    if (Werld.Config.HIGHLIGHT_TILES_WHEN_CREATURES_MOVE) {
+      var brightnessFilterMatrix = new CreateJS.ColorMatrix();
+      brightnessFilterMatrix.adjustBrightness(50);
+      this.filters.brightness = new CreateJS.ColorMatrixFilter(brightnessFilterMatrix);
 
-    this.model.on('change:highlighted', this.onModelHighlightedChange);
+      this.model.on('change:highlighted', this.onModelHighlightedChange);
+    }
+
     this.model.on(
       'change:onScreenCoordinates', this.onModelScreenCoordinatesChange
     );
