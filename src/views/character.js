@@ -5,8 +5,10 @@ Werld.Views.Character = Werld.Views.Base.Creature.extend({
     this.nameText = new Werld.Text(_({
       TEXT: this.model.get('name')
     }).extend(Werld.TEXT.CHARACTER_NAME));
-    this.nameText.x = Werld.Config.PIXELS_PER_TILE / 2;
-    this.nameText.y = - (this.spriteSheet._regY + 28);
+
+    this.nameText.y = - (this.spriteSheet._frameHeight -
+                           0.2 * this.spriteSheet._regY +
+                           this.nameText.getMeasuredLineHeight());
 
     this.container.addChild(this.nameText);
   },
@@ -14,6 +16,7 @@ Werld.Views.Character = Werld.Views.Base.Creature.extend({
     var damageText = new Werld.Text(_({
       TEXT: Math.abs(damage)
     }).extend(Werld.TEXT.CHARACTER_HIT_RECEIVED));
+
     Werld.layers.battle.show(damageText, { above: this.model });
   }
 });

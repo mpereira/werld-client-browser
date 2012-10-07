@@ -20,7 +20,7 @@ Werld.Views.Creature = Werld.Views.Base.Creature.extend({
     this.nameText = new Werld.Text(_({
       TEXT: this.model.get('name')
     }).extend(Werld.TEXT.CREATURE_NAME));
-    this.nameText.x = Werld.Config.PIXELS_PER_TILE / 2;
+
     this.nameText.y =
       this.hitPointsBarRectangle.y - (this.nameText.getMeasuredLineHeight() + 3);
 

@@ -16,8 +16,12 @@ Werld.Views.Base.Creature = Backbone.View.extend({
       frames: {
         width: this.options.image.DIMENSIONS[0],
         height: this.options.image.DIMENSIONS[1],
-        regX: (this.options.image.DIMENSIONS[0] - Werld.Config.PIXELS_PER_TILE) / 2,
-        regY: (1.7 * this.options.image.DIMENSIONS[1] - Werld.Config.PIXELS_PER_TILE) / 2
+        regX: (this.options.image.DIMENSIONS[0] -
+                 Werld.Config.PIXELS_PER_TILE) / 2 +
+                Werld.Config.PIXELS_PER_TILE / 2,
+        regY: (1.7 * this.options.image.DIMENSIONS[1] -
+                 Werld.Config.PIXELS_PER_TILE) / 2 +
+                Werld.Config.PIXELS_PER_TILE / 2
       },
       animations: {
         walkDown:  [0,  3,  true, 1 / this.options.image.FREQUENCY],
@@ -150,7 +154,6 @@ Werld.Views.Base.Creature = Backbone.View.extend({
 
         temporaryCreatureScreenCoordinates[1] -=
           self.messageText.getMeasuredLineHeight();
-        self.messageText.x = Werld.Config.PIXELS_PER_TILE / 2;
         self.messageText.y = temporaryCreatureScreenCoordinates[1];
       }
     });

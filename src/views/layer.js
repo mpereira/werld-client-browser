@@ -19,7 +19,7 @@ Werld.Views.Layer = Backbone.View.extend({
     options || (options = {});
 
     text.x =
-      options.above.get('coordinates')[0] + Werld.Config.PIXELS_PER_TILE / 2;
+      options.above.get('coordinates')[0] - Werld.Config.PIXELS_PER_TILE / 2;
     text.y =
      options.above.get('coordinates')[1] - text.getMeasuredLineHeight();
 
