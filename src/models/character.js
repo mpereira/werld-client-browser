@@ -16,7 +16,6 @@ Werld.Models.Character = Werld.Models.Base.Creature.extend({
 
     this.items.each(function(item) { item.container = this.backpack; }, this);
 
-    this.on('change:attackee', this.onAttackeeChange);
     this.on('hitAttempted', function() {
       this.maybeIncreaseCappedAttribute('strength');
     }, this);
@@ -106,18 +105,6 @@ Werld.Models.Character = Werld.Models.Base.Creature.extend({
     var increment = this[incrementMethodName](cappedAttributeName);
 
     this.normalizedSet(cappedAttributeName, this.get(cappedAttributeName) + increment);
-  },
-  onAttackeeChange: function() {
-    if (this.has('attackee')) {
-      this.get('attackee').on('change:tile', this.onAttackeeTileChange, this);
-    } else {
-      this.previous('attackee').off('change:tile', this.onAttackeeTileChange, this);
-    }
-  },
-  onAttackeeTileChange: function() {
-    if (this.isFollowing(this.get('attackee'))) {
-      this.follow(this.get('attackee'));
-    }
   },
   maybeIncreaseCappedAttribute: function(cappedAttributeName) {
     if (this.get(cappedAttributeName) >=

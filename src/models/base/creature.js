@@ -26,7 +26,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       mana: this.get('intelligence'),
       stamina: this.get('dexterity'),
       destination: _.clone(this.get('coordinates')),
-      tile: Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates')),
       messages: [],
       path: []
     });
@@ -49,7 +48,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       this.setIsMovingToTrueIfNotOnDestination
     );
     this.on('change:coordinates', this.updateTileCreatures);
-    this.on('change:coordinates', this.updateTile);
     this.on('change:path', this.setIsMovingToFalseIfOnDestinationAndNoPath);
     this.on('change:destination', this.onDestinationChange);
     this.on('change:hitPoints', this.resurrectIfHitPointsGreaterThanZero);
@@ -74,12 +72,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     if (!tile) { return; }
 
     tile.get('creatures').add(this);
-  },
-  updateTile: function(creature, value, options) {
-    var tile =
-      Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates'));
-
-    this.set('tile', tile);
   },
   maxHitPoints: function() {
     return(this.get('strength'));
@@ -239,9 +231,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     } else {
       return(this.states.idle);
     }
-  },
-  isFollowing: function(creature) {
-    return(this.get('followee') === creature);
   },
   stopFollowing: function(creature) {
     this.unset('followee');
