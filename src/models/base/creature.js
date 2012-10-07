@@ -182,7 +182,9 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     var self = this;
 
     this._pathfind || (this._pathfind = _.throttle(function(thing) {
-      self.set('path', Werld.path.search(self, thing));
+      var path = Werld.path.search(self, thing);
+      Werld.path.highlight(path, { duration: 1000 });
+      self.set('path', path);
     }, 100));
 
     this._pathfind(thing);

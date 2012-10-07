@@ -33,6 +33,19 @@ Werld.Path = function(options) {
 };
 
 Werld.Path.prototype = {
+  highlight: function(path, options) {
+    options || (options = {});
+
+    var tilePoints = _(path).map(function(tileObject) {
+      return([tileObject.x, tileObject.y]);
+    });
+
+    _(tilePoints).each(function(tilePoint) {
+      this.map.get('tiles')[tilePoint[0]][tilePoint[1]].highlight({
+        duration: options.duration
+      });
+    }, this);
+  },
   search: function(origin, destination) {
     var originTile;
     var destinationTile;

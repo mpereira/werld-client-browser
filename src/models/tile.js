@@ -1,4 +1,7 @@
 Werld.Models.Tile = Werld.Models.Base.Container.extend({
+  defaults: {
+    highlightDuration: 2000
+  },
   initialize: function() {
     this.constructor.__super__.initialize.apply(this, arguments);
 
@@ -24,5 +27,21 @@ Werld.Models.Tile = Werld.Models.Base.Container.extend({
   },
   isCurrentlyWalkable: function() {
     return(this.get('walkable') && !this.get('creatures').anyAlive());
+  },
+  isHighlighted: function() {
+    return(this.get('highlighted'));
+  },
+  highlight: function(options) {
+    options || (options = {});
+
+    this.set('highlighted', true);
+
+    if (options.duration) {
+      var unhighlight = _(this.unhighlight).bind(this);
+      _(unhighlight).delay(options.duration || this.get('highlightDuration'));
+    }
+  },
+  unhighlight: function() {
+    this.set('highlighted', false);
   }
 });

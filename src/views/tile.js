@@ -4,10 +4,20 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
 
     _.bindAll(this);
 
-    this.model.bind('change', this.onModelChange);
+    this.filters = {};
+
+    var brightnessFilterMatrix = new CreateJS.ColorMatrix();
+    brightnessFilterMatrix.adjustBrightness(50);
+    this.filters.brightness = new CreateJS.ColorMatrixFilter(brightnessFilterMatrix);
+
+    this.model.on('change:highlighted', this.onModelHighlightedChange);
+    this.model.on(
+      'change:onScreenCoordinates', this.onModelScreenCoordinatesChange
+    );
 
     this.bitmap =
       new CreateJS.Bitmap(Werld.canvas.textures.tiles[this.model.get('type')]);
+    this.bitmap.filters || (this.bitmap.filters = []);
     this.bitmap.onPress = this.onBitmapPress;
     this.container.addChild(this.bitmap);
   },
@@ -16,7 +26,7 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
       stopFollowing: true
     });
   },
-  onModelChange: function(event) {
+  onModelScreenCoordinatesChange: function() {
     this.container.x = this.model.get('onScreenCoordinates')[0];
     this.container.y = this.model.get('onScreenCoordinates')[1];
   },
@@ -34,5 +44,18 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
     } else {
       return(false);
     }
+  },
+  onModelHighlightedChange: function() {
+    this.bitmap.cache(0, 0, 40, 40);
+
+    if (this.model.isHighlighted()) {
+      this.bitmap.filters.push(this.filters.brightness);
+    } else {
+      this.bitmap.filters = _(this.bitmap.filters).reject(function(filter) {
+        return(filter === this.filters.brightness);
+      }, this);
+    }
+
+    this.bitmap.updateCache();
   }
 });
