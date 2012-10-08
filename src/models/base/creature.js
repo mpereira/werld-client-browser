@@ -151,7 +151,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     Werld.Utils.Interval.install({ movementHandler: Werld.frameRate() }, this);
   },
   onFolloweeTileChange: function(followee, coordinates, options) {
-    this.moveToCreature(this.get('followee'));
+    this.pathfindToCreature(this.get('followee'));
   },
   movementHandler: function() {
     var coordinates = _.clone(this.get('coordinates'));
@@ -182,7 +182,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   },
   follow: function(creature) {
     this.set('followee', creature);
-    this.moveToCreature(creature);
+    this.pathfindToCreature(creature);
     creature.on('change:tile', this.onFolloweeTileChange, this);
   },
   pathfind: function(thing) {
@@ -196,7 +196,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this._pathfind(thing);
   },
-  moveToTilePoint: function(tilePoint, options) {
+  pathfindToTilePoint: function(tilePoint, options) {
     if (options && options.stopFollowing) {
       if (this.has('followee')) {
         this.stopFollowing(this.get('followee'));
@@ -205,12 +205,12 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.pathfind(tilePoint);
   },
-  moveToCoordinatePoint: function(coordinatePoint, options) {
-    this.moveToTilePoint(
+  pathfindToCoordinatePoint: function(coordinatePoint, options) {
+    this.pathfindToTilePoint(
       Werld.Utils.Geometry.pixelPointToTilePoint(coordinatePoint), options
     );
   },
-  moveToCreature: function(creature, options) {
+  pathfindToCreature: function(creature, options) {
     if (this.tileDistance(creature) <= 1) { return; }
 
     var creatureNearestWalkableAdjacentTileCoordinatePoint =
@@ -218,7 +218,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     if (!creatureNearestWalkableAdjacentTileCoordinatePoint) { return; }
 
-    this.moveToCoordinatePoint(
+    this.pathfindToCoordinatePoint(
       creatureNearestWalkableAdjacentTileCoordinatePoint, options
     );
   },

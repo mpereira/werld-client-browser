@@ -25,7 +25,7 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
     this.container.addChild(this.bitmap);
   },
   onBitmapPress: function(event) {
-    Werld.character.moveToCoordinatePoint(this.model.get('coordinates'), {
+    Werld.character.pathfindToCoordinatePoint(this.model.get('coordinates'), {
       stopFollowing: true
     });
   },
