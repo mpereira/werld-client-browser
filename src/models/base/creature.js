@@ -493,20 +493,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   destroy: function() {
     this.trigger('destroy', this);
   },
-  getItem: function(item) {
-    var creatureItem = this.items.find(function(collectionItem) {
-      return(collectionItem.stackable() && collectionItem.same(item));
-    });
-
-    if (creatureItem) {
-      creatureItem.merge(item);
-      item.destroy();
-      return(false);
-    } else {
-      this.items.add(item);
-      return(true);
-    }
-  },
   adjacentTilePoints: function() {
     var tilePoint =
       Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates'));
