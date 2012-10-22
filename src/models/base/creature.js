@@ -26,6 +26,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       mana: this.get('intelligence'),
       stamina: this.get('dexterity'),
       destination: _.clone(this.get('coordinates')),
+      tile: Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates')),
       messages: [],
       path: []
     });
@@ -36,8 +37,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     this.installIntervalFunctions();
 
-    this.updateTileCreatures(this, this.get('coordinates'));
-
     this.on('change:path', this.setDestinationWithThePathsHead);
     this.on(
       'change:coordinates change:destination',
@@ -47,15 +46,23 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
       'change:coordinates change:destination',
       this.setIsMovingToTrueIfNotOnDestination
     );
-    this.on('change:coordinates', this.updateTileCreatures);
+    this.on(
+      'change:coordinates change:destination',
+      this.setIsMovingToFalseIfOnDestinationAndNoPath
+    );
+    this.on('change:path', this.moveToWalkableAdjacentTileIfOnNonWalkableTile);
     this.on('change:coordinates', this.updateTile);
-    this.on('change:path', this.setIsMovingToFalseIfOnDestinationAndNoPath);
+    this.on('change:tile', this.adjustPath);
     this.on('change:destination', this.onDestinationChange);
+    this.on('change:followee', this.onFolloweeChange);
     this.on('change:hitPoints', this.resurrectIfHitPointsGreaterThanZero);
     this.on('change:hitPoints', this.dieIfHitPointsLowerThanZero);
     this.on('resurrection', this.installLifeIntervalFunctions);
     this.on('death', this.uninstallLifeIntervalFunctions);
     this.on('destroy', this.uninstallIntervalFunctions);
+  },
+  tile: function() {
+    return(Werld.game.get('map').getTileByTilePoint(this.get('tile')));
   },
   isSteppingOnTile: function(tile) {
     var creatureTilePoint =
@@ -65,20 +72,18 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
 
     return(_(creatureTilePoint).isEqual(tileTilePoint));
   },
-  updateTileCreatures: function(creature, value, options) {
-    if (!Werld.map) { return; }
-
-    var tile = Werld.map.getTileByCoordinatePoint(this.get('coordinates'));
-
-    if (!tile) { return; }
-
-    tile.get('creatures').add(this);
-  },
   updateTile: function(creature, value, options) {
     this.set(
       'tile',
       Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates'))
     );
+  },
+  adjustPath: function(creature, value, options) {
+    if (this.has('followee')) {
+      this.pathfindToCreature(this.get('followee'));
+    } else {
+      this.pathfindToTilePoint(_(this.get('path')).last());
+    }
   },
   maxHitPoints: function() {
     return(this.get('strength'));
@@ -120,9 +125,18 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
   isMoving: function() {
     return(this.get('isMoving'));
   },
+  setDestinationWithThePathsHead: function(creature, value, options) {
+    if (_.isEmpty(this.get('path'))) { return; }
+
+    this.set('destination', _(Werld.Utils.Geometry.tilePointToPixelPoint(
+      _.head(this.get('path'))
+    )).map(function(pixels) {
+      return(pixels + Werld.Config.PIXELS_PER_TILE / 2);
+    }));
+  },
   setPathToItsTailIfOnIntermediateDestination: function(creature, value, options) {
     if (_(this.get('coordinates')).isEqual(this.get('destination'))) {
-      this.set('path', _.tail(this.get('path')));
+      this.set('path', _(this.get('path')).tail());
     }
   },
   setIsMovingToTrueIfNotOnDestination: function(creature, value, options) {
@@ -131,9 +145,19 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     }
   },
   setIsMovingToFalseIfOnDestinationAndNoPath: function(creature, value, options) {
+    if (!_(this.get('path')).isEmpty()) {
+      return
+    }
+
     if (_(this.get('coordinates')).isEqual(this.get('destination'))) {
-      if (_.isEmpty(this.get('path'))) {
-        this.set('isMoving', false);
+      this.set('isMoving', false);
+    }
+  },
+  moveToWalkableAdjacentTileIfOnNonWalkableTile: function(creature, value, options) {
+    // consider if creature is following something
+    if (_(this.get('path')).isEmpty()) {
+      if (!this.tile().isCurrentlyWalkable()) {
+        this.pathfindToTilePoint(this.randomWalkableAdjacentTilePoint());
       }
     }
   },
@@ -154,73 +178,73 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.pathfindToCreature(this.get('followee'));
   },
   movementHandler: function() {
-    var coordinates = _.clone(this.get('coordinates'));
+    var coordinates = _(this.get('coordinates')).clone();
+    var tile = {
+      left: Werld.game.get('map').tileAdjacentToTile(this.tile(), 'left'),
+      right: Werld.game.get('map').tileAdjacentToTile(this.tile(), 'right'),
+      top: Werld.game.get('map').tileAdjacentToTile(this.tile(), 'top'),
+      bottom: Werld.game.get('map').tileAdjacentToTile(this.tile(), 'bottom'),
+    };
 
     if (this.get('coordinates')[0] > this.get('destination')[0]) {
-      coordinates[0] -= this.get('MOVEMENT_SPEED');
+      if (coordinates[0] % Werld.Config.PIXELS_PER_TILE !== Werld.Config.PIXELS_PER_TILE / 2 || tile.left.isCurrentlyWalkable()) {
+        coordinates[0] -= this.get('MOVEMENT_SPEED');
+      }
     } else if (this.get('coordinates')[0] < this.get('destination')[0]) {
-      coordinates[0] += this.get('MOVEMENT_SPEED');
+      if (coordinates[0] % Werld.Config.PIXELS_PER_TILE !== Werld.Config.PIXELS_PER_TILE / 2 || tile.right.isCurrentlyWalkable()) {
+        coordinates[0] += this.get('MOVEMENT_SPEED');
+      }
     }
 
     if (this.get('coordinates')[1] > this.get('destination')[1]) {
-      coordinates[1] -= this.get('MOVEMENT_SPEED');
+      if (coordinates[1] % Werld.Config.PIXELS_PER_TILE !== Werld.Config.PIXELS_PER_TILE / 2 || tile.top.isCurrentlyWalkable()) {
+        coordinates[1] -= this.get('MOVEMENT_SPEED');
+      }
     } else if (this.get('coordinates')[1] < this.get('destination')[1]) {
-      coordinates[1] += this.get('MOVEMENT_SPEED');
+      if (coordinates[1] % Werld.Config.PIXELS_PER_TILE !== Werld.Config.PIXELS_PER_TILE / 2 || tile.bottom.isCurrentlyWalkable()) {
+        coordinates[1] += this.get('MOVEMENT_SPEED');
+      }
     }
 
     this.set('coordinates', coordinates);
   },
-  setDestinationWithThePathsHead: function(creature, value, options) {
-    if (_.isEmpty(this.get('path'))) { return; }
-
-    this.set('destination', _(Werld.Utils.Geometry.tilePointToPixelPoint([
-      _.head(this.get('path')).x,
-      _.head(this.get('path')).y
-    ])).map(function(pixels) {
-      return(pixels + Werld.Config.PIXELS_PER_TILE / 2);
-    }));
-  },
   follow: function(creature) {
     this.set('followee', creature);
     this.pathfindToCreature(creature);
-    creature.on('change:tile', this.onFolloweeTileChange, this);
   },
-  pathfind: function(thing) {
-    var self = this;
+  stopFollowing: function(creature) {
+    this.unset('followee');
+  },
+  onFolloweeChange: function(model, value, options) {
+    if (this.has('followee')) {
+      this.get('followee').on('change:tile', this.onFolloweeTileChange, this);
+    } else {
+      this.previous('followee').off('change:tile', this.onFolloweeTileChange, this);
+    }
+  },
+  pathfind: function(tilePoint) {
+    var path = Werld.path.search(this.get('tile'), tilePoint);
 
-    this._pathfind || (this._pathfind = _.throttle(function(thing) {
-      var path = Werld.path.search(self, thing);
-      Werld.path.highlight(path, { duration: 1000 });
-      self.set('path', path);
-    }, 100));
-
-    this._pathfind(thing);
+    Werld.path.highlight(path, { duration: 1000 });
+    this.set('path', path);
   },
   pathfindToTilePoint: function(tilePoint, options) {
-    if (options && options.stopFollowing) {
-      if (this.has('followee')) {
-        this.stopFollowing(this.get('followee'));
-      }
-    }
-
     this.pathfind(tilePoint);
   },
-  pathfindToCoordinatePoint: function(coordinatePoint, options) {
+  pathfindToCoordinatePoint: function(coordinatePoint) {
     this.pathfindToTilePoint(
-      Werld.Utils.Geometry.pixelPointToTilePoint(coordinatePoint), options
+      Werld.Utils.Geometry.pixelPointToTilePoint(coordinatePoint)
     );
   },
-  pathfindToCreature: function(creature, options) {
+  pathfindToCreature: function(creature) {
     if (this.tileDistance(creature) <= 1) { return; }
 
-    var creatureNearestWalkableAdjacentTileCoordinatePoint =
-      this.nearestWalkableAdjacentTileCoordinatePoint(creature);
+    var creatureNearestWalkableAdjacentTilePoint =
+      this.nearestWalkableTilePointAdjacentTo(creature);
 
-    if (!creatureNearestWalkableAdjacentTileCoordinatePoint) { return; }
+    if (!creatureNearestWalkableAdjacentTilePoint) { return; }
 
-    this.pathfindToCoordinatePoint(
-      creatureNearestWalkableAdjacentTileCoordinatePoint, options
-    );
+    this.pathfindToTilePoint(creatureNearestWalkableAdjacentTilePoint);
   },
   states: {
     attacking: 'attacking',
@@ -238,10 +262,6 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     } else {
       return(this.states.idle);
     }
-  },
-  stopFollowing: function(creature) {
-    this.unset('followee');
-    creature.off('change:tile', this.onFolloweeTileChange, this);
   },
   attackSpeed: function() {
     var baseAttackSpeed = this.has('weapon') ?
@@ -430,6 +450,7 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     return(Werld.Utils.Geometry.pixelDistance(this.coordinates(), thing.coordinates()));
   },
   tileDistance: function(thing) {
+    //return(Werld.path.search(this.get('tile'), thing.get('tile')).length);
     return(Werld.Utils.Geometry.pixelsToTiles(this.pixelDistance(thing)));
   },
   resurrectIfHitPointsGreaterThanZero: function(creature, hitPoints, options) {
@@ -494,56 +515,37 @@ Werld.Models.Base.Creature = Backbone.Model.extend({
     this.trigger('destroy', this);
   },
   adjacentTilePoints: function() {
-    var tilePoint =
-      Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates'));
-
     return(_([
       [-1, -1], [-1, 0], [-1, 1],
       [0, -1], [0, 1],
       [1, -1], [1, 0], [1, 1]
-    ]).reduce(function(memo, adjacentTileOffset) {
+    ]).reduce(_(function(memo, adjacentTileOffset) {
       return(memo.concat([[
-        tilePoint[0] + adjacentTileOffset[0],
-        tilePoint[1] + adjacentTileOffset[1]
+        this.get('tile')[0] + adjacentTileOffset[0],
+        this.get('tile')[1] + adjacentTileOffset[1]
       ]]));
-    }, []));
-  },
-  adjacentTileCoordinatePoints: function() {
-    return(
-      _(this.adjacentTilePoints()).map(Werld.Utils.Geometry.tilePointToPixelPoint)
-    );
+    }).bind(this), []));
   },
   walkableAdjacentTilePoints: function() {
     return(_(this.adjacentTilePoints()).filter(function(tilePoint) {
-      var tile = Werld.map.getTileByTilePoint(tilePoint);
+      var tile = Werld.game.get('map').getTileByTilePoint(tilePoint);
 
       return(tile.isCurrentlyWalkable());
     }));
   },
-  walkableAdjacentTileCoordinatePoints: function() {
-    return(
-      _(this.walkableAdjacentTilePoints())
-        .map(Werld.Utils.Geometry.tilePointToPixelPoint)
-    );
+  randomWalkableAdjacentTilePoint: function() {
+    return(_(this.walkableAdjacentTilePoints()).shuffle()[0]);
   },
-  nearestAdjacentTileCoordinatePoint: function(creature) {
+  nearestWalkableTilePointAdjacentTo: function(creature) {
     return(
-      _.chain(creature.adjacentTileCoordinatePoints())
-        .sortBy(_(function(coordinates) {
-          return(Werld.Utils.Geometry.pixelDistance(
-            this.get('coordinates'), coordinates
+      _(creature.walkableAdjacentTilePoints())
+        .chain()
+        .sortBy(_(function(tilePoint) {
+          return(Werld.Utils.Geometry.tileDistance(
+            this.get('tile'), tilePoint
           ));
-        }).bind(this)).value()[0]
-    );
-  },
-  nearestWalkableAdjacentTileCoordinatePoint: function(creature) {
-    return(
-      _.chain(creature.walkableAdjacentTileCoordinatePoints())
-        .sortBy(_(function(coordinates) {
-          return(Werld.Utils.Geometry.pixelDistance(
-            this.get('coordinates'), coordinates
-          ));
-        }).bind(this)).value()[0]
+        }).bind(this))
+        .value()[0]
     );
   },
   installIntervalFunctions: function(creature) {

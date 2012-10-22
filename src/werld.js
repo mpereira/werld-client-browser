@@ -104,10 +104,9 @@ var Werld = {
   Config: {
     AGGRESSIVENESS_HANDLER_RATE: 2000,
     AGGRESSIVENESS_RADIUS: 6,
-    ALTAR_CHARACTER_RESURRECTION_OBSERVER_INTERVAL: 1000,
     CORPSE_DECAY_TIME: 80 * 1000,
     FRAMES_PER_SECOND: 30,
-    HIGHLIGHT_TILES_WHEN_CREATURES_MOVE: false,
+    HIGHLIGHT_TILES_WHEN_CREATURES_MOVE: true,
     MAXIMUM_ATTACK_SPEED: 1.25,
     MAXIMUM_DAMAGE_BONUS_PERCENTAGE: 100,
     MAXIMUM_HIT_CHANCE_PERCENTAGE: 100,
@@ -160,14 +159,17 @@ var Werld = {
 
         Werld.character.equip(shortSword);
 
-        Werld.map = new Werld.Models.Map();
+        Werld.game = new Werld.Models.Game({
+          map: new Werld.Models.Map(),
+          characters: new Werld.Collections.Characters([Werld.character])
+        });
 
         Werld.path = new Werld.Path({
-          tiles: Werld.map.get('tiles')
+          tiles: Werld.game.get('map').get('tiles')
         });
 
         Werld.screen = new Werld.Models.Screen({
-          map: Werld.map,
+          map: Werld.game.get('map'),
           character: Werld.character,
           dimensions: Werld.Config.SCREEN_DIMENSIONS,
           coordinates: [0, 0]
@@ -176,8 +178,6 @@ var Werld = {
         Werld.canvas.screenView = new Werld.Views.Screen({
           model: Werld.screen
         });
-
-        Werld.game = new Werld.Models.Game({ characters: [Werld.character] });
 
         Werld.canvas.characterView = new Werld.Views.Character({
           model: Werld.character,
@@ -196,35 +196,35 @@ var Werld = {
           creature: Werld.CREATURES.SILVER_BAT,
           tileCoordinates: [4, 4],
           tileRadius: 3,
-          numberOfCreatures: 3
+          numberOfCreatures: 0
         });
 
         var whiteWolfSpawner = new Werld.Models.CreatureSpawner({
           creature: Werld.CREATURES.WHITE_WOLF,
           tileCoordinates: [15, 10],
           tileRadius: 4,
-          numberOfCreatures: 2
+          numberOfCreatures: 10
         });
 
         var fireWolfSpawner = new Werld.Models.CreatureSpawner({
           creature: Werld.CREATURES.FIRE_WOLF,
           tileCoordinates: [15, 15],
           tileRadius: 4,
-          numberOfCreatures: 2
+          numberOfCreatures: 10
         });
 
         var leviathanSpawner = new Werld.Models.CreatureSpawner({
           creature: Werld.CREATURES.LEVIATHAN,
           tileCoordinates: [4, 15],
           tileRadius: 4,
-          numberOfCreatures: 1
+          numberOfCreatures: 0
         });
 
         var blueDragonSpawner = new Werld.Models.CreatureSpawner({
           creature: Werld.CREATURES.BLUE_DRAGON,
           tileCoordinates: [4, 10],
           tileRadius: 4,
-          numberOfCreatures: 1
+          numberOfCreatures: 0
         });
 
         Werld.creatureSpawners = new Werld.Collections.CreatureSpawners([
@@ -240,13 +240,10 @@ var Werld = {
           character: Werld.character
         });
 
-        Werld.altar = new Werld.Models.Altar(
-          _.extend(Werld.OBJECTS.ALTAR, {
-            coordinates: _([7, 8]).map(function(coordinate) {
-              return(coordinate * Werld.Config.PIXELS_PER_TILE);
-            })
-          })
-        );
+        Werld.altar = new Werld.Models.Altar(_({
+          coordinates: Werld.Utils.Geometry.tilePointToPixelPoint([9, 5]),
+          characters: Werld.game.get('characters')
+        }).extend(Werld.OBJECTS.ALTAR));
 
         Werld.canvas.altarView = new Werld.Views.Altar({
           model: Werld.altar
@@ -265,6 +262,7 @@ var Werld = {
         Werld.containers.terrain.addChild(Werld.canvas.screenView.container);
         Werld.containers.objects.addChild(Werld.canvas.altarView.container);
         Werld.containers.character.addChild(Werld.canvas.characterView.container);
+
         Werld.creatureSpawners.activateAll();
 
         Werld.containers.gumps.addChild(Werld.canvas.statusBarView.container);

@@ -9,7 +9,8 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
     if (Werld.Config.HIGHLIGHT_TILES_WHEN_CREATURES_MOVE) {
       var brightnessFilterMatrix = new CreateJS.ColorMatrix();
       brightnessFilterMatrix.adjustBrightness(50);
-      this.filters.brightness = new CreateJS.ColorMatrixFilter(brightnessFilterMatrix);
+      this.filters.brightness =
+        new CreateJS.ColorMatrixFilter(brightnessFilterMatrix);
 
       this.model.on('change:highlighted', this.onModelHighlightedChange);
     }
@@ -25,9 +26,11 @@ Werld.Views.Tile = Werld.Views.Base.Container.extend({
     this.container.addChild(this.bitmap);
   },
   onBitmapPress: function(event) {
-    Werld.character.pathfindToCoordinatePoint(this.model.get('coordinates'), {
-      stopFollowing: true
-    });
+    if (Werld.character.has('followee')) {
+      Werld.character.stopFollowing(Werld.character.get('followee'));
+    }
+
+    Werld.character.pathfindToCoordinatePoint(this.model.get('coordinates'));
   },
   onModelScreenCoordinatesChange: function() {
     this.container.x = this.model.get('onScreenCoordinates')[0];

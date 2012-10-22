@@ -28,5 +28,40 @@ Werld.Models.Map = Backbone.Model.extend({
     var tilePoint = Werld.Utils.Geometry.pixelPointToTilePoint(coordinates);
 
     return(this.getTileByTilePoint(tilePoint));
+  },
+  tilesAdjacentToTile: function(tile) {
+    return(_([
+      [-1, -1], [-1, 0], [-1, 1],
+      [0, -1], [0, 1],
+      [1, -1], [1, 0], [1, 1]
+    ]).reduce(_(function(memo, tilePointOffset) {
+      return(memo.concat(
+        this.getTileByTilePoint([
+          tile.get('tilePoint')[0] + tilePointOffset[0],
+          tile.get('tilePoint')[1] + tilePointOffset[1]
+        ])
+      ));
+    }).bind(this), []));
+  },
+  tilesAdjacentToCreature: function(creature) {
+    return(this.tilesAdjacentToTile(creature.tile()));
+  },
+  tileAdjacentToTile: function(tile, direction) {
+    var directions = [
+      { name: 'top', offset: [0, -1] },
+      { name: 'right', offset: [1, 0] },
+      { name: 'bottom', offset: [0, 1] },
+      { name: 'left', offset: [-1, 0] }
+    ];
+
+    if (!_(_(directions).pluck('name')).include(direction)) {
+      console.error('invalid direction: ' + direction);
+      return;
+    }
+
+    return(this.getTileByTilePoint([
+      tile.get('tilePoint')[0] + _(directions).where({ name: direction })[0].offset[0],
+      tile.get('tilePoint')[1] + _(directions).where({ name: direction })[0].offset[1]
+    ]));
   }
 });
