@@ -20,10 +20,10 @@ module.exports = function(grunt) {
         'vendor/javascripts/tween-*.js',
         'vendor/javascripts/preload-*.js',
         'vendor/javascripts/stats-*.js',
-        'vendor/javascripts/astar-*.js'
+        'vendor/javascripts/pathfinding-*.js',
+        'vendor/javascripts/transpose-*.js'
       ],
       src: [
-        'src/astar.heuristics.chebyshev.js',
         'src/create.js',
         'src/werld.js',
         'src/gumps.js',
@@ -120,9 +120,7 @@ module.exports = function(grunt) {
         Stats: true,
         Werld: true,
         createjs: true,
-        // astar
-        astar: true,
-        Graph: true
+        PF: true
       }
     }
   });

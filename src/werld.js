@@ -162,7 +162,9 @@ var Werld = {
 
         Werld.map = new Werld.Models.Map();
 
-        Werld.path = new Werld.Path({ map: Werld.map });
+        Werld.path = new Werld.Path({
+          tiles: Werld.map.get('tiles')
+        });
 
         Werld.screen = new Werld.Models.Screen({
           map: Werld.map,

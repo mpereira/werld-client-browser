@@ -8,8 +8,17 @@ Werld.Models.Tile = Werld.Models.Base.Container.extend({
     _.bindAll(this, 'onCreatureAdd', 'onCreatureCoordinatesChange');
 
     this.has('creatures') || (this.set('creatures', new Werld.Collections.Creatures()));
+    this.updateTile();
+
+    this.on('change:coordinates', this.updateTile);
 
     this.get('creatures').on('add', this.onCreatureAdd);
+  },
+  updateTile: function(creature, value, options) {
+    this.set(
+      'tilePoint',
+      Werld.Utils.Geometry.pixelPointToTilePoint(this.get('coordinates'))
+    );
   },
   onCreatureAdd: function(creature, creatures) {
     creature.on('change:coordinates', this.onCreatureCoordinatesChange);
@@ -26,7 +35,7 @@ Werld.Models.Tile = Werld.Models.Base.Container.extend({
     return(this.get('coordinates'));
   },
   isCurrentlyWalkable: function() {
-    return(this.get('walkable') && !this.get('creatures').anyAlive());
+    return(!!this.get('walkable') && !this.get('creatures').anyAlive());
   },
   isHighlighted: function() {
     return(this.get('highlighted'));
