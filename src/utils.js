@@ -10,6 +10,12 @@ Werld.Utils.Geometry = {
   tilePointToPixelPoint: function(tilePoint) {
     return(_(tilePoint).map(Werld.Utils.Geometry.tilesToPixels));
   },
+  tileCenterPointToPixelPoint: function(tilePoint) {
+    return(_(tilePoint).map(function(tile) {
+      return(Werld.Utils.Geometry.tilesToPixels(tile) +
+               Werld.Config.PIXELS_PER_TILE / 2);
+    }));
+  },
   pixelPointToTilePoint: function(pixelPoint) {
     return(_(pixelPoint).map(Werld.Utils.Geometry.pixelsToTiles));
   },

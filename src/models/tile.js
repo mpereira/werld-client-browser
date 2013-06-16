@@ -34,6 +34,9 @@ Werld.Models.Tile = Werld.Models.Base.Container.extend({
   coordinates: function() {
     return(this.get('coordinates'));
   },
+  anyCreaturesAboveOtherThan: function(creature) {
+    return(this.get('creatures').include(creature) && this.get('creatures').length > 1);
+  },
   isCurrentlyWalkable: function() {
     return(!!this.get('walkable') && !this.get('creatures').anyAlive());
   },

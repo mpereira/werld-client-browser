@@ -13,22 +13,21 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
       measurement: 'tiles'
     });
 
-    this.creatures = new Werld.Collections.Creatures();
+    this.has('creatures') || this.set('creatures', new Werld.Collections.Creatures());
 
-    var spawner = this;
-
-    // FIXME: put this in a view?
-    this.creatures.on('add', function(creature) {
-      var creatureView = new Werld.Views.Creature({
-        model: creature,
-        image: Werld.IMAGES[creature.get('name')]
-      });
-      Werld.containers.creatures.addChild(creatureView.container);
+    this.get('creatures').on('add', this.createCreatureView);
+    this.get('creatures').on('add', this.spawnAreaMovementHandler);
+    this.get('creatures').on('reset', this.addCreaturesToGameCreatures);
+    this.get('creatures').on('add', this.addCreatureToGameCreatures);
+    this.get('creatures').on('remove', this.removeCreatureFromGameCreatures);
+  },
+  createCreatureView: function(creature) {
+    var creatureView = new Werld.Views.Creature({
+      model: creature,
+      image: Werld.IMAGES[creature.get('name')]
     });
 
-    this.creatures.on('add', function(creature) {
-      spawner.spawnAreaMovementHandler(creature);
-    });
+    Werld.containers.creatures.addChild(creatureView.container);
   },
   spawnAreaMovementHandler: function(creature) {
     var timeRange = this.get('randomMovementWithinSpawnAreaTimeRange');
@@ -42,18 +41,18 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
       }
 
       if (creature.state() === creature.states.idle) {
-        var randomWalkableAdjacentTileCoordinatePointWithinSpawnArea =
-          spawner.randomWalkableAdjacentTileCoordinatePointWithinSpawnArea(creature);
+        var randomWalkableAdjacentTilePointWithinSpawnArea =
+          spawner.randomWalkableAdjacentTilePointWithinSpawnArea(creature);
 
         // This means the creature is either inside the spawn area or at least
         // tangential to the spawn area's bounds.
-        if (randomWalkableAdjacentTileCoordinatePointWithinSpawnArea) {
-          creature.pathfindToCoordinatePoint(
-            randomWalkableAdjacentTileCoordinatePointWithinSpawnArea
+        if (randomWalkableAdjacentTilePointWithinSpawnArea) {
+          creature.pathfindToTilePoint(
+            randomWalkableAdjacentTilePointWithinSpawnArea
           );
         } else {
-          creature.pathfindToCoordinatePoint(
-            spawner.walkableAdjacentTileCoordinatePointCloserToSpawnArea(creature)
+          creature.pathfindToTilePoint(
+            spawner.walkableAdjacentTilePointCloserToSpawnArea(creature)
           );
         }
       }
@@ -61,10 +60,10 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
       spawner.spawnAreaMovementHandler(creature);
     }).delay(time);
   },
-  walkableAdjacentTileCoordinatePointCloserToSpawnArea: function(creature) {
+  walkableAdjacentTilePointCloserToSpawnArea: function(creature) {
     var spawner = this;
 
-    return(_(creature.walkableAdjacentTileCoordinatePoints()).sortBy(function(tilePoint) {
+    return(_(creature.walkableAdjacentTilePoints()).sortBy(function(tilePoint) {
       return(Werld.Utils.Geometry.tileDistance(
         Werld.Utils.Geometry.pixelPointToTilePoint(
           spawner.spawnAreaCircle.center
@@ -73,17 +72,17 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
       ));
     })[0]);
   },
-  randomWalkableAdjacentTileCoordinatePointWithinSpawnArea: function(creature) {
+  randomWalkableAdjacentTilePointWithinSpawnArea: function(creature) {
     var spawner = this;
     var walkableAdjacentTilePointsWithinSpawnArea =
-      _(creature.walkableAdjacentTileCoordinatePoints()).filter(function(coordinatePoint) {
-        return(spawner.tileCoordinatePointWithinSpawnArea(coordinatePoint));
+      _(creature.walkableAdjacentTilePoints()).filter(function(tilePoint) {
+        return(spawner.tilePointWithinSpawnArea(tilePoint));
       });
 
     return(_.shuffle(walkableAdjacentTilePointsWithinSpawnArea)[0]);
   },
-  tileCoordinatePointWithinSpawnArea: function(tileCoordinatePoint) {
-    return(this.spawnAreaCircle.pixelPointWithinArea(tileCoordinatePoint));
+  tilePointWithinSpawnArea: function(tilePoint) {
+    return(this.spawnAreaCircle.tilePointWithinArea(tilePoint));
   },
   randomTilePointWithinSpawnArea: function() {
     return(this.spawnAreaCircle.randomTilePoint());
@@ -98,7 +97,8 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
     creature.on('death', this.scheduleCreatureDestroy);
     creature.on('death', this.scheduleAddCreature);
     creature.on('destroy', this.onCreatureDestroy);
-    this.creatures.add(creature);
+
+    this.get('creatures').add(creature);
   },
   activate: function() {
     for (var i = 0; i < this.get('numberOfCreatures'); i++) {
@@ -112,6 +112,15 @@ Werld.Models.CreatureSpawner = Backbone.Model.extend({
     _(this.addCreature).delay(this.get('respawnTime'));
   },
   onCreatureDestroy: function(creature) {
-    this.creatures.remove(creature);
+    this.get('creatures').remove(creature);
+  },
+  addCreatureToGameCreatures: function(creature) {
+    Werld.game.get('creatures').add(creature);
+  },
+  addCreaturesToGameCreatures: function(collection) {
+    collection.each(this.addCreatureToGameCreatures);
+  },
+  removeCreatureFromGameCreatures: function(creature) {
+    Werld.game.get('creatures').remove(creature);
   }
 });

@@ -3,5 +3,10 @@ Werld.Collections.CreatureSpawners = Backbone.Collection.extend({
     this.each(function(creatureSpawner) {
       creatureSpawner.activate();
     });
+  },
+  creatures: function() {
+    return(_(this.map(function(creatureSpawner) {
+      return(creatureSpawner.get('creatures').models);
+    })).flatten());
   }
 });
